@@ -1,0 +1,383 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		2C5327592CE26D4B0059CAA4 /* Scene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5327582CE26D4B0059CAA4 /* Scene.swift */; };
+		2C53275B2CE271780059CAA4 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C53275A2CE271780059CAA4 /* ViewController.swift */; };
+		2C53275D2CE27A270059CAA4 /* Camera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C53275C2CE27A270059CAA4 /* Camera.swift */; };
+		2C53275F2CE292BA0059CAA4 /* FloatN.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C53275E2CE292BA0059CAA4 /* FloatN.swift */; };
+		2C5327612CE292D90059CAA4 /* MyMesh.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5327602CE292D90059CAA4 /* MyMesh.swift */; };
+		2CF9032029BE6510000D2729 /* MetalLabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF9031F29BE6510000D2729 /* MetalLabApp.swift */; };
+		2CF9032229BE6510000D2729 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF9032129BE6510000D2729 /* ContentView.swift */; };
+		2CF9032429BE6515000D2729 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2CF9032329BE6515000D2729 /* Assets.xcassets */; };
+		2CF9032729BE6515000D2729 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2CF9032629BE6515000D2729 /* Preview Assets.xcassets */; };
+		2CF9032F29BE653B000D2729 /* MetalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF9032E29BE653B000D2729 /* MetalView.swift */; };
+		2CF9033129BE6824000D2729 /* Renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF9033029BE6824000D2729 /* Renderer.swift */; };
+		2CF9033329BE7402000D2729 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 2CF9033229BE7402000D2729 /* Shaders.metal */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		2C5327582CE26D4B0059CAA4 /* Scene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scene.swift; sourceTree = "<group>"; };
+		2C53275A2CE271780059CAA4 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		2C53275C2CE27A270059CAA4 /* Camera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Camera.swift; sourceTree = "<group>"; };
+		2C53275E2CE292BA0059CAA4 /* FloatN.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatN.swift; sourceTree = "<group>"; };
+		2C5327602CE292D90059CAA4 /* MyMesh.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyMesh.swift; sourceTree = "<group>"; };
+		2CF9031C29BE6510000D2729 /* MetalLab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalLab.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2CF9031F29BE6510000D2729 /* MetalLabApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalLabApp.swift; sourceTree = "<group>"; };
+		2CF9032129BE6510000D2729 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		2CF9032329BE6515000D2729 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2CF9032629BE6515000D2729 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		2CF9032829BE6515000D2729 /* MetalLab.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MetalLab.entitlements; sourceTree = "<group>"; };
+		2CF9032E29BE653B000D2729 /* MetalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalView.swift; sourceTree = "<group>"; };
+		2CF9033029BE6824000D2729 /* Renderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Renderer.swift; sourceTree = "<group>"; };
+		2CF9033229BE7402000D2729 /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		2CF9031929BE6510000D2729 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2CF9031329BE6510000D2729 = {
+			isa = PBXGroup;
+			children = (
+				2CF9031E29BE6510000D2729 /* MetalLab */,
+				2CF9031D29BE6510000D2729 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		2CF9031D29BE6510000D2729 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				2CF9031C29BE6510000D2729 /* MetalLab.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		2CF9031E29BE6510000D2729 /* MetalLab */ = {
+			isa = PBXGroup;
+			children = (
+				2CF9031F29BE6510000D2729 /* MetalLabApp.swift */,
+				2CF9032129BE6510000D2729 /* ContentView.swift */,
+				2C53275A2CE271780059CAA4 /* ViewController.swift */,
+				2CF9032E29BE653B000D2729 /* MetalView.swift */,
+				2C5327582CE26D4B0059CAA4 /* Scene.swift */,
+				2C53275C2CE27A270059CAA4 /* Camera.swift */,
+				2CF9033029BE6824000D2729 /* Renderer.swift */,
+				2CF9033229BE7402000D2729 /* Shaders.metal */,
+				2C53275E2CE292BA0059CAA4 /* FloatN.swift */,
+				2C5327602CE292D90059CAA4 /* MyMesh.swift */,
+				2CF9032329BE6515000D2729 /* Assets.xcassets */,
+				2CF9032829BE6515000D2729 /* MetalLab.entitlements */,
+				2CF9032529BE6515000D2729 /* Preview Content */,
+			);
+			path = MetalLab;
+			sourceTree = "<group>";
+		};
+		2CF9032529BE6515000D2729 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				2CF9032629BE6515000D2729 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		2CF9031B29BE6510000D2729 /* MetalLab */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2CF9032B29BE6515000D2729 /* Build configuration list for PBXNativeTarget "MetalLab" */;
+			buildPhases = (
+				2CF9031829BE6510000D2729 /* Sources */,
+				2CF9031929BE6510000D2729 /* Frameworks */,
+				2CF9031A29BE6510000D2729 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MetalLab;
+			productName = MetalLab;
+			productReference = 2CF9031C29BE6510000D2729 /* MetalLab.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		2CF9031429BE6510000D2729 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1420;
+				LastUpgradeCheck = 1610;
+				TargetAttributes = {
+					2CF9031B29BE6510000D2729 = {
+						CreatedOnToolsVersion = 14.2;
+					};
+				};
+			};
+			buildConfigurationList = 2CF9031729BE6510000D2729 /* Build configuration list for PBXProject "MetalLab" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 2CF9031329BE6510000D2729;
+			productRefGroup = 2CF9031D29BE6510000D2729 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				2CF9031B29BE6510000D2729 /* MetalLab */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		2CF9031A29BE6510000D2729 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2CF9032729BE6515000D2729 /* Preview Assets.xcassets in Resources */,
+				2CF9032429BE6515000D2729 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2CF9031829BE6510000D2729 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2C53275F2CE292BA0059CAA4 /* FloatN.swift in Sources */,
+				2C53275D2CE27A270059CAA4 /* Camera.swift in Sources */,
+				2CF9033129BE6824000D2729 /* Renderer.swift in Sources */,
+				2CF9032F29BE653B000D2729 /* MetalView.swift in Sources */,
+				2C5327592CE26D4B0059CAA4 /* Scene.swift in Sources */,
+				2CF9032229BE6510000D2729 /* ContentView.swift in Sources */,
+				2C53275B2CE271780059CAA4 /* ViewController.swift in Sources */,
+				2CF9032029BE6510000D2729 /* MetalLabApp.swift in Sources */,
+				2C5327612CE292D90059CAA4 /* MyMesh.swift in Sources */,
+				2CF9033329BE7402000D2729 /* Shaders.metal in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		2CF9032929BE6515000D2729 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.1;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		2CF9032A29BE6515000D2729 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.1;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		2CF9032C29BE6515000D2729 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MetalLab/MetalLab.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_ASSET_PATHS = "\"MetalLab/Preview Content\"";
+				DEVELOPMENT_TEAM = VDC2JMF3CC;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ivanmcode.MetalLab;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		2CF9032D29BE6515000D2729 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MetalLab/MetalLab.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_ASSET_PATHS = "\"MetalLab/Preview Content\"";
+				DEVELOPMENT_TEAM = VDC2JMF3CC;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ivanmcode.MetalLab;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2CF9031729BE6510000D2729 /* Build configuration list for PBXProject "MetalLab" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2CF9032929BE6515000D2729 /* Debug */,
+				2CF9032A29BE6515000D2729 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2CF9032B29BE6515000D2729 /* Build configuration list for PBXNativeTarget "MetalLab" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2CF9032C29BE6515000D2729 /* Debug */,
+				2CF9032D29BE6515000D2729 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 2CF9031429BE6510000D2729 /* Project object */;
+}
