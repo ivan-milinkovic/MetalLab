@@ -15,7 +15,7 @@ class ViewController: NSObject, ObservableObject {
     
     func load() {
         scene.load(device: renderer.device)
-        renderer.meshBuffer = scene.triangleMesh.buffer
+        renderer.mesh = scene.mesh
     }
 }
 

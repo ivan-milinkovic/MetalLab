@@ -2,10 +2,9 @@ import SwiftUI
 
 @main
 struct MetalLabApp: App {
+    
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    
     let viewController = ViewController()
-    
     
     var body: some Scene {
         WindowGroup {

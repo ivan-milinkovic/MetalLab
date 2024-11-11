@@ -13,15 +13,17 @@ struct VertexOutput {
     float3 normal;
     float4 color;
     float2 uv;
+    bool is_textured;
 };
 
 struct Constants {
     float4x4 projectionMatrix;
     float4x4 viewMatrix;
+    int2 is_textured; // boolean and int have size issues with swift
 };
 
 
-vertex VertexOutput basic_vertex(
+vertex VertexOutput vertex_main(
     VertexInput vertexData [[stage_in]],
     constant Constants& constants [[buffer(1)]])
 {
@@ -30,12 +32,32 @@ vertex VertexOutput basic_vertex(
     out.normal = vertexData.normal;
     out.color = vertexData.color;
     out.uv = vertexData.uv;
+    out.is_textured = constants.is_textured.x == 1;
     return out;
 }
 
+float4 checker_board(float2 uv, float scale);
 
-fragment half4 basic_fragment(VertexOutput fragmentData [[stage_in]]) {
-    return half4(fragmentData.color);
+fragment float4 fragment_main(
+    VertexOutput fragmentData [[stage_in]],
+    texture2d<float, access::sample> texture [[texture(0)]],
+    sampler sampler [[sampler(0)]])
+{
+    if (!fragmentData.is_textured) {
+        return fragmentData.color;
+    }
+    return texture.sample(sampler, fragmentData.uv);
+    
+//    auto cb = checker_board(fragmentData.uv, 0.05);
+//    return cb * fragmentData.color;
+}
+
+float4 checker_board(float2 uv, float scale)
+{
+    int x = floor(uv.x / scale);
+    int y = floor(uv.y / scale);
+    bool isEven = (x + y) % 2;
+    return isEven ? float4(1.0) : float4(0.0);
 }
 
 

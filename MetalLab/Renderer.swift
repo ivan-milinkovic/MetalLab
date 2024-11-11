@@ -11,6 +11,7 @@ class Renderer {
     var pipelineState: MTLRenderPipelineState!
     let pixelFormat: MTLPixelFormat = .rgba8Unorm;
     var renderPassDesc: MTLRenderPassDescriptor!
+    var textureSamplerState: MTLSamplerState!
     var commandQueue: MTLCommandQueue!
     var constantsBuff: MTLBuffer!
     var mtkView: MTKView!
@@ -18,6 +19,7 @@ class Renderer {
     struct Constants {
         var projectionMatrix: float4x4 = matrix_identity_float4x4
         var viewMatrix: float4x4 = matrix_identity_float4x4
+        var textured: SIMD2<Int> = [0,0] // treat as a boolean, boolean and int types have size issues with metal
     }
     
     init() { }
@@ -37,8 +39,8 @@ class Renderer {
         guard commandQueue != nil else { throw MyError.setup("No command queue") }
         
         guard let lib = device.makeDefaultLibrary() else { throw MyError.setup("no library") }
-        guard let vertexFunction = lib.makeFunction(name: "basic_vertex") else { throw MyError.setup("no vertex shader") }
-        guard let fragmentFunction = lib.makeFunction(name: "basic_fragment") else { throw MyError.setup("no fragment shader") }
+        guard let vertexFunction = lib.makeFunction(name: "vertex_main") else { throw MyError.setup("no vertex shader") }
+        guard let fragmentFunction = lib.makeFunction(name: "fragment_main") else { throw MyError.setup("no fragment shader") }
         
         let pipelineDesc = MTLRenderPipelineDescriptor()
         pipelineDesc.vertexFunction = vertexFunction
@@ -54,6 +56,13 @@ class Renderer {
             throw MyError.setup("No pipeline state")
         }
         
+        let samplerDesc = MTLSamplerDescriptor()
+        samplerDesc.normalizedCoordinates = true
+        samplerDesc.magFilter = .linear
+        samplerDesc.minFilter = .linear
+        samplerDesc.sAddressMode = .repeat
+        samplerDesc.tAddressMode = .repeat
+        textureSamplerState = device.makeSamplerState(descriptor: samplerDesc)
         
         renderPassDesc = MTLRenderPassDescriptor()
         renderPassDesc.colorAttachments[0].loadAction = .clear
@@ -110,12 +119,12 @@ class Renderer {
         constants.pointee.viewMatrix = viewMat
     }
     
-    var meshBuffer: MTLBuffer?
+    var mesh: MyMesh?
     
     @MainActor
     func draw() {
         guard let drawable = mtkView.currentDrawable else { return }
-        guard let vertexBuffer = meshBuffer else { return }
+        guard let mesh = mesh else { return }
         
         renderPassDesc.colorAttachments[0].texture = drawable.texture
         
@@ -124,9 +133,17 @@ class Renderer {
         guard let enc = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDesc) else { return }
         enc.setFrontFacing(.counterClockwise)
         enc.setRenderPipelineState(pipelineState)
-        enc.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
+        enc.setVertexBuffer(mesh.buffer, offset: 0, index: 0)
+        let constants = constantsBuff.contents().bindMemory(to: Constants.self, capacity: 1)
+        if let texture = mesh.texture {
+            enc.setFragmentTexture(texture, index: 0)
+            constants.pointee.textured = .one
+        } else {
+            constants.pointee.textured = .zero
+        }
+        enc.setFragmentSamplerState(textureSamplerState, index: 0)
         enc.setVertexBuffer(constantsBuff, offset: 0, index: 1)
-        enc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
+        enc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: mesh.vertexCount)
         enc.endEncoding()
         
         commandBuffer.present(drawable)

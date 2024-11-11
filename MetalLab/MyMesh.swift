@@ -1,12 +1,50 @@
 import Foundation
 import Metal
+import MetalKit
 
 class MyMesh {
     let buffer: MTLBuffer
-    init(vertices: [VertexData], device: MTLDevice) {
+    let texture: MTLTexture?
+    let vertexCount: Int
+    
+    init(vertices: [VertexData], texture: MTLTexture?, device: MTLDevice) {
         var vs = vertices
         let byteLength = MemoryLayout<VertexData>.stride * vertices.count
         buffer = device.makeBuffer(bytes: &vs, length: byteLength, options: .storageModeShared)!
+        vertexCount = vertices.count
+        self.texture = texture
+    }
+    
+    static func triangle(device: MTLDevice) -> MyMesh {
+        let n:Float3 = [0, 0, -1]
+        let triangle: [VertexData] = [
+            VertexData(position: [ 0,  1, -2], normal: n, color: [0, 0, 1, 1], uv: [ 0.5,    0]), // top
+            VertexData(position: [-1, -1, -2], normal: n, color: [0, 1, 0, 1], uv: [ 0.0,  1.0]), // bot left
+            VertexData(position: [ 1, -1, -2], normal: n, color: [1, 0, 0, 1], uv: [ 1.0,  1.0]), // bot right, counter-clockwise
+        ]
+        return MyMesh(vertices: triangle, texture: nil, device: device)
+    }
+    
+    static func rectangle(device: MTLDevice) -> MyMesh {
+        let n:Float3 = [0, 0, -1]
+        let triangle: [VertexData] = [
+            VertexData(position: [-1,  1, -2], normal: n, color: .one, uv: [ 0.0,  0.0]), // top left
+            VertexData(position: [-1, -1, -2], normal: n, color: .one, uv: [ 0.0,  1.0]), // bot left
+            VertexData(position: [ 1, -1, -2], normal: n, color: .one, uv: [ 1.0,  1.0]), // bot right, counter-clockwise
+            
+            VertexData(position: [-1,  1, -2], normal: n, color: .one, uv: [ 0.0,  0.0]), // top left
+            VertexData(position: [ 1, -1, -2], normal: n, color: .one, uv: [ 1.0,  1.0]), // bot right
+            VertexData(position: [ 1,  1, -2], normal: n, color: .one, uv: [ 1.0,  0.0]), // top right, counter-clockwise
+        ]
+        let tex = loadPlaceholderTexture(device)
+        return MyMesh(vertices: triangle, texture: tex, device: device)
+    }
+    
+    static func loadPlaceholderTexture(_ device: MTLDevice) -> MTLTexture {
+        let tl = MTKTextureLoader(device: device)
+        let tex = try! tl.newTexture(name: "tex", scaleFactor: 1.0, bundle: .main,
+                                     options: [.textureUsage: MTLTextureUsage.shaderRead.rawValue, .textureStorageMode: MTLStorageMode.private.rawValue])
+        return tex
     }
 }
 
