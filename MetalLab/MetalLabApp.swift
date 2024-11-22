@@ -10,9 +10,6 @@ struct MetalLabApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(viewController)
-                .task {
-                    viewController.load()
-                }
         }
     }
 }
@@ -22,4 +19,3 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         true
     }
 }
-

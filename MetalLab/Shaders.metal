@@ -29,7 +29,7 @@ vertex VertexOutput vertex_main(
 {
     VertexOutput out;
     out.position = constants.projectionMatrix * constants.viewMatrix * float4(vertexData.position, 1);
-    out.normal = vertexData.normal;
+    out.normal = vertexData.normal; // todo: transform the normal
     out.color = vertexData.color;
     out.uv = vertexData.uv;
     out.is_textured = constants.is_textured.x == 1;
@@ -43,8 +43,12 @@ fragment float4 fragment_main(
     texture2d<float, access::sample> texture [[texture(0)]],
     sampler sampler [[sampler(0)]])
 {
+    float3 lightDir = {1, -1, 0};
+    lightDir = normalize(-lightDir);
+    float f = max(0.1, dot(fragmentData.normal, lightDir));
+    
     if (!fragmentData.is_textured) {
-        return fragmentData.color;
+        return f*fragmentData.color;
     }
     return texture.sample(sampler, fragmentData.uv);
     

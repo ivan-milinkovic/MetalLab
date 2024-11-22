@@ -9,14 +9,15 @@ class Renderer {
     
     var device: MTLDevice!
     var pipelineState: MTLRenderPipelineState!
-    let pixelFormat: MTLPixelFormat = .rgba8Unorm;
-    var renderPassDesc: MTLRenderPassDescriptor!
+    let colorPixelFormat: MTLPixelFormat = .rgba8Unorm;
+    var depthStencilState: MTLDepthStencilState!
     var textureSamplerState: MTLSamplerState!
     var commandQueue: MTLCommandQueue!
     var constantsBuff: MTLBuffer!
     var mtkView: MTKView!
+    let depthPixelFormat = MTLPixelFormat.depth32Float
     
-    struct Constants {
+    struct FrameConstants {
         var projectionMatrix: float4x4 = matrix_identity_float4x4
         var viewMatrix: float4x4 = matrix_identity_float4x4
         var textured: SIMD2<Int> = [0,0] // treat as a boolean, boolean and int types have size issues with metal
@@ -29,11 +30,29 @@ class Renderer {
     }
     
     @MainActor
-    func setup() throws {
+    func setupDevice() throws {
         guard let dev = MTLCreateSystemDefaultDevice() else {
             throw MyError.setup("No Device")
         }
         device = dev
+    }
+    
+    @MainActor
+    func setMtkView(_ mv: MTKView) throws(MyError) {
+        self.mtkView = mv
+        mtkView.device = device
+        mtkView.clearColor = MTLClearColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0)
+        mtkView.colorPixelFormat = colorPixelFormat
+        mtkView.framebufferOnly = true
+        mtkView.depthStencilPixelFormat = depthPixelFormat
+        mtkView.clearDepth = 1.0
+        mtkView.preferredFramesPerSecond = 60
+        mtkView.sampleCount = 1
+        try! setupPipeline()
+    }
+    
+    @MainActor
+    func setupPipeline() throws(MyError) {
         
         commandQueue = device.makeCommandQueue()
         guard commandQueue != nil else { throw MyError.setup("No command queue") }
@@ -45,10 +64,13 @@ class Renderer {
         let pipelineDesc = MTLRenderPipelineDescriptor()
         pipelineDesc.vertexFunction = vertexFunction
         pipelineDesc.fragmentFunction = fragmentFunction
-        pipelineDesc.colorAttachments[0].pixelFormat = pixelFormat
-        pipelineDesc.vertexDescriptor = VertexData.vertexDescriptor
         
-        constantsBuff = device.makeBuffer(length: MemoryLayout<Constants>.size, options: .storageModeShared)
+        pipelineDesc.vertexDescriptor = VertexData.vertexDescriptor
+        pipelineDesc.colorAttachments[0].pixelFormat = colorPixelFormat
+        pipelineDesc.depthAttachmentPixelFormat = depthPixelFormat
+        pipelineDesc.rasterSampleCount = mtkView.sampleCount
+        
+        constantsBuff = device.makeBuffer(length: MemoryLayout<FrameConstants>.size, options: .storageModeShared)
         
         do {
             pipelineState = try device.makeRenderPipelineState(descriptor: pipelineDesc)
@@ -64,17 +86,10 @@ class Renderer {
         samplerDesc.tAddressMode = .repeat
         textureSamplerState = device.makeSamplerState(descriptor: samplerDesc)
         
-        renderPassDesc = MTLRenderPassDescriptor()
-        renderPassDesc.colorAttachments[0].loadAction = .clear
-        renderPassDesc.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
-    }
-    
-    @MainActor
-    func setMtkView(_ mv: MTKView) throws(MyError) {
-        self.mtkView = mv
-        mtkView.device = device
-        mtkView.colorPixelFormat = pixelFormat
-        mtkView.framebufferOnly = true
+        let depthDesc = MTLDepthStencilDescriptor()
+        depthDesc.isDepthWriteEnabled = true
+        depthDesc.depthCompareFunction = .less
+        depthStencilState = device.makeDepthStencilState(descriptor: depthDesc)
     }
     
     var camera: Camera!
@@ -105,7 +120,7 @@ class Renderer {
             SIMD4(0,  0,  Tz, 0)
         )
         
-        let constants = constantsBuff.contents().bindMemory(to: Constants.self, capacity: 1)
+        let constants = constantsBuff.contents().bindMemory(to: FrameConstants.self, capacity: 1)
         constants.pointee.projectionMatrix = projection
     }
     
@@ -115,7 +130,7 @@ class Renderer {
         let transMat = float4x4.init([1,0,0,0], [0,1,0,0], [0,0,1,0], SIMD4(-camera.position, 1))
         let viewMat = transMat * rotMat
         
-        let constants = constantsBuff.contents().bindMemory(to: Constants.self, capacity: 1)
+        let constants = constantsBuff.contents().bindMemory(to: FrameConstants.self, capacity: 1)
         constants.pointee.viewMatrix = viewMat
     }
     
@@ -125,29 +140,41 @@ class Renderer {
     func draw() {
         guard let drawable = mtkView.currentDrawable else { return }
         guard let mesh = mesh else { return }
-        
-        renderPassDesc.colorAttachments[0].texture = drawable.texture
+        guard let renderPassDesc = mtkView.currentRenderPassDescriptor else { return }
         
         guard let commandBuffer = commandQueue.makeCommandBuffer() else { return }
-        
         guard let enc = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDesc) else { return }
-        enc.setFrontFacing(.counterClockwise)
+        
         enc.setRenderPipelineState(pipelineState)
-        enc.setVertexBuffer(mesh.buffer, offset: 0, index: 0)
-        let constants = constantsBuff.contents().bindMemory(to: Constants.self, capacity: 1)
+        enc.setDepthStencilState(depthStencilState)
+        
+        enc.setFrontFacing(.counterClockwise)
+        enc.setCullMode(.back)
+        
+        enc.setVertexBuffer(mesh.vertexBuffer, offset: 0, index: 0)
+        let constants = constantsBuff.contents().bindMemory(to: FrameConstants.self, capacity: 1)
         if let texture = mesh.texture {
             enc.setFragmentTexture(texture, index: 0)
             constants.pointee.textured = .one
         } else {
             constants.pointee.textured = .zero
         }
+        
         enc.setFragmentSamplerState(textureSamplerState, index: 0)
+        
         enc.setVertexBuffer(constantsBuff, offset: 0, index: 1)
-        enc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: mesh.vertexCount)
+        
+        if let indexBuffer = mesh.indexBuffer {
+            enc.drawIndexedPrimitives(type: .triangle, indexCount: mesh.indexCount, indexType: .uint32, indexBuffer: indexBuffer, indexBufferOffset: 0)
+        } else {
+            enc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: mesh.vertexCount)
+        }
+        
         enc.endEncoding()
         
         commandBuffer.present(drawable)
         commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
     }
     
 }

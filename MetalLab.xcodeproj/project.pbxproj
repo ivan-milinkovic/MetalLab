@@ -7,11 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2C007C0D2CF0811200F6EEAE /* box.obj in Resources */ = {isa = PBXBuildFile; fileRef = 2C007C0C2CF0811200F6EEAE /* box.obj */; };
+		2C007C0E2CF0811200F6EEAE /* box.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 2C007C0B2CF0811200F6EEAE /* box.mtl */; };
 		2C5327592CE26D4B0059CAA4 /* Scene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5327582CE26D4B0059CAA4 /* Scene.swift */; };
 		2C53275B2CE271780059CAA4 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C53275A2CE271780059CAA4 /* ViewController.swift */; };
 		2C53275D2CE27A270059CAA4 /* Camera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C53275C2CE27A270059CAA4 /* Camera.swift */; };
 		2C53275F2CE292BA0059CAA4 /* FloatN.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C53275E2CE292BA0059CAA4 /* FloatN.swift */; };
 		2C5327612CE292D90059CAA4 /* MyMesh.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5327602CE292D90059CAA4 /* MyMesh.swift */; };
+		2C5A393D2CEFC94F0019AED7 /* ObjLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5A393C2CEFC94F0019AED7 /* ObjLoader.swift */; };
+		2C5A39412CEFC97A0019AED7 /* monkey.obj in Resources */ = {isa = PBXBuildFile; fileRef = 2C5A393F2CEFC97A0019AED7 /* monkey.obj */; };
+		2C5A39422CEFC97A0019AED7 /* monkey.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 2C5A393E2CEFC97A0019AED7 /* monkey.mtl */; };
 		2CF9032029BE6510000D2729 /* MetalLabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF9031F29BE6510000D2729 /* MetalLabApp.swift */; };
 		2CF9032229BE6510000D2729 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF9032129BE6510000D2729 /* ContentView.swift */; };
 		2CF9032429BE6515000D2729 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2CF9032329BE6515000D2729 /* Assets.xcassets */; };
@@ -22,11 +27,16 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		2C007C0B2CF0811200F6EEAE /* box.mtl */ = {isa = PBXFileReference; lastKnownFileType = text; path = box.mtl; sourceTree = "<group>"; };
+		2C007C0C2CF0811200F6EEAE /* box.obj */ = {isa = PBXFileReference; lastKnownFileType = text; path = box.obj; sourceTree = "<group>"; };
 		2C5327582CE26D4B0059CAA4 /* Scene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scene.swift; sourceTree = "<group>"; };
 		2C53275A2CE271780059CAA4 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		2C53275C2CE27A270059CAA4 /* Camera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Camera.swift; sourceTree = "<group>"; };
 		2C53275E2CE292BA0059CAA4 /* FloatN.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatN.swift; sourceTree = "<group>"; };
 		2C5327602CE292D90059CAA4 /* MyMesh.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyMesh.swift; sourceTree = "<group>"; };
+		2C5A393C2CEFC94F0019AED7 /* ObjLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjLoader.swift; sourceTree = "<group>"; };
+		2C5A393E2CEFC97A0019AED7 /* monkey.mtl */ = {isa = PBXFileReference; lastKnownFileType = text; path = monkey.mtl; sourceTree = "<group>"; };
+		2C5A393F2CEFC97A0019AED7 /* monkey.obj */ = {isa = PBXFileReference; lastKnownFileType = text; path = monkey.obj; sourceTree = "<group>"; };
 		2CF9031C29BE6510000D2729 /* MetalLab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalLab.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2CF9031F29BE6510000D2729 /* MetalLabApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalLabApp.swift; sourceTree = "<group>"; };
 		2CF9032129BE6510000D2729 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -49,9 +59,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2C5A39402CEFC97A0019AED7 /* res */ = {
+			isa = PBXGroup;
+			children = (
+				2C5A393E2CEFC97A0019AED7 /* monkey.mtl */,
+				2C5A393F2CEFC97A0019AED7 /* monkey.obj */,
+				2C007C0B2CF0811200F6EEAE /* box.mtl */,
+				2C007C0C2CF0811200F6EEAE /* box.obj */,
+			);
+			path = res;
+			sourceTree = "<group>";
+		};
 		2CF9031329BE6510000D2729 = {
 			isa = PBXGroup;
 			children = (
+				2C5A39402CEFC97A0019AED7 /* res */,
 				2CF9031E29BE6510000D2729 /* MetalLab */,
 				2CF9031D29BE6510000D2729 /* Products */,
 			);
@@ -78,6 +100,7 @@
 				2CF9033229BE7402000D2729 /* Shaders.metal */,
 				2C53275E2CE292BA0059CAA4 /* FloatN.swift */,
 				2C5327602CE292D90059CAA4 /* MyMesh.swift */,
+				2C5A393C2CEFC94F0019AED7 /* ObjLoader.swift */,
 				2CF9032329BE6515000D2729 /* Assets.xcassets */,
 				2CF9032829BE6515000D2729 /* MetalLab.entitlements */,
 				2CF9032529BE6515000D2729 /* Preview Content */,
@@ -151,8 +174,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2C007C0D2CF0811200F6EEAE /* box.obj in Resources */,
+				2C007C0E2CF0811200F6EEAE /* box.mtl in Resources */,
 				2CF9032729BE6515000D2729 /* Preview Assets.xcassets in Resources */,
 				2CF9032429BE6515000D2729 /* Assets.xcassets in Resources */,
+				2C5A39412CEFC97A0019AED7 /* monkey.obj in Resources */,
+				2C5A39422CEFC97A0019AED7 /* monkey.mtl in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -163,6 +190,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2C5A393D2CEFC94F0019AED7 /* ObjLoader.swift in Sources */,
 				2C53275F2CE292BA0059CAA4 /* FloatN.swift in Sources */,
 				2C53275D2CE27A270059CAA4 /* Camera.swift in Sources */,
 				2CF9033129BE6824000D2729 /* Renderer.swift in Sources */,

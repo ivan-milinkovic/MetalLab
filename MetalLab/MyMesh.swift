@@ -2,16 +2,32 @@ import Foundation
 import Metal
 import MetalKit
 
+typealias VertexIndexType = UInt32
+let sentinelIndex: VertexIndexType = 0xFFFFFFFF
+
 class MyMesh {
-    let buffer: MTLBuffer
-    let texture: MTLTexture?
+    let vertexBuffer: MTLBuffer
     let vertexCount: Int
     
-    init(vertices: [VertexData], texture: MTLTexture?, device: MTLDevice) {
+    let indexBuffer: MTLBuffer?
+    let indexCount: Int
+    
+    let texture: MTLTexture?
+    
+    init(vertices: [VertexData], indices: [VertexIndexType]? = nil, texture: MTLTexture?, device: MTLDevice) {
         var vs = vertices
         let byteLength = MemoryLayout<VertexData>.stride * vertices.count
-        buffer = device.makeBuffer(bytes: &vs, length: byteLength, options: .storageModeShared)!
+        vertexBuffer = device.makeBuffer(bytes: &vs, length: byteLength, options: .storageModeShared)!
         vertexCount = vertices.count
+        
+        if var ind = indices {
+            let indByteLen = MemoryLayout<VertexIndexType>.stride * ind.count
+            self.indexBuffer = device.makeBuffer(bytes: &ind, length: indByteLen, options: .storageModeShared)
+            self.indexCount = ind.count
+        } else {
+            self.indexBuffer = nil
+            self.indexCount = 0
+        }
         self.texture = texture
     }
     
@@ -38,6 +54,12 @@ class MyMesh {
         ]
         let tex = loadPlaceholderTexture(device)
         return MyMesh(vertices: triangle, texture: tex, device: device)
+    }
+    
+    static func monkey(device: MTLDevice) -> MyMesh {
+        let url = Bundle.main.url(forResource: "monkey", withExtension: "obj")!
+        let ramMesh = loadObj(url)
+        return MyMesh(vertices: ramMesh.vertices, indices: nil, texture: nil, device: device)
     }
     
     static func loadPlaceholderTexture(_ device: MTLDevice) -> MTLTexture {

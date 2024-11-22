@@ -9,7 +9,7 @@ class ViewController: NSObject, ObservableObject {
     override init() {
         scene = MyScene()
         renderer = Renderer()
-        try! renderer.setup()
+        try! renderer.setupDevice()
         renderer.camera = scene.camera
     }
     
@@ -25,7 +25,12 @@ extension ViewController: MTKViewDelegate {
     }
     
     func draw(in view: MTKView) {
+        //let d0 = Date()
+        
         renderer.update()
         renderer.draw()
+        
+        //let dt = Date().timeIntervalSince(d0)
+        //print(String(format: "render time: %.2fms, ~fps: %d", dt * 1000, Int(1 / dt)))
     }
 }

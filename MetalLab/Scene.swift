@@ -8,7 +8,9 @@ class MyScene {
     var mesh: MyMesh!
     
     func load(device: MTLDevice) {
-//        mesh = MyMesh.triangle(device: device)
-        mesh = MyMesh.rectangle(device: device)
+        //mesh = MyMesh.triangle(device: device)
+        //mesh = MyMesh.rectangle(device: device)
+        mesh = MyMesh.monkey(device: device)
+        camera.rotate(dx: -.pi*0.5, dy: 0)
     }
 }
