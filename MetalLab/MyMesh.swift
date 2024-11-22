@@ -29,7 +29,29 @@ class MyMesh {
             self.indexCount = 0
         }
         self.texture = texture
+        
+        updateTransform()
     }
+    
+    // positioning
+    var position: SIMD3<TFloat> = [0, 0, 0]
+    var orientation: simd_quatf = simd_quatf(angle: 0.0, axis: [0, 0, 1])
+    var transform: float4x4 = matrix_identity_float4x4
+    
+    func rotate(dx: TFloat, dy: TFloat) {
+        let xq = simd_quatf(angle: dx, axis: [1, 0, 0])
+        let yq = simd_quatf(angle: dy, axis: [0, 1, 0])
+        orientation = orientation * xq * yq
+        
+        updateTransform()
+    }
+    
+    func updateTransform() {
+        let rotMat = float4x4(orientation.inverse)
+        let transMat = float4x4.init([1,0,0,0], [0,1,0,0], [0,0,1,0], SIMD4(-position, 1))
+        transform = transMat * rotMat
+    }
+    // ---
     
     static func triangle(device: MTLDevice) -> MyMesh {
         let n:Float3 = [0, 0, -1]

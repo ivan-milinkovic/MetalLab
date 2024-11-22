@@ -11,6 +11,6 @@ class MyScene {
         //mesh = MyMesh.triangle(device: device)
         //mesh = MyMesh.rectangle(device: device)
         mesh = MyMesh.monkey(device: device)
-        camera.rotate(dx: -.pi*0.5, dy: 0)
+        mesh.rotate(dx: -.pi*0.5, dy: 0)
     }
 }

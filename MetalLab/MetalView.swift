@@ -7,12 +7,12 @@ struct MetalView: NSViewRepresentable {
     
     func makeNSView(context: Context) -> MTKView {
         let mtkView = MTKView()
-        try! viewController.renderer.setMtkView(mtkView)
+        try! viewController.setMtkView(mtkView)
         mtkView.delegate = viewController
         return mtkView
     }
     
-    func updateNSView(_ nsView: MTKView, context: Context) {
+    func updateNSView(_ mtkView: MTKView, context: Context) {
         
     }
 }

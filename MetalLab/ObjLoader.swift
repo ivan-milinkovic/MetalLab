@@ -85,6 +85,7 @@ func loadObj(_ url: URL) -> RamMesh {
         // if usedIndexSet.contains(faceFTN.vertexIndex) {
         //     indices.append(faceFTN.vertexIndex)
         // }
+        
         // this will create duplicate vertices, ignoring indexing
         let vdata = VertexData(position: vertices[Int(faceFTN.vertexIndex)],
                                normal: normals[Int(faceFTN.normalIndex)],

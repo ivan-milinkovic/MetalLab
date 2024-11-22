@@ -16,23 +16,29 @@ struct VertexOutput {
     bool is_textured;
 };
 
-struct Constants {
+struct FrameStaticData {
     float4x4 projectionMatrix;
     float4x4 viewMatrix;
+    
+};
+
+struct ObjectStaticData {
+    float4x4 modelViewProjectionMatrix;
+    float4x4 modelViewInverseTransposeMatrix;
     int2 is_textured; // boolean and int have size issues with swift
 };
 
 
 vertex VertexOutput vertex_main(
     VertexInput vertexData [[stage_in]],
-    constant Constants& constants [[buffer(1)]])
+    constant ObjectStaticData& objectStaticData [[buffer(1)]])
 {
     VertexOutput out;
-    out.position = constants.projectionMatrix * constants.viewMatrix * float4(vertexData.position, 1);
-    out.normal = vertexData.normal; // todo: transform the normal
+    out.position = objectStaticData.modelViewProjectionMatrix * float4(vertexData.position, 1);
+    out.normal = normalize((objectStaticData.modelViewInverseTransposeMatrix * float4(vertexData.normal, 0)).xyz);
     out.color = vertexData.color;
     out.uv = vertexData.uv;
-    out.is_textured = constants.is_textured.x == 1;
+    out.is_textured = objectStaticData.is_textured.x == 1;
     return out;
 }
 
@@ -43,14 +49,14 @@ fragment float4 fragment_main(
     texture2d<float, access::sample> texture [[texture(0)]],
     sampler sampler [[sampler(0)]])
 {
-    float3 lightDir = {1, -1, 0};
+    float3 lightDir = {1, -1, -1};
     lightDir = normalize(-lightDir);
     float f = max(0.1, dot(fragmentData.normal, lightDir));
     
     if (!fragmentData.is_textured) {
         return f*fragmentData.color;
     }
-    return texture.sample(sampler, fragmentData.uv);
+    return f*texture.sample(sampler, fragmentData.uv);
     
 //    auto cb = checker_board(fragmentData.uv, 0.05);
 //    return cb * fragmentData.color;

@@ -12,7 +12,7 @@ extension Float4 {
     }
 }
 
-extension simd_float4x4 {
+extension float4x4 {
     init(rotationRads rads: Float, axis: SIMD3<Float>) {
         let x = axis.x
         let y = axis.y

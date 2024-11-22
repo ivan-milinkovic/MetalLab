@@ -5,6 +5,7 @@ import MetalKit
 class ViewController: NSObject, ObservableObject {
     let scene: MyScene
     let renderer: Renderer
+    var mtkView: MTKView!
     
     override init() {
         scene = MyScene()
@@ -16,18 +17,25 @@ class ViewController: NSObject, ObservableObject {
     func load() {
         scene.load(device: renderer.device)
         renderer.mesh = scene.mesh
+        
+        scene.camera.updateProjection(size: mtkView.drawableSize)
+        scene.camera.updateViewMatrix()
+    }
+    
+    func setMtkView(_ mtkView: MTKView) throws(MyError) {
+        self.mtkView = mtkView
+        try renderer.setMtkView(mtkView)
     }
 }
 
 extension ViewController: MTKViewDelegate {
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
-        renderer.updateProjection()
+        scene.camera.updateProjection(size: mtkView.drawableSize)
     }
     
     func draw(in view: MTKView) {
         //let d0 = Date()
         
-        renderer.update()
         renderer.draw()
         
         //let dt = Date().timeIntervalSince(d0)

@@ -13,13 +13,13 @@ class Renderer {
     var depthStencilState: MTLDepthStencilState!
     var textureSamplerState: MTLSamplerState!
     var commandQueue: MTLCommandQueue!
-    var constantsBuff: MTLBuffer!
+    var objectStaticDataBuff: MTLBuffer!
     var mtkView: MTKView!
     let depthPixelFormat = MTLPixelFormat.depth32Float
     
-    struct FrameConstants {
-        var projectionMatrix: float4x4 = matrix_identity_float4x4
-        var viewMatrix: float4x4 = matrix_identity_float4x4
+    struct ObjectStaticData {
+        var modelViewProjectionMatrix: float4x4 = matrix_identity_float4x4
+        var modelViewInverseTransposeMatrix: float4x4 = matrix_identity_float4x4
         var textured: SIMD2<Int> = [0,0] // treat as a boolean, boolean and int types have size issues with metal
     }
     
@@ -70,7 +70,7 @@ class Renderer {
         pipelineDesc.depthAttachmentPixelFormat = depthPixelFormat
         pipelineDesc.rasterSampleCount = mtkView.sampleCount
         
-        constantsBuff = device.makeBuffer(length: MemoryLayout<FrameConstants>.size, options: .storageModeShared)
+        objectStaticDataBuff = device.makeBuffer(length: MemoryLayout<ObjectStaticData>.size, options: .storageModeShared)
         
         do {
             pipelineState = try device.makeRenderPipelineState(descriptor: pipelineDesc)
@@ -92,48 +92,21 @@ class Renderer {
         depthStencilState = device.makeDepthStencilState(descriptor: depthDesc)
     }
     
+    func updateObjectStaticData(projectionMat: float4x4, viewMat: float4x4, modelMat: float4x4, texture: (any MTLTexture)?, encoder: MTLRenderCommandEncoder) {
+        let objectStaticData = objectStaticDataBuff.contents().bindMemory(to: ObjectStaticData.self, capacity: 1)
+        let viewModelMat = viewMat * modelMat
+        objectStaticData.pointee.modelViewProjectionMatrix = projectionMat * viewModelMat
+        objectStaticData.pointee.modelViewInverseTransposeMatrix = viewModelMat.inverse.transpose
+        
+        if let texture = texture {
+            encoder.setFragmentTexture(texture, index: 0)
+            objectStaticData.pointee.textured = .one
+        } else {
+            objectStaticData.pointee.textured = .zero
+        }
+    }
+    
     var camera: Camera!
-    
-    @MainActor
-    func update() {
-        updateProjection()
-        updateViewMatrix()
-    }
-    
-    @MainActor
-    func updateProjection() {
-        let fovRads: TFloat = 60 * TFloat.pi / 180.0
-        let near: TFloat = 1.0
-        let far: TFloat = 100.0
-        let aspect = TFloat(mtkView.drawableSize.width / mtkView.drawableSize.height)
-        
-        // right-handed
-        let Sy = 1 / tan(fovRads * 0.5)
-        let Sx = Sy / aspect
-        let dz = far - near
-        let Sz = -(far + near) / dz
-        let Tz = -2 * (far * near) / dz
-        let projection = float4x4(
-            SIMD4(Sx, 0,  0,  0),
-            SIMD4(0, Sy,  0,  0),
-            SIMD4(0,  0, Sz, -1),
-            SIMD4(0,  0,  Tz, 0)
-        )
-        
-        let constants = constantsBuff.contents().bindMemory(to: FrameConstants.self, capacity: 1)
-        constants.pointee.projectionMatrix = projection
-    }
-    
-    @MainActor
-    func updateViewMatrix() {
-        let rotMat = float4x4(camera.orientation.inverse)
-        let transMat = float4x4.init([1,0,0,0], [0,1,0,0], [0,0,1,0], SIMD4(-camera.position, 1))
-        let viewMat = transMat * rotMat
-        
-        let constants = constantsBuff.contents().bindMemory(to: FrameConstants.self, capacity: 1)
-        constants.pointee.viewMatrix = viewMat
-    }
-    
     var mesh: MyMesh?
     
     @MainActor
@@ -141,9 +114,14 @@ class Renderer {
         guard let drawable = mtkView.currentDrawable else { return }
         guard let mesh = mesh else { return }
         guard let renderPassDesc = mtkView.currentRenderPassDescriptor else { return }
-        
         guard let commandBuffer = commandQueue.makeCommandBuffer() else { return }
         guard let enc = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDesc) else { return }
+        
+        updateObjectStaticData(projectionMat: camera.projectionMatrix,
+                               viewMat: camera.viewMatrix,
+                               modelMat: mesh.transform,
+                               texture: mesh.texture,
+                               encoder: enc)
         
         enc.setRenderPipelineState(pipelineState)
         enc.setDepthStencilState(depthStencilState)
@@ -152,17 +130,9 @@ class Renderer {
         enc.setCullMode(.back)
         
         enc.setVertexBuffer(mesh.vertexBuffer, offset: 0, index: 0)
-        let constants = constantsBuff.contents().bindMemory(to: FrameConstants.self, capacity: 1)
-        if let texture = mesh.texture {
-            enc.setFragmentTexture(texture, index: 0)
-            constants.pointee.textured = .one
-        } else {
-            constants.pointee.textured = .zero
-        }
-        
         enc.setFragmentSamplerState(textureSamplerState, index: 0)
         
-        enc.setVertexBuffer(constantsBuff, offset: 0, index: 1)
+        enc.setVertexBuffer(objectStaticDataBuff, offset: 0, index: 1)
         
         if let indexBuffer = mesh.indexBuffer {
             enc.drawIndexedPrimitives(type: .triangle, indexCount: mesh.indexCount, indexType: .uint32, indexBuffer: indexBuffer, indexBufferOffset: 0)
