@@ -21,6 +21,7 @@ class Renderer {
         var modelViewProjectionMatrix: float4x4 = matrix_identity_float4x4
         var modelViewInverseTransposeMatrix: float4x4 = matrix_identity_float4x4
         var textured: SIMD2<Int> = [0,0] // treat as a boolean, boolean and int types have size issues with metal
+        var directionalLightDir: Float4 = .zeros
     }
     
     init() { }
@@ -92,11 +93,17 @@ class Renderer {
         depthStencilState = device.makeDepthStencilState(descriptor: depthDesc)
     }
     
-    func updateObjectStaticData(projectionMat: float4x4, viewMat: float4x4, modelMat: float4x4, texture: (any MTLTexture)?, encoder: MTLRenderCommandEncoder) {
+    func updateObjectStaticData(projectionMat: float4x4,
+                                viewMat: float4x4,
+                                modelMat: float4x4,
+                                lightDir: Float4,
+                                texture: (any MTLTexture)?,
+                                encoder: MTLRenderCommandEncoder) {
         let objectStaticData = objectStaticDataBuff.contents().bindMemory(to: ObjectStaticData.self, capacity: 1)
         let viewModelMat = viewMat * modelMat
         objectStaticData.pointee.modelViewProjectionMatrix = projectionMat * viewModelMat
         objectStaticData.pointee.modelViewInverseTransposeMatrix = viewModelMat.inverse.transpose
+        objectStaticData.pointee.directionalLightDir = viewMat * lightDir
         
         if let texture = texture {
             encoder.setFragmentTexture(texture, index: 0)
@@ -107,7 +114,8 @@ class Renderer {
     }
     
     var camera: Camera!
-    var mesh: MyMesh?
+    var mesh: MyMesh!
+    var lightDir: Float4!
     
     @MainActor
     func draw() {
@@ -120,6 +128,7 @@ class Renderer {
         updateObjectStaticData(projectionMat: camera.projectionMatrix,
                                viewMat: camera.viewMatrix,
                                modelMat: mesh.transform,
+                               lightDir: lightDir,
                                texture: mesh.texture,
                                encoder: enc)
         

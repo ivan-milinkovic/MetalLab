@@ -14,18 +14,14 @@ struct VertexOutput {
     float4 color;
     float2 uv;
     bool is_textured;
-};
-
-struct FrameStaticData {
-    float4x4 projectionMatrix;
-    float4x4 viewMatrix;
-    
+    float3 lightDir;
 };
 
 struct ObjectStaticData {
     float4x4 modelViewProjectionMatrix;
     float4x4 modelViewInverseTransposeMatrix;
     int2 is_textured; // boolean and int have size issues with swift
+    float4 directionalLightDir;
 };
 
 
@@ -39,6 +35,7 @@ vertex VertexOutput vertex_main(
     out.color = vertexData.color;
     out.uv = vertexData.uv;
     out.is_textured = objectStaticData.is_textured.x == 1;
+    out.lightDir = objectStaticData.directionalLightDir.xyz;
     return out;
 }
 
@@ -49,7 +46,7 @@ fragment float4 fragment_main(
     texture2d<float, access::sample> texture [[texture(0)]],
     sampler sampler [[sampler(0)]])
 {
-    float3 lightDir = {1, -1, -1};
+    float3 lightDir = fragmentData.lightDir;
     lightDir = normalize(-lightDir);
     float f = max(0.1, dot(fragmentData.normal, lightDir));
     

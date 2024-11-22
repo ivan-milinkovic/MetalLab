@@ -10,8 +10,8 @@ struct ContentView: View {
                 let f: TFloat = 0.00002
                 let dx = -f * TFloat(dragVal.velocity.height)
                 let dy = -f * TFloat(dragVal.velocity.width)
-                viewController.scene.camera.rotate(dx: dx, dy: dy)
-                //viewController.scene.mesh.rotate(dx: dx, dy: dy)
+                //viewController.scene.camera.rotate(dx: dx, dy: dy)
+                viewController.scene.mesh.rotate(dx: dx, dy: dy)
             }))
             .task {
                 viewController.load()

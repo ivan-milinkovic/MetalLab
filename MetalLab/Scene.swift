@@ -6,6 +6,7 @@ class MyScene {
     
     let camera = Camera()
     var mesh: MyMesh!
+    let directionalLightDir: Float4 = [1, -1, -1, 0]
     
     func load(device: MTLDevice) {
         //mesh = MyMesh.triangle(device: device)
