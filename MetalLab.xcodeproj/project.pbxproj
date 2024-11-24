@@ -12,7 +12,7 @@
 		2C007C132CF31B0B00F6EEAE /* MeshObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C007C122CF31B0000F6EEAE /* MeshObject.swift */; };
 		2C007C172CF31D1A00F6EEAE /* PositionOrientation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C007C162CF31D1600F6EEAE /* PositionOrientation.swift */; };
 		2C007C192CF323EC00F6EEAE /* VertexData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C007C182CF323E800F6EEAE /* VertexData.swift */; };
-		2C007C1B2CF39D9400F6EEAE /* PointLight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C007C1A2CF39D8F00F6EEAE /* PointLight.swift */; };
+		2C007C1B2CF39D9400F6EEAE /* SpotLight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C007C1A2CF39D8F00F6EEAE /* SpotLight.swift */; };
 		2C5327592CE26D4B0059CAA4 /* Scene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5327582CE26D4B0059CAA4 /* Scene.swift */; };
 		2C53275B2CE271780059CAA4 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C53275A2CE271780059CAA4 /* ViewController.swift */; };
 		2C53275D2CE27A270059CAA4 /* Camera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C53275C2CE27A270059CAA4 /* Camera.swift */; };
@@ -36,7 +36,7 @@
 		2C007C122CF31B0000F6EEAE /* MeshObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeshObject.swift; sourceTree = "<group>"; };
 		2C007C162CF31D1600F6EEAE /* PositionOrientation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PositionOrientation.swift; sourceTree = "<group>"; };
 		2C007C182CF323E800F6EEAE /* VertexData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VertexData.swift; sourceTree = "<group>"; };
-		2C007C1A2CF39D8F00F6EEAE /* PointLight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PointLight.swift; sourceTree = "<group>"; };
+		2C007C1A2CF39D8F00F6EEAE /* SpotLight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotLight.swift; sourceTree = "<group>"; };
 		2C5327582CE26D4B0059CAA4 /* Scene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scene.swift; sourceTree = "<group>"; };
 		2C53275A2CE271780059CAA4 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		2C53275C2CE27A270059CAA4 /* Camera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Camera.swift; sourceTree = "<group>"; };
@@ -108,7 +108,7 @@
 				2C007C162CF31D1600F6EEAE /* PositionOrientation.swift */,
 				2C53275C2CE27A270059CAA4 /* Camera.swift */,
 				2CF9033029BE6824000D2729 /* Renderer.swift */,
-				2C007C1A2CF39D8F00F6EEAE /* PointLight.swift */,
+				2C007C1A2CF39D8F00F6EEAE /* SpotLight.swift */,
 				2CF9033229BE7402000D2729 /* Shaders.metal */,
 				2C53275E2CE292BA0059CAA4 /* FloatN.swift */,
 				2C5327602CE292D90059CAA4 /* MetalMesh.swift */,
@@ -208,7 +208,7 @@
 				2C53275F2CE292BA0059CAA4 /* FloatN.swift in Sources */,
 				2C53275D2CE27A270059CAA4 /* Camera.swift in Sources */,
 				2CF9033129BE6824000D2729 /* Renderer.swift in Sources */,
-				2C007C1B2CF39D9400F6EEAE /* PointLight.swift in Sources */,
+				2C007C1B2CF39D9400F6EEAE /* SpotLight.swift in Sources */,
 				2CF9032F29BE653B000D2729 /* MetalView.swift in Sources */,
 				2C5327592CE26D4B0059CAA4 /* Scene.swift in Sources */,
 				2CF9032229BE6510000D2729 /* ContentView.swift in Sources */,

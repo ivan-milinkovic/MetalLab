@@ -14,13 +14,16 @@ enum MyError : Error {
 class Renderer {
     
     var device: MTLDevice!
+    var library: MTLLibrary!
     var pipelineState: MTLRenderPipelineState!
+    var shadowPipelineState: MTLRenderPipelineState!
     let colorPixelFormat: MTLPixelFormat = .rgba8Unorm;
     var depthStencilState: MTLDepthStencilState!
     var textureSamplerState: MTLSamplerState!
     var commandQueue: MTLCommandQueue!
     var mtkView: MTKView!
     let depthPixelFormat = MTLPixelFormat.depth32Float
+    let winding = MTLWinding.counterClockwise
     
     init() { }
     
@@ -50,15 +53,17 @@ class Renderer {
         try! setupPipeline()
     }
     
+    
     @MainActor
     func setupPipeline() throws(MyError) {
         
         commandQueue = device.makeCommandQueue()
         guard commandQueue != nil else { throw MyError.setup("No command queue") }
         
-        guard let lib = device.makeDefaultLibrary() else { throw MyError.setup("no library") }
-        guard let vertexFunction = lib.makeFunction(name: "vertex_main") else { throw MyError.setup("no vertex shader") }
-        guard let fragmentFunction = lib.makeFunction(name: "fragment_main") else { throw MyError.setup("no fragment shader") }
+        library = device.makeDefaultLibrary()
+        if library == nil { throw MyError.setup("no library") }
+        guard let vertexFunction = library.makeFunction(name: "vertex_main") else { throw MyError.setup("no vertex shader") }
+        guard let fragmentFunction = library.makeFunction(name: "fragment_main") else { throw MyError.setup("no fragment shader") }
         
         let pipelineDesc = MTLRenderPipelineDescriptor()
         pipelineDesc.vertexFunction = vertexFunction
@@ -87,79 +92,133 @@ class Renderer {
         depthDesc.isDepthWriteEnabled = true
         depthDesc.depthCompareFunction = .less
         depthStencilState = device.makeDepthStencilState(descriptor: depthDesc)
+        
+        // shadow pipeline
+        let shadowRPD = MTLRenderPipelineDescriptor()
+        shadowRPD.vertexDescriptor = VertexData.vertexDescriptor
+        shadowRPD.depthAttachmentPixelFormat = depthPixelFormat
+        shadowRPD.vertexFunction = library.makeFunction(name: "vertex_shadow")
+        
+        shadowPipelineState = try! device.makeRenderPipelineState(descriptor: shadowRPD)
     }
     
-    func updateObjectStaticData(
-        objectStaticDataBuff: MTLBuffer,
-        projectionMat: float4x4,
-        viewMat: float4x4,
-        modelMat: float4x4,
-        texture: (any MTLTexture)?,
-        directionalLight: Float4,
-        pointLight: PointLight,
-        encoder: MTLRenderCommandEncoder)
-    {
-        let objectStaticData = objectStaticDataBuff.contents().bindMemory(to: ObjectStaticData.self, capacity: 1)
-        let modelViewMat = viewMat * modelMat
-        objectStaticData.pointee.modelViewProjectionMatrix = projectionMat * modelViewMat
-        objectStaticData.pointee.modelViewMatrix = modelViewMat
-        objectStaticData.pointee.modelMatrix = modelMat
-        objectStaticData.pointee.modelViewInverseTransposeMatrix = modelViewMat.inverse.transpose
-        objectStaticData.pointee.directionalLightDir = viewMat * directionalLight
-        
-        let pl = viewMat * Float4(pointLight.positionOrientation.position, 1) // position in view space
-        objectStaticData.pointee.pointLight.position = Float3(pl.x, pl.y, pl.z)
-        objectStaticData.pointee.pointLight.color = pointLight.color
-        
-        if let texture = texture {
-            encoder.setFragmentTexture(texture, index: 0)
-            objectStaticData.pointee.textured = .one
-        } else {
-            objectStaticData.pointee.textured = .zero
-        }
-    }
     
     @MainActor
-    func draw(scene: MyScene) {
-        guard let drawable = mtkView.currentDrawable else { return }
-        guard let renderPassDesc = mtkView.currentRenderPassDescriptor else { return }
-        guard let commandBuffer = commandQueue.makeCommandBuffer() else { return }
-        guard let enc = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDesc) else { return }
+    func drawShadowMap(scene: MyScene, cmdBuff: MTLCommandBuffer)
+    {
+        let rpd = MTLRenderPassDescriptor()
+        rpd.depthAttachment.loadAction = .clear
+        rpd.depthAttachment.storeAction = .store
+        rpd.depthAttachment.clearDepth = 1.0
+        rpd.depthAttachment.texture = scene.spotLight.texture
         
-        enc.setFrontFacing(.counterClockwise)
+        //cmdBuff.pushDebugGroup("Draw Shadow Map")
+        //cmdBuff.popDebugGroup()
+        
+        let enc = cmdBuff.makeRenderCommandEncoder(descriptor: rpd)!
+        enc.setRenderPipelineState(shadowPipelineState)
+        enc.setDepthStencilState(depthStencilState)
+        enc.setFrontFacing(winding)
+        enc.setCullMode(.back)
+        
+        let projectionMat = scene.lightProjectionMatrix
+        let lightMat = scene.spotLight.positionOrientation.transform.inverse
+        
+        for meshObject in scene.sceneObjects {
+            // update statics
+            let objectStatics = meshObject.objectStaticDataBuff.contents().bindMemory(to: ObjectStaticData.self, capacity: 1)
+            let modelMat = meshObject.positionOrientation.transform
+            objectStatics.pointee.modelLightProjectionMatrix = projectionMat * lightMat * modelMat
+            
+            // encode draw calls
+            for meshObject in scene.sceneObjects {
+                enc.setVertexBuffer(meshObject.metalMesh.vertexBuffer, offset: 0, index: 0)
+                enc.setVertexBuffer(meshObject.objectStaticDataBuff, offset: 0, index: 1)
+                if let indexBuffer = meshObject.metalMesh.indexBuffer {
+                    enc.drawIndexedPrimitives(type: .triangle, indexCount: meshObject.metalMesh.indexCount,
+                                              indexType: .uint32, indexBuffer: indexBuffer, indexBufferOffset: 0)
+                } else {
+                    enc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: meshObject.metalMesh.vertexCount)
+                }
+            }
+        }
+        
+        enc.endEncoding()
+    }
+    
+    
+    @MainActor
+    func draw(scene: MyScene, cmdBuff: MTLCommandBuffer) {
+        guard let renderPassDesc = mtkView.currentRenderPassDescriptor else { return }
+        guard let enc = cmdBuff.makeRenderCommandEncoder(descriptor: renderPassDesc) else { return }
+        
+        enc.setFrontFacing(winding)
         enc.setCullMode(.back)
         enc.setRenderPipelineState(pipelineState)
         enc.setDepthStencilState(depthStencilState)
         enc.setFragmentSamplerState(textureSamplerState, index: 0)
         
-        let camera = scene.camera
+        let viewMat = scene.camera.viewMatrix
+        //let viewMat = scene.spotLight.positionOrientation.transform.inverse // view from light position
+        let projectionMat = scene.camera.projectionMatrix
+        let directionalLight = scene.directionalLightDir
         
-        for sceneObject in scene.sceneObjects {
+        for meshObject in scene.sceneObjects {
             
-            updateObjectStaticData(objectStaticDataBuff: sceneObject.objectStaticDataBuff,
-                                   projectionMat: camera.projectionMatrix,
-                                   viewMat: scene.camera.viewMatrix,
-                                   modelMat: sceneObject.positionOrientation.transform,
-                                   texture: sceneObject.metalMesh.texture,
-                                   directionalLight: scene.directionalLightDir,
-                                   pointLight: scene.pointLight,
-                                   encoder: enc)
+            // update statics
+            let objectStaticData = meshObject.objectStaticDataBuff.contents().bindMemory(to: ObjectStaticData.self, capacity: 1)
+            let modelMat = meshObject.positionOrientation.transform
+            let modelViewMat = viewMat * modelMat
             
-            enc.setVertexBuffer(sceneObject.metalMesh.vertexBuffer, offset: 0, index: 0)
-            enc.setVertexBuffer(sceneObject.objectStaticDataBuff, offset: 0, index: 1)
-            enc.setFragmentBuffer(sceneObject.objectStaticDataBuff, offset: 0, index: 2)
+            objectStaticData.pointee.modelViewProjectionMatrix = projectionMat * modelViewMat
+            objectStaticData.pointee.modelViewMatrix = modelViewMat
+            objectStaticData.pointee.modelMatrix = modelMat
+            objectStaticData.pointee.modelViewInverseTransposeMatrix = modelViewMat.inverse.transpose
+            objectStaticData.pointee.directionalLightDir = viewMat * directionalLight
             
-            if let indexBuffer = sceneObject.metalMesh.indexBuffer {
-                enc.drawIndexedPrimitives(type: .triangle, indexCount: sceneObject.metalMesh.indexCount, indexType: .uint32, indexBuffer: indexBuffer, indexBufferOffset: 0)
+            let lightPos = viewMat * Float4(scene.spotLight.positionOrientation.position, 1) // position in view space
+            let lightDir = viewMat.inverse.transpose * Float4(scene.spotLight.positionOrientation.orientation.axis, 0)
+            objectStaticData.pointee.spotLight.position = Float3(lightPos.x, lightPos.y, lightPos.z)
+            objectStaticData.pointee.spotLight.direction = Float3(lightDir.x, lightDir.y, lightDir.z)
+            objectStaticData.pointee.spotLight.color = scene.spotLight.color
+            
+            if let texture = meshObject.metalMesh.texture {
+                enc.setFragmentTexture(texture, index: 0)
+                objectStaticData.pointee.textured = .one
             } else {
-                enc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: sceneObject.metalMesh.vertexCount)
+                objectStaticData.pointee.textured = .zero
+            }
+            
+            
+            // encode draw calls
+            enc.setVertexBuffer(meshObject.metalMesh.vertexBuffer, offset: 0, index: 0)
+            enc.setVertexBuffer(meshObject.objectStaticDataBuff, offset: 0, index: 1)
+            enc.setFragmentBuffer(meshObject.objectStaticDataBuff, offset: 0, index: 0)
+            
+            enc.setFragmentTexture(scene.spotLight.texture, index: 1)
+            
+            if let indexBuffer = meshObject.metalMesh.indexBuffer {
+                enc.drawIndexedPrimitives(type: .triangle, indexCount: meshObject.metalMesh.indexCount,
+                                          indexType: .uint32, indexBuffer: indexBuffer, indexBufferOffset: 0)
+            } else {
+                enc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: meshObject.metalMesh.vertexCount)
             }
         }
         
         enc.endEncoding()
+    }
+    
+    
+    @MainActor
+    func draw(scene: MyScene) {
+        guard let drawable = mtkView.currentDrawable else { return }
+        guard let commandBuffer = commandQueue.makeCommandBuffer() else { return }
+        
+        drawShadowMap(scene: scene, cmdBuff: commandBuffer)
+        draw(scene: scene, cmdBuff: commandBuffer)
+        
         commandBuffer.present(drawable)
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
     }
-    
 }

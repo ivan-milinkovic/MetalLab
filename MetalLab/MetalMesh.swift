@@ -9,7 +9,7 @@ class MetalMesh {
     let indexBuffer: MTLBuffer?
     let indexCount: Int
     
-    let texture: MTLTexture?
+    var texture: MTLTexture?
     
     init(vertices: [VertexData], indices: [VertexIndexType]? = nil, texture: MTLTexture?, device: MTLDevice) {
         var vs = vertices
@@ -108,7 +108,7 @@ class MetalMesh {
             VertexData(position: [x_max, y_min, z_max], normal: n, color: color, uv: [ 1.0,  1.0]), // bot right back
             VertexData(position: [x_max, y_max, z_min], normal: n, color: color, uv: [ 1.0,  0.0]), // top right back, counter-clockwise
         ]
-        //let tex = loadPlaceholderTexture(device)
         return MetalMesh(vertices: triangle, texture: nil, device: device)
+        //return MetalMesh(vertices: triangle, texture: loadPlaceholderTexture(device), device: device)
     }
 }

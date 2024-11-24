@@ -9,6 +9,10 @@ struct PositionOrientation {
         didSet { updateTransform() }
     }
     
+    var scale: Float = 1.0 {
+        didSet { updateTransform() }
+    }
+    
     var transform: float4x4 = matrix_identity_float4x4
     
     init() {
@@ -37,8 +41,10 @@ struct PositionOrientation {
     }
     
     mutating func updateTransform() {
+        var scaleMat = matrix_identity_float4x4 * scale;
+        scaleMat.columns.3.w = 1
         let rotMat = float4x4(orientation)
         let transMat = float4x4.init([1,0,0,0], [0,1,0,0], [0,0,1,0], SIMD4(position, 1))
-        transform = transMat * rotMat
+        transform = transMat * rotMat * scaleMat
     }
 }

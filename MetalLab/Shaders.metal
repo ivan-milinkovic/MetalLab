@@ -9,17 +9,19 @@ struct VertexInput {
     float2 uv [[attribute(3)]];
 };
 
-struct PointLight {
+struct SpotLight {
     float3 position;
+    float3 direction;
     float3 color;
 };
 
-struct VertexOutput {
+struct FragmentData {
     float4 positionClip [[position]];
     float3 position;
     float3 normal;
     float4 color;
     float2 uv;
+    float4 positionModel; // for shadow mapping
 };
 
 struct ObjectStaticData {
@@ -27,20 +29,25 @@ struct ObjectStaticData {
     float4x4 modelViewMatrix;
     float4x4 modelViewProjectionMatrix;
     float4x4 modelViewInverseTransposeMatrix;
+    float4x4 modelLightProjectionMatrix;
+    
     int2 isTextured; // boolean and int have size issues with swift
+    
     float4 directionalLightDir;
-    PointLight pointLight;
+    SpotLight spotLight;
+    
+    
 };
 
 
-
-vertex VertexOutput vertex_main(
+vertex FragmentData vertex_main(
     VertexInput vertexData [[stage_in]],
     constant ObjectStaticData& staticData [[buffer(1)]])
 {
-    VertexOutput out;
+    FragmentData out;
     out.positionClip = staticData.modelViewProjectionMatrix * float4(vertexData.position, 1);
     out.position = (staticData.modelViewMatrix * float4(vertexData.position, 1)).xyz;
+    out.positionModel = float4(vertexData.position, 1);
     out.normal = normalize((staticData.modelViewInverseTransposeMatrix * float4(vertexData.normal, 0)).xyz);
     out.color = vertexData.color;
     out.uv = vertexData.uv;
@@ -52,33 +59,48 @@ float4 checker_board(float2 uv, float scale);
 
 
 fragment float4 fragment_main(
-    VertexOutput fragmentData [[stage_in]],
-    constant ObjectStaticData& staticData [[buffer(2)]],
+    FragmentData fragmentData [[stage_in]],
+    constant ObjectStaticData& staticData [[buffer(0)]],
     texture2d<float, access::sample> texture [[texture(0)]],
+    depth2d<float, access::sample> shadowMap [[texture(1)]],
     sampler sampler [[sampler(0)]])
 {
-    //float3 lightDir = staticData.directionalLightDir.xyz;
-    //lightDir = normalize(-lightDir);
+    //return shadowMap.sample(sampler, fragmentData.uv);
+    
+    float4 color = fragmentData.color;
+    bool isTextured = staticData.isTextured.x == 1;
+    if (isTextured) {
+        color = texture.sample(sampler, fragmentData.uv);
+    }
+    
+    // directional light
+    float3 lightDir = staticData.directionalLightDir.xyz;
+    lightDir = normalize(-lightDir);
     //float f = max(0.1, dot(fragmentData.normalView, lightDir)); // physically meaningfull
-    //float f = abs(dot(fragmentData.normalView, lightDir)); // light from both lightDir and -lightDir, looks better
+    float f_dirLight = abs(dot(fragmentData.normal, lightDir)); // light from both lightDir and -lightDir, looks better
     
-    float3 lightPos = staticData.pointLight.position;
+    // point light
+    float3 lightPos = staticData.spotLight.position;
     float3 toLight = normalize(lightPos - fragmentData.position.xyz);
-    float f = max(0.1, dot(fragmentData.normal, toLight));
+    float f_light = max(0.0, dot(fragmentData.normal, toLight));
+    float4 lightColor = float4(staticData.spotLight.color, 1);
     
-    if (f > 100000000) {
-        return float4(1,0,0,1);
-    }
+    // read shadow map
+    float4 shadowNDC = staticData.modelLightProjectionMatrix * fragmentData.positionModel;
+    shadowNDC.xyz /= shadowNDC.w;
+    shadowNDC.y *= -1;
+    float2 shadowUV = shadowNDC.xy * 0.5 + 0.5;
+    constexpr struct sampler shadowSampler(coord::normalized, address::clamp_to_edge, filter::linear, compare_func::greater_equal);
+    float f_shadow = shadowMap.sample_compare(shadowSampler, shadowUV, shadowNDC.z - 5e-3f);
+    f_shadow = 1 - f_shadow;
+    //f_shadow = 1; // ignores shadow map
     
-    bool is_textured = staticData.isTextured.x == 1;
-    if (!is_textured) {
-        return f * float4(staticData.pointLight.color, 1) * fragmentData.color;
-    }
-    return f * float4(staticData.pointLight.color, 1) * texture.sample(sampler, fragmentData.uv);
-    
-    //auto cb = checker_board(fragmentData.uv, 0.05);
-    //return cb * fragmentData.color;
+    float f_light2 = f_shadow * f_light + 0.2 * f_dirLight;
+    float4 finalColor = f_light2 * (lightColor * color);
+    finalColor.w = 1;
+    return finalColor;
 }
+
 
 
 float4 checker_board(float2 uv, float scale)
@@ -87,6 +109,15 @@ float4 checker_board(float2 uv, float scale)
     int y = floor(uv.y / scale);
     bool isEven = (x + y) % 2;
     return isEven ? float4(1.0) : float4(0.0);
+}
+
+
+
+vertex float4 vertex_shadow(
+    VertexInput vertexInput [[stage_in]],
+    constant ObjectStaticData& statics [[buffer(1)]])
+{
+    return statics.modelLightProjectionMatrix * float4(vertexInput.position, 1);
 }
 
 

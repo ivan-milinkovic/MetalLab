@@ -17,12 +17,16 @@ struct ObjectStaticData {
     var modelViewMatrix: float4x4 = matrix_identity_float4x4
     var modelViewProjectionMatrix: float4x4 = matrix_identity_float4x4
     var modelViewInverseTransposeMatrix: float4x4 = matrix_identity_float4x4
-    var textured: SIMD2<Int> = [0,0] // treat as a boolean, boolean and int types have size issues with metal
-    var directionalLightDir: Float4 = .zeros
-    var pointLight: PointLightStaticData
+    var modelLightProjectionMatrix: float4x4 = matrix_identity_float4x4
     
-    struct PointLightStaticData {
+    var textured: SIMD2<Int> = .zero // treat as a boolean, boolean and int types have size issues with metal
+    
+    var directionalLightDir: Float4 = .zeros
+    var spotLight: SpotLightStaticData
+    
+    struct SpotLightStaticData {
         var position: Float3
+        var direction: Float3
         var color: Float3
     }
 }

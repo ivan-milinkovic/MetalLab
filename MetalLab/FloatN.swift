@@ -31,4 +31,34 @@ extension float4x4 {
         
         self.init(columns: M.columns)
     }
+    
+    static func perspectiveProjection(vFovRads: Float, aspectRatio: Float, near: Float, far: Float) -> float4x4 {
+        // right-handed
+        let Sy = 1 / tan(vFovRads * 0.5)
+        let Sx = Sy / aspectRatio
+        let dz = far - near
+        let Sz = -(far + near) / dz
+        let Tz = -2 * (far * near) / dz
+        return float4x4(
+            SIMD4(Sx, 0,  0,  0),
+            SIMD4(0, Sy,  0,  0),
+            SIMD4(0,  0, Sz, -1),
+            SIMD4(0,  0,  Tz, 0)
+        )
+    }
+    
+    static func orthographicProjection(left  : Float, right: Float,
+                                       bottom: Float, top  : Float,
+                                       near  : Float, far  : Float) -> float4x4 {
+        let sx = 2 / (right - left)
+        let sy = 2 / (top - bottom)
+        let sz = 1 / (near - far)
+        let tx = (left + right) / (left - right)
+        let ty = (top + bottom) / (bottom - top)
+        let tz = near / (near - far)
+        return float4x4(SIMD4<Float>(sx,  0,  0, 0),
+                        SIMD4<Float>( 0, sy,  0, 0),
+                        SIMD4<Float>( 0,  0, sz, 0),
+                        SIMD4<Float>(tx, ty, tz, 1))
+    }
 }

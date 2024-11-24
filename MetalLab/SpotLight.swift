@@ -1,6 +1,6 @@
 import Metal
 
-class PointLight {
+class SpotLight {
     var positionOrientation: PositionOrientation = .init()
     var color: Float3 = .one
     let texture: MTLTexture
