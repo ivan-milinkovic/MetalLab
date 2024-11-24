@@ -55,8 +55,27 @@ class MetalMesh {
     
     static func monkey(device: MTLDevice) -> MetalMesh {
         let url = Bundle.main.url(forResource: "monkey", withExtension: "obj")!
-        let ramMesh = loadObj(url)
-        return MetalMesh(vertices: ramMesh.vertices, indices: nil, texture: nil, device: device)
+        return loadObjFile(url, device: device)
+    }
+    
+    static func loadObjFile(_ url: URL, device: MTLDevice) -> MetalMesh {
+        let objMesh = loadObj(url)
+        let vertexData = nonIndexedVertexDataFromObjMesh(objMesh)
+        return MetalMesh(vertices: vertexData, indices: nil, texture: nil, device: device)
+    }
+    
+    static func nonIndexedVertexDataFromObjMesh(_ objMesh: ObjMesh) -> [VertexData] {
+        var vertexData: [VertexData] = []
+        for face in objMesh.faces {
+            for faceFTN in face.indices {
+                let vdata = VertexData(position: objMesh.vertices[Int(faceFTN.vertexIndex)],
+                                       normal: objMesh.normals[Int(faceFTN.normalIndex)],
+                                       color: Float4.ones,
+                                       uv: objMesh.uvs[Int(faceFTN.uvIndex)])
+                vertexData.append(vdata)
+            }
+        }
+        return vertexData
     }
     
     static func loadPlaceholderTexture(_ device: MTLDevice) -> MTLTexture {
