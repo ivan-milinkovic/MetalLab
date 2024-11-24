@@ -5,6 +5,12 @@ import QuartzCore
 
 typealias TFloat = Float
 
+enum MyError : Error {
+    case setup(String)
+    case loading(String)
+}
+
+
 class Renderer {
     
     var device: MTLDevice!
@@ -13,16 +19,8 @@ class Renderer {
     var depthStencilState: MTLDepthStencilState!
     var textureSamplerState: MTLSamplerState!
     var commandQueue: MTLCommandQueue!
-    var objectStaticDataBuff: MTLBuffer!
     var mtkView: MTKView!
     let depthPixelFormat = MTLPixelFormat.depth32Float
-    
-    struct ObjectStaticData {
-        var modelViewProjectionMatrix: float4x4 = matrix_identity_float4x4
-        var modelViewInverseTransposeMatrix: float4x4 = matrix_identity_float4x4
-        var textured: SIMD2<Int> = [0,0] // treat as a boolean, boolean and int types have size issues with metal
-        var directionalLightDir: Float4 = .zeros
-    }
     
     init() { }
     
@@ -71,8 +69,6 @@ class Renderer {
         pipelineDesc.depthAttachmentPixelFormat = depthPixelFormat
         pipelineDesc.rasterSampleCount = mtkView.sampleCount
         
-        objectStaticDataBuff = device.makeBuffer(length: MemoryLayout<ObjectStaticData>.size, options: .storageModeShared)
-        
         do {
             pipelineState = try device.makeRenderPipelineState(descriptor: pipelineDesc)
         } catch {
@@ -93,12 +89,15 @@ class Renderer {
         depthStencilState = device.makeDepthStencilState(descriptor: depthDesc)
     }
     
-    func updateObjectStaticData(projectionMat: float4x4,
-                                viewMat: float4x4,
-                                modelMat: float4x4,
-                                lightDir: Float4,
-                                texture: (any MTLTexture)?,
-                                encoder: MTLRenderCommandEncoder) {
+    func updateObjectStaticData(
+        objectStaticDataBuff: MTLBuffer,
+        projectionMat: float4x4,
+        viewMat: float4x4,
+        modelMat: float4x4,
+        lightDir: Float4,
+        texture: (any MTLTexture)?,
+        encoder: MTLRenderCommandEncoder)
+    {
         let objectStaticData = objectStaticDataBuff.contents().bindMemory(to: ObjectStaticData.self, capacity: 1)
         let viewModelMat = viewMat * modelMat
         objectStaticData.pointee.modelViewProjectionMatrix = projectionMat * viewModelMat
@@ -113,54 +112,45 @@ class Renderer {
         }
     }
     
-    var camera: Camera!
-    var sceneObject: MeshObject!
-    var lightDir: Float4!
-    
     @MainActor
-    func draw() {
+    func draw(scene: MyScene) {
         guard let drawable = mtkView.currentDrawable else { return }
-        guard let sceneObject = sceneObject else { return }
         guard let renderPassDesc = mtkView.currentRenderPassDescriptor else { return }
         guard let commandBuffer = commandQueue.makeCommandBuffer() else { return }
         guard let enc = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDesc) else { return }
         
-        let metalMesh = sceneObject.metalMesh
-        
-        updateObjectStaticData(projectionMat: camera.projectionMatrix,
-                               viewMat: camera.viewMatrix,
-                               modelMat: sceneObject.positionOrientation.transform,
-                               lightDir: lightDir,
-                               texture: metalMesh.texture,
-                               encoder: enc)
-        
-        enc.setRenderPipelineState(pipelineState)
-        enc.setDepthStencilState(depthStencilState)
-        
         enc.setFrontFacing(.counterClockwise)
         enc.setCullMode(.back)
-        
-        enc.setVertexBuffer(sceneObject.metalMesh.vertexBuffer, offset: 0, index: 0)
+        enc.setRenderPipelineState(pipelineState)
+        enc.setDepthStencilState(depthStencilState)
         enc.setFragmentSamplerState(textureSamplerState, index: 0)
         
-        enc.setVertexBuffer(objectStaticDataBuff, offset: 0, index: 1)
+        let camera = scene.camera
         
-        if let indexBuffer = metalMesh.indexBuffer {
-            enc.drawIndexedPrimitives(type: .triangle, indexCount: metalMesh.indexCount, indexType: .uint32, indexBuffer: indexBuffer, indexBufferOffset: 0)
-        } else {
-            enc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: metalMesh.vertexCount)
+        for sceneObject in scene.sceneObjects {
+            
+            updateObjectStaticData(objectStaticDataBuff: sceneObject.objectStaticDataBuff,
+                                   projectionMat: camera.projectionMatrix,
+                                   viewMat: scene.camera.viewMatrix,
+                                   modelMat: sceneObject.positionOrientation.transform,
+                                   lightDir: scene.directionalLightDir,
+                                   texture: sceneObject.metalMesh.texture,
+                                   encoder: enc)
+            
+            enc.setVertexBuffer(sceneObject.metalMesh.vertexBuffer, offset: 0, index: 0)
+            enc.setVertexBuffer(sceneObject.objectStaticDataBuff, offset: 0, index: 1)
+            
+            if let indexBuffer = sceneObject.metalMesh.indexBuffer {
+                enc.drawIndexedPrimitives(type: .triangle, indexCount: sceneObject.metalMesh.indexCount, indexType: .uint32, indexBuffer: indexBuffer, indexBufferOffset: 0)
+            } else {
+                enc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: sceneObject.metalMesh.vertexCount)
+            }
         }
         
         enc.endEncoding()
-        
         commandBuffer.present(drawable)
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
     }
     
-}
-
-enum MyError : Error {
-    case setup(String)
-    case loading(String)
 }

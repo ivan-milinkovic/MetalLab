@@ -15,15 +15,30 @@ struct PositionOrientation {
         updateTransform()
     }
     
-    mutating func rotate(dx: TFloat, dy: TFloat) {
+    mutating func moveBy(_ dv: Float3) {
+        position += dv
+    }
+    
+    mutating func look(from: Float3, at: Float3) {
+        position = from
+        orientation = simd_quatf.init(angle: 0.0, axis: normalize(at - from))
+    }
+    
+    mutating func lookAt(_ p2: SIMD3<TFloat>) {
+        let dir = normalize(p2 - position)
+        orientation = simd_quatf(angle: 0.0, axis: dir)
+    }
+    
+    mutating func rotate(dx: TFloat = 0.0, dy: TFloat = 0.0, dz: TFloat = 0.0) {
         let xq = simd_quatf(angle: dx, axis: [1, 0, 0])
         let yq = simd_quatf(angle: dy, axis: [0, 1, 0])
-        orientation = orientation * xq * yq
+        let zq = simd_quatf(angle: dz, axis: [0, 0, 1])
+        orientation = orientation * xq * yq * zq
     }
     
     mutating func updateTransform() {
-        let rotMat = float4x4(orientation.inverse)
-        let transMat = float4x4.init([1,0,0,0], [0,1,0,0], [0,0,1,0], SIMD4(-position, 1))
+        let rotMat = float4x4(orientation)
+        let transMat = float4x4.init([1,0,0,0], [0,1,0,0], [0,0,1,0], SIMD4(position, 1))
         transform = transMat * rotMat
     }
 }

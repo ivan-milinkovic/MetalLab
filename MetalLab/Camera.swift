@@ -5,16 +5,7 @@ class Camera {
     var positionOrientation: PositionOrientation = .init()
     
     var projectionMatrix: float4x4 = matrix_identity_float4x4
-    var viewMatrix: float4x4 { positionOrientation.transform }
-    
-    func lookAt(_ p2: SIMD3<TFloat>) {
-        let dir = normalize(p2 - positionOrientation.position)
-        positionOrientation.orientation = simd_quatf(angle: 0.0, axis: dir)
-    }
-    
-    func rotate(dx: TFloat, dy: TFloat) {
-        positionOrientation.rotate(dx: dx, dy: dy)
-    }
+    var viewMatrix: float4x4 { positionOrientation.transform.inverse }
     
     func updateProjection(size: CGSize) {
         let fovRads: TFloat = 60 * TFloat.pi / 180.0
