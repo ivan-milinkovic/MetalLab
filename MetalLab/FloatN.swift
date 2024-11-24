@@ -1,5 +1,7 @@
 import simd
 
+let epsilon: Float = 0.00002
+
 typealias Float2 = SIMD2<Float>
 typealias Float3 = SIMD3<Float>
 typealias Float4 = SIMD4<Float>

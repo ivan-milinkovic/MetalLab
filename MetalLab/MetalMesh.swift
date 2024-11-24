@@ -94,17 +94,21 @@ class MetalMesh {
         let y_max = max(p1.y, p2.y)
         let z_max = max(p1.z, p2.z)
         
-        let n:Float3 = [0, 0, -1]
+        let v1: Float3 = [x_min, y_max, z_min]
+        let v2: Float3 = [x_min, y_min, z_max]
+        let n : Float3 = normalize(cross(v1, v2))
+        let color = Float4(0.5, 0.5, 0.6, 1)
+        
         let triangle: [VertexData] = [
-            VertexData(position: [x_min, y_max, z_min], normal: n, color: .one, uv: [ 0.0,  0.0]), // top left front
-            VertexData(position: [x_min, y_min, z_max], normal: n, color: .one, uv: [ 0.0,  1.0]), // bot left front
-            VertexData(position: [x_max, y_min, z_max], normal: n, color: .one, uv: [ 1.0,  1.0]), // bot right front, counter-clockwise
+            VertexData(position: [x_min, y_max, z_min], normal: n, color: color, uv: [ 0.0,  0.0]), // top left front
+            VertexData(position: [x_min, y_min, z_max], normal: n, color: color, uv: [ 0.0,  1.0]), // bot left front
+            VertexData(position: [x_max, y_min, z_max], normal: n, color: color, uv: [ 1.0,  1.0]), // bot right front, counter-clockwise
             
-            VertexData(position: [x_min, y_max, z_min], normal: n, color: .one, uv: [ 0.0,  0.0]), // top left back
-            VertexData(position: [x_max, y_min, z_max], normal: n, color: .one, uv: [ 1.0,  1.0]), // bot right back
-            VertexData(position: [x_max, y_max, z_min], normal: n, color: .one, uv: [ 1.0,  0.0]), // top right back, counter-clockwise
+            VertexData(position: [x_min, y_max, z_min], normal: n, color: color, uv: [ 0.0,  0.0]), // top left back
+            VertexData(position: [x_max, y_min, z_max], normal: n, color: color, uv: [ 1.0,  1.0]), // bot right back
+            VertexData(position: [x_max, y_max, z_min], normal: n, color: color, uv: [ 1.0,  0.0]), // top right back, counter-clockwise
         ]
-        //let tex = loadPlaceholderTexture(device)/
+        //let tex = loadPlaceholderTexture(device)
         return MetalMesh(vertices: triangle, texture: nil, device: device)
     }
 }

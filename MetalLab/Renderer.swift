@@ -94,15 +94,22 @@ class Renderer {
         projectionMat: float4x4,
         viewMat: float4x4,
         modelMat: float4x4,
-        lightDir: Float4,
         texture: (any MTLTexture)?,
+        directionalLight: Float4,
+        pointLight: PointLight,
         encoder: MTLRenderCommandEncoder)
     {
         let objectStaticData = objectStaticDataBuff.contents().bindMemory(to: ObjectStaticData.self, capacity: 1)
-        let viewModelMat = viewMat * modelMat
-        objectStaticData.pointee.modelViewProjectionMatrix = projectionMat * viewModelMat
-        objectStaticData.pointee.modelViewInverseTransposeMatrix = viewModelMat.inverse.transpose
-        objectStaticData.pointee.directionalLightDir = viewMat * lightDir
+        let modelViewMat = viewMat * modelMat
+        objectStaticData.pointee.modelViewProjectionMatrix = projectionMat * modelViewMat
+        objectStaticData.pointee.modelViewMatrix = modelViewMat
+        objectStaticData.pointee.modelMatrix = modelMat
+        objectStaticData.pointee.modelViewInverseTransposeMatrix = modelViewMat.inverse.transpose
+        objectStaticData.pointee.directionalLightDir = viewMat * directionalLight
+        
+        let pl = viewMat * Float4(pointLight.positionOrientation.position, 1) // position in view space
+        objectStaticData.pointee.pointLight.position = Float3(pl.x, pl.y, pl.z)
+        objectStaticData.pointee.pointLight.color = pointLight.color
         
         if let texture = texture {
             encoder.setFragmentTexture(texture, index: 0)
@@ -133,12 +140,14 @@ class Renderer {
                                    projectionMat: camera.projectionMatrix,
                                    viewMat: scene.camera.viewMatrix,
                                    modelMat: sceneObject.positionOrientation.transform,
-                                   lightDir: scene.directionalLightDir,
                                    texture: sceneObject.metalMesh.texture,
+                                   directionalLight: scene.directionalLightDir,
+                                   pointLight: scene.pointLight,
                                    encoder: enc)
             
             enc.setVertexBuffer(sceneObject.metalMesh.vertexBuffer, offset: 0, index: 0)
             enc.setVertexBuffer(sceneObject.objectStaticDataBuff, offset: 0, index: 1)
+            enc.setFragmentBuffer(sceneObject.objectStaticDataBuff, offset: 0, index: 2)
             
             if let indexBuffer = sceneObject.metalMesh.indexBuffer {
                 enc.drawIndexedPrimitives(type: .triangle, indexCount: sceneObject.metalMesh.indexCount, indexType: .uint32, indexBuffer: indexBuffer, indexBufferOffset: 0)

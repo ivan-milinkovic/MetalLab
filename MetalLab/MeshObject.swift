@@ -2,7 +2,6 @@ import Metal
 import simd
 
 class MeshObject {
-    
     var positionOrientation: PositionOrientation = .init()
     let metalMesh: MetalMesh
     var objectStaticDataBuff: MTLBuffer
@@ -14,8 +13,16 @@ class MeshObject {
 }
 
 struct ObjectStaticData {
+    var modelMatrix: float4x4 = matrix_identity_float4x4
+    var modelViewMatrix: float4x4 = matrix_identity_float4x4
     var modelViewProjectionMatrix: float4x4 = matrix_identity_float4x4
     var modelViewInverseTransposeMatrix: float4x4 = matrix_identity_float4x4
     var textured: SIMD2<Int> = [0,0] // treat as a boolean, boolean and int types have size issues with metal
     var directionalLightDir: Float4 = .zeros
+    var pointLight: PointLightStaticData
+    
+    struct PointLightStaticData {
+        var position: Float3
+        var color: Float3
+    }
 }
