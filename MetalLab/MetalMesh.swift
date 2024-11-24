@@ -2,10 +2,7 @@ import Foundation
 import Metal
 import MetalKit
 
-typealias VertexIndexType = UInt32
-let sentinelIndex: VertexIndexType = 0xFFFFFFFF
-
-class MyMesh {
+class MetalMesh {
     let vertexBuffer: MTLBuffer
     let vertexCount: Int
     
@@ -29,41 +26,19 @@ class MyMesh {
             self.indexCount = 0
         }
         self.texture = texture
-        
-        updateTransform()
     }
     
-    // positioning
-    var position: SIMD3<TFloat> = [0, 0, 0]
-    var orientation: simd_quatf = simd_quatf(angle: 0.0, axis: [0, 0, 1])
-    var transform: float4x4 = matrix_identity_float4x4
-    
-    func rotate(dx: TFloat, dy: TFloat) {
-        let xq = simd_quatf(angle: dx, axis: [1, 0, 0])
-        let yq = simd_quatf(angle: dy, axis: [0, 1, 0])
-        orientation = orientation * xq * yq
-        
-        updateTransform()
-    }
-    
-    func updateTransform() {
-        let rotMat = float4x4(orientation.inverse)
-        let transMat = float4x4.init([1,0,0,0], [0,1,0,0], [0,0,1,0], SIMD4(-position, 1))
-        transform = transMat * rotMat
-    }
-    // ---
-    
-    static func triangle(device: MTLDevice) -> MyMesh {
+    static func triangle(device: MTLDevice) -> MetalMesh {
         let n:Float3 = [0, 0, -1]
         let triangle: [VertexData] = [
             VertexData(position: [ 0,  1, -2], normal: n, color: [0, 0, 1, 1], uv: [ 0.5,    0]), // top
             VertexData(position: [-1, -1, -2], normal: n, color: [0, 1, 0, 1], uv: [ 0.0,  1.0]), // bot left
             VertexData(position: [ 1, -1, -2], normal: n, color: [1, 0, 0, 1], uv: [ 1.0,  1.0]), // bot right, counter-clockwise
         ]
-        return MyMesh(vertices: triangle, texture: nil, device: device)
+        return MetalMesh(vertices: triangle, texture: nil, device: device)
     }
     
-    static func rectangle(device: MTLDevice) -> MyMesh {
+    static func rectangle(device: MTLDevice) -> MetalMesh {
         let n:Float3 = [0, 0, -1]
         let triangle: [VertexData] = [
             VertexData(position: [-1,  1, -2], normal: n, color: .one, uv: [ 0.0,  0.0]), // top left
@@ -75,13 +50,13 @@ class MyMesh {
             VertexData(position: [ 1,  1, -2], normal: n, color: .one, uv: [ 1.0,  0.0]), // top right, counter-clockwise
         ]
         let tex = loadPlaceholderTexture(device)
-        return MyMesh(vertices: triangle, texture: tex, device: device)
+        return MetalMesh(vertices: triangle, texture: tex, device: device)
     }
     
-    static func monkey(device: MTLDevice) -> MyMesh {
+    static func monkey(device: MTLDevice) -> MetalMesh {
         let url = Bundle.main.url(forResource: "monkey", withExtension: "obj")!
         let ramMesh = loadObj(url)
-        return MyMesh(vertices: ramMesh.vertices, indices: nil, texture: nil, device: device)
+        return MetalMesh(vertices: ramMesh.vertices, indices: nil, texture: nil, device: device)
     }
     
     static func loadPlaceholderTexture(_ device: MTLDevice) -> MTLTexture {
@@ -90,47 +65,4 @@ class MyMesh {
                                      options: [.textureUsage: MTLTextureUsage.shaderRead.rawValue, .textureStorageMode: MTLStorageMode.private.rawValue])
         return tex
     }
-}
-
-
-struct VertexData {
-    let position: Float3
-    let normal: Float3
-    let color: Float4
-    let uv: Float2
-    
-    
-    @MainActor
-    static let vertexDescriptor: MTLVertexDescriptor = {
-        
-        let positionSize = MemoryLayout<Float3>.size
-        let normalSize = MemoryLayout<Float3>.size
-        let colorSize = MemoryLayout<Float4>.size
-        
-        let vertexDesc = MTLVertexDescriptor()
-        
-        // position
-        vertexDesc.attributes[0].format = .float3;
-        vertexDesc.attributes[0].offset = 0;
-        vertexDesc.attributes[0].bufferIndex = 0;
-        
-        // normal
-        vertexDesc.attributes[1].format = .float3;
-        vertexDesc.attributes[1].offset = positionSize;
-        vertexDesc.attributes[1].bufferIndex = 0;
-        
-        // color
-        vertexDesc.attributes[2].format = .float4;
-        vertexDesc.attributes[2].offset = positionSize + normalSize;
-        vertexDesc.attributes[2].bufferIndex = 0;
-        
-        // uv
-        vertexDesc.attributes[3].format = .float4;
-        vertexDesc.attributes[3].offset = positionSize + normalSize + colorSize;
-        vertexDesc.attributes[3].bufferIndex = 0;
-        
-        vertexDesc.layouts[0].stride = MemoryLayout<VertexData>.stride
-        
-        return vertexDesc
-    }()
 }

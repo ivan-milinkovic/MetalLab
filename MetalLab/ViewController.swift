@@ -17,7 +17,6 @@ class ViewController: NSObject, ObservableObject {
         scene.load(device: renderer.device)
         
         scene.camera.updateProjection(size: mtkView.drawableSize)
-        scene.camera.updateViewMatrix()
     }
     
     func setMtkView(_ mtkView: MTKView) throws(MyError) {
@@ -37,7 +36,7 @@ extension ViewController: MTKViewDelegate {
         //let d0 = Date()
         
         renderer.camera = scene.camera
-        renderer.mesh = scene.mesh
+        renderer.sceneObject = scene.sceneObject
         renderer.lightDir = scene.directionalLightDir
         
         renderer.draw()

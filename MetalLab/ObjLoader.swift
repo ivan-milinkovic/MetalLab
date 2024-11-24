@@ -1,5 +1,8 @@
 import Foundation
 
+typealias VertexIndexType = UInt32
+let sentinelIndex: VertexIndexType = 0xFFFFFFFF
+
 class RamMesh {
     let vertices: [VertexData]
     let indices: [VertexIndexType]?

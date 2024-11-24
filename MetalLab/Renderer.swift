@@ -114,22 +114,24 @@ class Renderer {
     }
     
     var camera: Camera!
-    var mesh: MyMesh!
+    var sceneObject: MeshObject!
     var lightDir: Float4!
     
     @MainActor
     func draw() {
         guard let drawable = mtkView.currentDrawable else { return }
-        guard let mesh = mesh else { return }
+        guard let sceneObject = sceneObject else { return }
         guard let renderPassDesc = mtkView.currentRenderPassDescriptor else { return }
         guard let commandBuffer = commandQueue.makeCommandBuffer() else { return }
         guard let enc = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDesc) else { return }
         
+        let metalMesh = sceneObject.metalMesh
+        
         updateObjectStaticData(projectionMat: camera.projectionMatrix,
                                viewMat: camera.viewMatrix,
-                               modelMat: mesh.transform,
+                               modelMat: sceneObject.positionOrientation.transform,
                                lightDir: lightDir,
-                               texture: mesh.texture,
+                               texture: metalMesh.texture,
                                encoder: enc)
         
         enc.setRenderPipelineState(pipelineState)
@@ -138,15 +140,15 @@ class Renderer {
         enc.setFrontFacing(.counterClockwise)
         enc.setCullMode(.back)
         
-        enc.setVertexBuffer(mesh.vertexBuffer, offset: 0, index: 0)
+        enc.setVertexBuffer(sceneObject.metalMesh.vertexBuffer, offset: 0, index: 0)
         enc.setFragmentSamplerState(textureSamplerState, index: 0)
         
         enc.setVertexBuffer(objectStaticDataBuff, offset: 0, index: 1)
         
-        if let indexBuffer = mesh.indexBuffer {
-            enc.drawIndexedPrimitives(type: .triangle, indexCount: mesh.indexCount, indexType: .uint32, indexBuffer: indexBuffer, indexBufferOffset: 0)
+        if let indexBuffer = metalMesh.indexBuffer {
+            enc.drawIndexedPrimitives(type: .triangle, indexCount: metalMesh.indexCount, indexType: .uint32, indexBuffer: indexBuffer, indexBufferOffset: 0)
         } else {
-            enc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: mesh.vertexCount)
+            enc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: metalMesh.vertexCount)
         }
         
         enc.endEncoding()

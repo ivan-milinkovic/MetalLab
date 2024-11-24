@@ -2,29 +2,18 @@ import Foundation
 import simd
 
 class Camera {
-    var position: SIMD3<TFloat> = [0, 0, 4]
-    var orientation: simd_quatf = simd_quatf(angle: 0.0, axis: [0, 0, -1])
+    var positionOrientation: PositionOrientation = .init()
     
     var projectionMatrix: float4x4 = matrix_identity_float4x4
-    var viewMatrix: float4x4 = matrix_identity_float4x4
-    
-    func updateViewMatrix() {
-        let rotMat = float4x4(orientation.inverse)
-        let transMat = float4x4.init([1,0,0,0], [0,1,0,0], [0,0,1,0], SIMD4(-position, 1))
-        viewMatrix = transMat * rotMat
-    }
+    var viewMatrix: float4x4 { positionOrientation.transform }
     
     func lookAt(_ p2: SIMD3<TFloat>) {
-        let dir = normalize(p2 - position)
-        orientation = simd_quatf(angle: 0.0, axis: dir)
+        let dir = normalize(p2 - positionOrientation.position)
+        positionOrientation.orientation = simd_quatf(angle: 0.0, axis: dir)
     }
     
     func rotate(dx: TFloat, dy: TFloat) {
-        let xq = simd_quatf(angle: dx, axis: [1, 0, 0])
-        let yq = simd_quatf(angle: dy, axis: [0, 1, 0])
-        orientation *= xq * yq
-        
-        updateViewMatrix()
+        positionOrientation.rotate(dx: dx, dy: dy)
     }
     
     func updateProjection(size: CGSize) {
