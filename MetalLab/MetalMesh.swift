@@ -81,7 +81,8 @@ class MetalMesh {
     static func loadPlaceholderTexture(_ device: MTLDevice) -> MTLTexture {
         let tl = MTKTextureLoader(device: device)
         let tex = try! tl.newTexture(name: "tex", scaleFactor: 1.0, bundle: .main,
-                                     options: [.textureUsage: MTLTextureUsage.shaderRead.rawValue, .textureStorageMode: MTLStorageMode.private.rawValue])
+                                     options: [.textureUsage: MTLTextureUsage.shaderRead.rawValue,
+                                               .textureStorageMode: MTLStorageMode.private.rawValue])
         return tex
     }
 }

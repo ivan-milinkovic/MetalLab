@@ -48,7 +48,8 @@ fragment float4 fragment_main(
 {
     float3 lightDir = fragmentData.lightDir;
     lightDir = normalize(-lightDir);
-    float f = max(0.1, dot(fragmentData.normal, lightDir));
+    //float f = max(0.1, dot(fragmentData.normal, lightDir)); // physically meaningfull
+    float f = abs(dot(fragmentData.normal, lightDir)); // light from both lightDir and -lightDir, looks better
     
     if (!fragmentData.is_textured) {
         return f*fragmentData.color;
