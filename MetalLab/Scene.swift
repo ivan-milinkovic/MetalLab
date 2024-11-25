@@ -6,7 +6,6 @@ class MyScene {
     
     let camera = Camera()
     var monkey: MeshObject!
-    var rect: MeshObject!
     var sceneObjects: [MeshObject] = []
     let directionalLightDir: Float4 = [1, -1, -1, 0]
     var spotLight: SpotLight!
@@ -39,7 +38,7 @@ class MyScene {
         spotLight.positionOrientation.look(from: [-2, 4, 2.5], at: [2, 1, 0])
         spotLight.positionOrientation.rotate(dx: -.pi*0.25, dy: -.pi*0.25, dz: 0)
         
-        //rect = MeshObject(metalMesh: MetalMesh.rectangle(device: device), device: device)
+        //let rect = MeshObject(metalMesh: MetalMesh.rectangle(device: device), device: device)
         //rect.positionOrientation.rotate(dx: -.pi*0.5)
         //rect.positionOrientation.position = [-2.2, 0.5, 1]
         //rect.positionOrientation.scale = 0.5

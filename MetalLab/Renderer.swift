@@ -210,12 +210,66 @@ class Renderer {
     
     
     @MainActor
+    func drawDepthTexture(scene: MyScene, cmdBuff: MTLCommandBuffer) {
+        let pipeline = MTLRenderPipelineDescriptor()
+        pipeline.vertexDescriptor = VertexData.vertexDescriptor
+        pipeline.vertexFunction = library.makeFunction(name: "vertex_depth_show")
+        pipeline.fragmentFunction = library.makeFunction(name: "fragment_depth_show")
+        pipeline.colorAttachments[0].pixelFormat = colorPixelFormat
+        
+        let renderPass = MTLRenderPassDescriptor()
+        renderPass.colorAttachments[0].loadAction = .load
+        renderPass.colorAttachments[0].clearColor = MTLClearColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0)
+        renderPass.colorAttachments[0].texture = mtkView.currentDrawable!.texture
+        let pipelineState = try! device.makeRenderPipelineState(descriptor: pipeline)
+        
+        var vertices: [Float2] = [
+            [-1,  1],
+            [-1, -1],
+            [ 1, -1],
+            [-1,  1],
+            [ 1, -1],
+            [ 1,  1]
+        ]
+        let aspect = Float(mtkView.drawableSize.width / mtkView.drawableSize.height)
+        let wscale = 0.25/aspect
+        let scaleMat = float2x2([wscale, 0], [0, 0.25])
+        vertices = vertices.map { v in
+            scaleMat * v + [-(1-wscale), 0.75]
+        }
+        let vbuff = device.makeBuffer(bytes: &vertices,length: MemoryLayout<SIMD2<Float>>.stride * vertices.count, options: .storageModeShared)
+        
+        var uvs: [Float2] = [
+            [0.0,  0.0],
+            [0.0,  1.0],
+            [1.0,  1.0],
+            [0.0,  0.0],
+            [1.0,  1.0],
+            [1.0,  0.0]
+        ]
+        let uvbuff = device.makeBuffer(bytes: &uvs,length: MemoryLayout<SIMD2<Float>>.stride * uvs.count, options: .storageModeShared)
+        
+        let enc = cmdBuff.makeRenderCommandEncoder(descriptor: renderPass)!
+        enc.setFrontFacing(winding)
+        enc.setCullMode(.back)
+        enc.setRenderPipelineState(pipelineState)
+        enc.setVertexBuffer(vbuff, offset: 0, index: 0)
+        enc.setVertexBuffer(uvbuff, offset: 0, index: 1)
+        enc.setFragmentSamplerState(textureSamplerState, index: 0)
+        enc.setFragmentTexture(scene.spotLight.texture, index: 0)
+        enc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6)
+        enc.endEncoding()
+    }
+    
+    
+    @MainActor
     func draw(scene: MyScene) {
         guard let drawable = mtkView.currentDrawable else { return }
         guard let commandBuffer = commandQueue.makeCommandBuffer() else { return }
         
         drawShadowMap(scene: scene, cmdBuff: commandBuffer)
         draw(scene: scene, cmdBuff: commandBuffer)
+        //drawDepthTexture(scene: scene, cmdBuff: commandBuffer)
         
         commandBuffer.present(drawable)
         commandBuffer.commit()
