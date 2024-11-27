@@ -21,9 +21,19 @@ class Renderer {
     var depthStencilState: MTLDepthStencilState!
     var textureSamplerState: MTLSamplerState!
     var commandQueue: MTLCommandQueue!
-    var mtkView: MTKView!
+    
+    let useCustomMsaaRenderPass = true
+    var msaaColorTexture: MTLTexture!
+    var msaaDepthTexture: MTLTexture!
+    
     let depthPixelFormat = MTLPixelFormat.depth32Float
     let winding = MTLWinding.counterClockwise
+    let sampleCount = 4
+    let clearColor = MTLClearColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0)
+    let clearDepth = 1.0
+    let fps = 60
+    
+    var mtkView: MTKView!
     
     init() { }
     
@@ -43,16 +53,15 @@ class Renderer {
     func setMtkView(_ mv: MTKView) throws(MyError) {
         self.mtkView = mv
         mtkView.device = device
-        mtkView.clearColor = MTLClearColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0)
+        mtkView.clearColor = clearColor
         mtkView.colorPixelFormat = colorPixelFormat
         mtkView.framebufferOnly = true
         mtkView.depthStencilPixelFormat = depthPixelFormat
-        mtkView.clearDepth = 1.0
-        mtkView.preferredFramesPerSecond = 60
-        mtkView.sampleCount = 1
+        mtkView.clearDepth = clearDepth
+        mtkView.preferredFramesPerSecond = fps
+        mtkView.sampleCount = useCustomMsaaRenderPass ? 1 : sampleCount
         try! setupPipeline()
     }
-    
     
     @MainActor
     func setupPipeline() throws(MyError) {
@@ -72,7 +81,7 @@ class Renderer {
         pipelineDesc.vertexDescriptor = VertexData.vertexDescriptor
         pipelineDesc.colorAttachments[0].pixelFormat = colorPixelFormat
         pipelineDesc.depthAttachmentPixelFormat = depthPixelFormat
-        pipelineDesc.rasterSampleCount = mtkView.sampleCount
+        pipelineDesc.rasterSampleCount = sampleCount
         
         do {
             pipelineState = try device.makeRenderPipelineState(descriptor: pipelineDesc)
@@ -102,20 +111,80 @@ class Renderer {
         shadowPipelineState = try! device.makeRenderPipelineState(descriptor: shadowRPD)
     }
     
+    @MainActor
+    func setupMsaaTextures() {
+        if sampleCount == 1 { return }
+        if mtkView.drawableSize == .zero { return }
+        if msaaColorTexture != nil
+            && msaaColorTexture.width == Int(mtkView.drawableSize.width)
+            && msaaColorTexture.height == Int(mtkView.drawableSize.height)
+            && msaaColorTexture.sampleCount == sampleCount
+            && msaaDepthTexture != nil
+            && msaaDepthTexture.width == Int(mtkView.drawableSize.width)
+            && msaaDepthTexture.height == Int(mtkView.drawableSize.height)
+            && msaaDepthTexture.sampleCount == sampleCount
+        { return }
+        
+        let colorTexDesc = MTLTextureDescriptor()
+        colorTexDesc.textureType = .type2DMultisample
+        colorTexDesc.sampleCount = sampleCount
+        colorTexDesc.pixelFormat = colorPixelFormat
+        colorTexDesc.width = Int(mtkView.drawableSize.width)
+        colorTexDesc.height = Int(mtkView.drawableSize.height)
+        colorTexDesc.storageMode = .private
+        colorTexDesc.usage = .renderTarget
+        msaaColorTexture = device.makeTexture(descriptor: colorTexDesc)
+        msaaColorTexture.label = "MetalLab: MSAA Color Texture"
+        
+        let depthTexDesc = MTLTextureDescriptor()
+        depthTexDesc.textureType = .type2DMultisample
+        depthTexDesc.sampleCount = sampleCount
+        depthTexDesc.pixelFormat = depthPixelFormat
+        depthTexDesc.width = Int(mtkView.drawableSize.width)
+        depthTexDesc.height = Int(mtkView.drawableSize.height)
+        depthTexDesc.storageMode = .private
+        depthTexDesc.usage = .renderTarget
+        msaaDepthTexture = device.makeTexture(descriptor: depthTexDesc)
+        msaaDepthTexture.label = "MetalLab: MSAA Depth Texture"
+        
+    }
+    
+    @MainActor
+    func mainRenderPassDescriptor() -> MTLRenderPassDescriptor {
+        if !useCustomMsaaRenderPass {
+            return mtkView.currentRenderPassDescriptor!
+        }
+        // it is necessary to create this descriptor on each frame
+        // because mtkView.currentDrawable and it's textures change
+        let msaaRenderPassDesc = MTLRenderPassDescriptor()
+        msaaRenderPassDesc.colorAttachments[0].texture = msaaColorTexture
+        msaaRenderPassDesc.colorAttachments[0].resolveTexture = mtkView.currentDrawable!.texture
+        msaaRenderPassDesc.colorAttachments[0].loadAction = .clear
+        msaaRenderPassDesc.colorAttachments[0].clearColor = clearColor
+        msaaRenderPassDesc.colorAttachments[0].storeAction = .multisampleResolve
+        
+        msaaRenderPassDesc.depthAttachment.texture = msaaDepthTexture
+        msaaRenderPassDesc.depthAttachment.resolveTexture = mtkView.depthStencilTexture
+        msaaRenderPassDesc.depthAttachment.loadAction = .clear
+        msaaRenderPassDesc.depthAttachment.clearDepth = clearDepth
+        msaaRenderPassDesc.depthAttachment.storeAction = .multisampleResolve
+        
+        return msaaRenderPassDesc
+    }
+    
     
     @MainActor
     func drawShadowMap(scene: MyScene, cmdBuff: MTLCommandBuffer)
     {
-        let rpd = MTLRenderPassDescriptor()
-        rpd.depthAttachment.loadAction = .clear
-        rpd.depthAttachment.storeAction = .store
-        rpd.depthAttachment.clearDepth = 1.0
-        rpd.depthAttachment.texture = scene.spotLight.texture
+        cmdBuff.pushDebugGroup("Draw Shadow Map")
         
-        //cmdBuff.pushDebugGroup("Draw Shadow Map")
-        //cmdBuff.popDebugGroup()
+        let shadowRenderPassDesc = MTLRenderPassDescriptor()
+        shadowRenderPassDesc.depthAttachment.loadAction = .clear
+        shadowRenderPassDesc.depthAttachment.storeAction = .store
+        shadowRenderPassDesc.depthAttachment.clearDepth = clearDepth
+        shadowRenderPassDesc.depthAttachment.texture = scene.spotLight.texture
         
-        let enc = cmdBuff.makeRenderCommandEncoder(descriptor: rpd)!
+        let enc = cmdBuff.makeRenderCommandEncoder(descriptor: shadowRenderPassDesc)!
         enc.setRenderPipelineState(shadowPipelineState)
         enc.setDepthStencilState(depthStencilState)
         enc.setFrontFacing(winding)
@@ -144,13 +213,16 @@ class Renderer {
         }
         
         enc.endEncoding()
+        cmdBuff.popDebugGroup()
     }
     
     
     @MainActor
-    func draw(scene: MyScene, cmdBuff: MTLCommandBuffer) {
-        guard let renderPassDesc = mtkView.currentRenderPassDescriptor else { return }
-        guard let enc = cmdBuff.makeRenderCommandEncoder(descriptor: renderPassDesc) else { return }
+    func drawMain(scene: MyScene, cmdBuff: MTLCommandBuffer) {
+        let mainRenderPassDesc = mainRenderPassDescriptor()
+        guard let enc = cmdBuff.makeRenderCommandEncoder(descriptor: mainRenderPassDesc) else { return }
+        
+        cmdBuff.pushDebugGroup("Main Render Pass")
         
         enc.setFrontFacing(winding)
         enc.setCullMode(.back)
@@ -189,7 +261,6 @@ class Renderer {
                 objectStaticData.pointee.textured = .zero
             }
             
-            
             // encode draw calls
             enc.setVertexBuffer(meshObject.metalMesh.vertexBuffer, offset: 0, index: 0)
             enc.setVertexBuffer(meshObject.objectStaticDataBuff, offset: 0, index: 1)
@@ -206,6 +277,7 @@ class Renderer {
         }
         
         enc.endEncoding()
+        cmdBuff.popDebugGroup()
     }
     
     
@@ -267,8 +339,10 @@ class Renderer {
         guard let drawable = mtkView.currentDrawable else { return }
         guard let commandBuffer = commandQueue.makeCommandBuffer() else { return }
         
+        setupMsaaTextures() // there is no MTKView callback AFTER it changes size
+        
         drawShadowMap(scene: scene, cmdBuff: commandBuffer)
-        draw(scene: scene, cmdBuff: commandBuffer)
+        drawMain(scene: scene, cmdBuff: commandBuffer)
         //drawDepthTexture(scene: scene, cmdBuff: commandBuffer)
         
         commandBuffer.present(drawable)

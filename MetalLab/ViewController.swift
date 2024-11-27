@@ -29,7 +29,8 @@ class ViewController: NSObject, ObservableObject {
 extension ViewController: MTKViewDelegate {
     
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
-        scene.camera.updateProjection(size: mtkView.drawableSize)
+        if size == .zero { return }
+        scene.camera.updateProjection(size: size)
     }
     
     func draw(in view: MTKView) {
