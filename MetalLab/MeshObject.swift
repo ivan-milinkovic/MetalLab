@@ -13,7 +13,6 @@ class MeshObject {
 }
 
 struct ObjectStaticData {
-    var modelMatrix: float4x4 = matrix_identity_float4x4
     var modelViewMatrix: float4x4 = matrix_identity_float4x4
     var modelViewProjectionMatrix: float4x4 = matrix_identity_float4x4
     var modelViewInverseTransposeMatrix: float4x4 = matrix_identity_float4x4
@@ -23,10 +22,10 @@ struct ObjectStaticData {
     
     var directionalLightDir: Float4 = .zeros
     var spotLight: SpotLightStaticData
-    
-    struct SpotLightStaticData {
-        var position: Float3
-        var direction: Float3
-        var color: Float3
-    }
+}
+
+struct SpotLightStaticData {
+    var position: Float3
+    var direction: Float3
+    var color: Float3
 }

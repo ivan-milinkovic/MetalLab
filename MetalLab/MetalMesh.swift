@@ -28,11 +28,6 @@ class MetalMesh {
         self.texture = texture
     }
     
-    static func monkey(device: MTLDevice) -> MetalMesh {
-        let url = Bundle.main.url(forResource: "monkey", withExtension: "obj")!
-        return loadObjFile(url, device: device)
-    }
-    
     static func loadObjFile(_ url: URL, device: MTLDevice) -> MetalMesh {
         let objMesh = loadObj(url)
         let vertexData = nonIndexedVertexDataFromObjMesh(objMesh)
@@ -59,6 +54,14 @@ class MetalMesh {
                                      options: [.textureUsage: MTLTextureUsage.shaderRead.rawValue,
                                                .textureStorageMode: MTLStorageMode.private.rawValue])
         return tex
+    }
+    
+    func setColor(_ color: Float4) {
+        for i in 0..<vertexCount {
+            let vertexData = vertexBuffer.contents().advanced(by: i * MemoryLayout<VertexData>.stride)
+                .bindMemory(to: VertexData.self, capacity: 1)
+            vertexData.pointee.color = color;
+        }
     }
     
     static func triangle(device: MTLDevice) -> MetalMesh {

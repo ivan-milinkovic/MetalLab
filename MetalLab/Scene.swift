@@ -10,9 +10,14 @@ class MyScene {
     let directionalLightDir: Float4 = [1, -1, -1, 0]
     var spotLight: SpotLight!
     
+    var instanceMesh: MeshObject!
+    var instancePositions: [PositionOrientation] = []
+    var instanceStaticsBuff: MTLBuffer!
+    let instanceCount = 4
+    
     var lightProjectionMatrix: float4x4 {
         camera.projectionMatrix
-        //let size: Float = 2
+        //let size: Float = 4
         //return float4x4.orthographicProjection(left: -size, right: size, bottom: -size, top: size, near: 1, far: 100)
     }
     
@@ -21,10 +26,10 @@ class MyScene {
         //triangle.positionOrientation.position = [0,1,0]
         //sceneObjects.append(triangle)
         
-        let metalMesh = MetalMesh.monkey(device: device)
-        let monkey = MeshObject(metalMesh: metalMesh, device: device)
+        let monkey = Self.loadMonkey(device: device)
         monkey.positionOrientation.rotate(dx: .pi*0.5, dy: 0)
-        monkey.positionOrientation.moveBy([0, 1.2, 0])
+        monkey.positionOrientation.moveBy([-1, 1.2, -0.5])
+        monkey.metalMesh.setColor([0.8, 0.4, 0.2, 1])
         self.sceneObjects.append(monkey)
         self.monkey = monkey
         
@@ -35,7 +40,7 @@ class MyScene {
         
         spotLight = SpotLight(device: device)
         spotLight.color = .one // [0.8, 0.8, 1]
-        spotLight.positionOrientation.look(from: [-2, 4, 2.5], at: [2, 1, 0])
+        spotLight.positionOrientation.look(from: [-3, 5, 2.5], at: [2, 1, 0])
         spotLight.positionOrientation.rotate(dx: -.pi*0.25, dy: -.pi*0.25, dz: 0)
         
         //let rect = MeshObject(metalMesh: MetalMesh.rectangle(device: device), device: device)
@@ -46,5 +51,49 @@ class MyScene {
         //sceneObjects.append(rect)
         
         self.camera.positionOrientation.look(from: [0, 1, 4], at: [0, 0, -1])
+        
+        prepareInstances(device)
+    }
+    
+    func prepareInstances(_ device: MTLDevice) {
+        
+        instanceMesh = Self.loadBox(device: device)
+        instanceStaticsBuff = device.makeBuffer(length: MemoryLayout<ObjectStaticData>.stride * instanceCount, options: .storageModeShared)
+        instanceMesh.metalMesh.setColor([0.1, 0.3, 0.8, 1])
+        //instanceMesh.metalMesh.texture = MetalMesh.loadPlaceholderTexture(device)
+        
+        var p = PositionOrientation()
+        p.position = [0, 0.25, 0]
+        p.scale = 0.25
+        instancePositions.append(p)
+        
+        p = PositionOrientation()
+        p.position = [1, 0.25, 0]
+        p.scale = 0.25
+        instancePositions.append(p)
+        
+        p = PositionOrientation()
+        p.position = [0, 0.25, -1]
+        p.scale = 0.25
+        instancePositions.append(p)
+        
+        p = PositionOrientation()
+        p.position = [1, 0.25, -1]
+        p.scale = 0.25
+        instancePositions.append(p)
+    }
+    
+    static func loadMonkey(device: MTLDevice) -> MeshObject {
+        let url = Bundle.main.url(forResource: "monkey", withExtension: "obj")!
+        let metalMesh = MetalMesh.loadObjFile(url, device: device)
+        let meshObject = MeshObject(metalMesh: metalMesh, device: device)
+        return meshObject
+    }
+    
+    static func loadBox(device: MTLDevice) -> MeshObject {
+        let url = Bundle.main.url(forResource: "box", withExtension: "obj")!
+        let metalMesh = MetalMesh.loadObjFile(url, device: device)
+        let meshObject = MeshObject(metalMesh: metalMesh, device: device)
+        return meshObject
     }
 }

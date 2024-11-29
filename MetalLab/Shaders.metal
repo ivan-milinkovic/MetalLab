@@ -25,7 +25,6 @@ struct FragmentData {
 };
 
 struct ObjectStaticData {
-    float4x4 modelMatrix;
     float4x4 modelViewMatrix;
     float4x4 modelViewProjectionMatrix;
     float4x4 modelViewInverseTransposeMatrix;
@@ -35,15 +34,18 @@ struct ObjectStaticData {
     
     float4 directionalLightDir;
     SpotLight spotLight;
-    
-    
 };
+
+float4 checker_board(float2 uv, float scale);
+
 
 
 vertex FragmentData vertex_main(
     VertexInput vertexData [[stage_in]],
-    constant ObjectStaticData& staticData [[buffer(1)]])
-{
+    const device ObjectStaticData* statics [[buffer(1)]],
+    uint instanceId [[instance_id]]
+) {
+    auto staticData = statics[instanceId];
     FragmentData out;
     out.positionClip = staticData.modelViewProjectionMatrix * float4(vertexData.position, 1);
     out.position = (staticData.modelViewMatrix * float4(vertexData.position, 1)).xyz;
@@ -55,9 +57,6 @@ vertex FragmentData vertex_main(
 }
 
 
-float4 checker_board(float2 uv, float scale);
-
-
 fragment float4 fragment_main(
     FragmentData fragmentData [[stage_in]],
     constant ObjectStaticData& staticData [[buffer(0)]],
@@ -65,6 +64,7 @@ fragment float4 fragment_main(
     depth2d<float, access::sample> shadowMap [[texture(1)]],
     sampler sampler [[sampler(0)]])
 {
+    //return {0, 0.2, 0.6, 1};
     //return shadowMap.sample(sampler, fragmentData.uv);
     
     float4 color = fragmentData.color;
@@ -76,13 +76,13 @@ fragment float4 fragment_main(
     // directional light
     float3 lightDir = staticData.directionalLightDir.xyz;
     lightDir = normalize(-lightDir);
-    //float f = max(0.1, dot(fragmentData.normalView, lightDir)); // physically meaningfull
-    float f_dirLight = abs(dot(fragmentData.normal, lightDir)); // light from both lightDir and -lightDir, looks better
+    //float f_dirLight = max(0.1, dot(fragmentData.normal, lightDir)); // physically meaningfull
+    float fDirLight = abs(dot(fragmentData.normal, lightDir)); // light from both lightDir and -lightDir, looks better
     
     // point light
     float3 lightPos = staticData.spotLight.position;
     float3 toLight = normalize(lightPos - fragmentData.position.xyz);
-    float f_light = max(0.0, dot(fragmentData.normal, toLight));
+    float fSpotLight = max(0.0, dot(fragmentData.normal, toLight));
     float4 lightColor = float4(staticData.spotLight.color, 1);
     
     // read shadow map
@@ -91,11 +91,10 @@ fragment float4 fragment_main(
     shadowNDC.y *= -1;
     float2 shadowUV = shadowNDC.xy * 0.5 + 0.5;
     constexpr struct sampler shadowSampler(coord::normalized, address::clamp_to_edge, filter::linear, compare_func::greater_equal);
-    float f_shadow = shadowMap.sample_compare(shadowSampler, shadowUV, shadowNDC.z - 5e-3f);
-    f_shadow = 1 - f_shadow;
-    //f_shadow = 1; // ignores shadow map
+    float fShadow = shadowMap.sample_compare(shadowSampler, shadowUV, shadowNDC.z - 5e-3f);
+    fShadow = 1 - fShadow;
     
-    float f_light2 = f_shadow * f_light + 0.2 * f_dirLight;
+    float f_light2 = fShadow * fSpotLight + 0.2 * fDirLight;
     float4 finalColor = f_light2 * (lightColor * color);
     finalColor.w = 1;
     return finalColor;
@@ -115,11 +114,12 @@ float4 checker_board(float2 uv, float scale)
 
 vertex float4 vertex_shadow(
     VertexInput vertexInput [[stage_in]],
-    constant ObjectStaticData& statics [[buffer(1)]])
+    const device ObjectStaticData* statics [[buffer(1)]],
+    uint instanceId [[instance_id]])
 {
-    return statics.modelLightProjectionMatrix * float4(vertexInput.position, 1);
+    ObjectStaticData staticData = statics[instanceId];
+    return staticData.modelLightProjectionMatrix * float4(vertexInput.position, 1);
 }
-
 
 
 struct ShowShadowFragmentData {

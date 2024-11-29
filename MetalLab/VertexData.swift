@@ -3,7 +3,7 @@ import Metal
 struct VertexData {
     let position: Float3
     let normal: Float3
-    let color: Float4
+    var color: Float4
     let uv: Float2
     
     
