@@ -40,7 +40,7 @@ class MetalMesh {
             for faceFTN in face.indices {
                 let vdata = VertexData(position: objMesh.vertices[Int(faceFTN.vertexIndex)],
                                        normal: objMesh.normals[Int(faceFTN.normalIndex)],
-                                       color: Float4.ones,
+                                       color: Float4.one,
                                        uv: objMesh.uvs[Int(faceFTN.uvIndex)])
                 vertexData.append(vdata)
             }

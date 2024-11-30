@@ -35,6 +35,8 @@ class Renderer {
     
     var mtkView: MTKView!
     
+    var frameConstantsBuff: MTLBuffer!
+    
     init() { }
     
     var isSetup: Bool {
@@ -103,6 +105,8 @@ class Renderer {
         shadowRPD.depthAttachmentPixelFormat = depthPixelFormat
         shadowRPD.vertexFunction = library.makeFunction(name: "vertex_shadow")
         shadowPipelineState = try! device.makeRenderPipelineState(descriptor: shadowRPD)
+        
+        frameConstantsBuff = device.makeBuffer(length: MemoryLayout<FrameConstants>.stride, options: .storageModeShared)
     }
     
     @MainActor
@@ -210,32 +214,17 @@ class Renderer {
     }
     
     func encodeGeometry(scene: MyScene, encoder: MTLRenderCommandEncoder) {
-        let projectionMat = scene.camera.projectionMatrix
-        let shadowProjectionMat = scene.lightProjectionMatrix
-        let viewMat = scene.camera.viewMatrix
-        //let viewMat = scene.spotLight.position.transform.inverse // render scene from light position
-        let directionalLight = scene.directionalLightDir
-        let lightMat = scene.spotLight.position.transform.inverse
+        
+        encoder.setVertexBuffer(frameConstantsBuff, offset: 0, index: 2)
+        encoder.setFragmentBuffer(frameConstantsBuff, offset: 0, index: 0)
         
         for meshObject in scene.sceneObjects {
             
             // update statics
             let objectStaticData = meshObject.objectStaticDataBuff.contents().bindMemory(to: ObjectStaticData.self, capacity: 1)
             let modelMat = meshObject.position.transform
-            let modelViewMat = viewMat * modelMat
             
-            objectStaticData.pointee.modelViewProjectionMatrix = projectionMat * modelViewMat
-            objectStaticData.pointee.modelViewMatrix = modelViewMat
-            objectStaticData.pointee.modelViewInverseTransposeMatrix = modelViewMat.inverse.transpose
-            objectStaticData.pointee.directionalLightDir = viewMat * directionalLight
-            
-            let lightPos = viewMat * Float4(scene.spotLight.position.position, 1) // position in view space
-            let lightDir = viewMat.inverse.transpose * Float4(scene.spotLight.position.orientation.axis, 0)
-            objectStaticData.pointee.spotLight.position = Float3(lightPos.x, lightPos.y, lightPos.z)
-            objectStaticData.pointee.spotLight.direction = Float3(lightDir.x, lightDir.y, lightDir.z)
-            objectStaticData.pointee.spotLight.color = scene.spotLight.color
-            
-            objectStaticData.pointee.modelLightProjectionMatrix = shadowProjectionMat * lightMat * modelMat
+            objectStaticData.pointee.modelMatrix = modelMat
             
             if let texture = meshObject.metalMesh.texture {
                 encoder.setFragmentTexture(texture, index: 0)
@@ -247,7 +236,6 @@ class Renderer {
             // encode draw calls
             encoder.setVertexBuffer(meshObject.metalMesh.vertexBuffer, offset: 0, index: 0)
             encoder.setVertexBuffer(meshObject.objectStaticDataBuff, offset: 0, index: 1)
-            encoder.setFragmentBuffer(meshObject.objectStaticDataBuff, offset: 0, index: 0)
             
             encoder.setFragmentTexture(scene.spotLight.texture, index: 1)
             
@@ -266,18 +254,7 @@ class Renderer {
                                 .bindMemory(to: ObjectStaticData.self, capacity: 1)
             
             let modelMat = scene.instancePositions[i].transform
-            let modelViewMat = viewMat * modelMat
-            objectStaticData.pointee.modelViewProjectionMatrix = projectionMat * modelViewMat
-            objectStaticData.pointee.modelViewMatrix = modelViewMat
-            objectStaticData.pointee.modelViewInverseTransposeMatrix = modelViewMat.inverse.transpose
-            objectStaticData.pointee.directionalLightDir = viewMat * scene.directionalLightDir
-            objectStaticData.pointee.modelLightProjectionMatrix = shadowProjectionMat * lightMat * modelMat
-            
-            let lightPos = viewMat * Float4(scene.spotLight.position.position, 1) // in view space
-            let lightDir = viewMat.inverse.transpose * Float4(scene.spotLight.position.orientation.axis, 0)
-            objectStaticData.pointee.spotLight.position = Float3(lightPos.x, lightPos.y, lightPos.z)
-            objectStaticData.pointee.spotLight.direction = Float3(lightDir.x, lightDir.y, lightDir.z)
-            objectStaticData.pointee.spotLight.color = .one// scene.spotLight.color
+            objectStaticData.pointee.modelMatrix = modelMat
             
             if let texture = instancedMesh.metalMesh.texture {
                 encoder.setFragmentTexture(texture, index: 0)
@@ -290,8 +267,6 @@ class Renderer {
         // encode draw calls
         encoder.setVertexBuffer(instancedMesh.metalMesh.vertexBuffer, offset: 0, index: 0)
         encoder.setVertexBuffer(scene.instanceStaticsBuff, offset: 0, index: 1)
-        // todo: fragment shader will read only the first one, works because it's the same light, transfer data inside shaders
-        encoder.setFragmentBuffer(scene.instanceStaticsBuff, offset: 0, index: 0)
         encoder.setFragmentTexture(scene.spotLight.texture, index: 1) // shadow map texture
         
         encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: instancedMesh.metalMesh.vertexCount, instanceCount: scene.instanceCount)
@@ -350,6 +325,27 @@ class Renderer {
         enc.endEncoding()
     }
     
+    func updateFrameConstants(_ scene: MyScene) {
+        let viewMatrix = scene.camera.viewMatrix
+        //let viewMatrix = scene.spotLight.position.transform.inverse // render scene from light perspective
+        
+        let fc = frameConstantsBuff.contents().bindMemory(to: FrameConstants.self, capacity: 1)
+        fc.pointee.viewMatrix = viewMatrix
+        fc.pointee.projectionMatrix = scene.camera.projectionMatrix
+        fc.pointee.viewProjectionMatrix = fc.pointee.projectionMatrix * fc.pointee.viewMatrix
+        
+        let dirLight = fc.pointee.viewMatrix * Float4(scene.directionalLightDir, 0)
+        fc.pointee.directionalLightDir = .init(dirLight.x, dirLight.y, dirLight.z)
+        
+        let lightMatrix = scene.spotLight.position.transform.inverse
+        fc.pointee.lightProjectionMatrix = scene.shadowMapProjectionMatrix * lightMatrix
+        
+        let lightPos = viewMatrix * Float4(scene.spotLight.position.position, 1) // position in view space
+        let lightDir = viewMatrix.inverse.transpose * Float4(scene.spotLight.position.orientation.axis, 0)
+        fc.pointee.spotLight.position = Float3(lightPos.x, lightPos.y, lightPos.z)
+        fc.pointee.spotLight.direction = Float3(lightDir.x, lightDir.y, lightDir.z)
+        fc.pointee.spotLight.color = scene.spotLight.color
+    }
     
     @MainActor
     func draw(scene: MyScene) {
@@ -357,6 +353,8 @@ class Renderer {
         guard let commandBuffer = commandQueue.makeCommandBuffer() else { return }
         
         setupMsaaTextures() // there is no MTKView callback AFTER it changes size
+        
+        updateFrameConstants(scene)
         
         drawShadowMap(scene: scene, cmdBuff: commandBuffer)
         drawMain(scene: scene, cmdBuff: commandBuffer)

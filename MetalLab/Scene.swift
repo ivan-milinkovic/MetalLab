@@ -7,7 +7,7 @@ class MyScene {
     let camera = Camera()
     var monkey: MeshObject!
     var sceneObjects: [MeshObject] = []
-    let directionalLightDir: Float4 = [1, -1, -1, 0]
+    let directionalLightDir: Float3 = [1, -1, -1]
     var spotLight: SpotLight!
     
     var instanceMesh: MeshObject!
@@ -15,7 +15,7 @@ class MyScene {
     var instanceStaticsBuff: MTLBuffer!
     let instanceCount = 4
     
-    var lightProjectionMatrix: float4x4 {
+    var shadowMapProjectionMatrix: float4x4 {
         camera.projectionMatrix
         //let size: Float = 4
         //return float4x4.orthographicProjection(left: -size, right: size, bottom: -size, top: size, near: 1, far: 100)
@@ -33,6 +33,7 @@ class MyScene {
         let planeSize: Float = 4
         let planeMesh = MetalMesh.rectangle(p1: [-planeSize, 0, -planeSize], p2: [planeSize, 0, planeSize], device: device)
         let plane = MeshObject(metalMesh: planeMesh, device: device)
+        //plane.metalMesh.texture = MetalMesh.loadPlaceholderTexture(device)
         self.sceneObjects.append(plane)
         
         spotLight = SpotLight(device: device)

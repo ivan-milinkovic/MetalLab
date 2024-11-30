@@ -7,8 +7,6 @@ typealias Float3 = SIMD3<Float>
 typealias Float4 = SIMD4<Float>
 
 extension Float4 {
-    static var zeros: Float4 { .init(repeating: 0) }
-    static var ones: Float4 { .init(repeating: 1) }
     static var randomOpaqueColor: Float4 {
         .init(Float.random(in: 0...1), Float.random(in: 0...1), Float.random(in: 0...1), 1)
     }
