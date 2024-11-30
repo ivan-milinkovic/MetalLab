@@ -24,7 +24,7 @@ struct SpotLight {
     float3 color;
 };
 
-struct ObjectStaticData {
+struct ObjectConstants {
     float4x4 modelMatrix;
     int2 isTextured; // boolean and int have size issues with swift
 };
@@ -41,25 +41,22 @@ struct FrameConstants {
 };
 
 
-float4 checker_board(float2 uv, float scale);
-
-
 
 vertex FragmentData vertex_main(
     VertexInput vertexData [[stage_in]],
-    const device ObjectStaticData* statics [[buffer(1)]],
+    const device ObjectConstants* objectConstantsArray [[buffer(1)]],
     uint instanceId [[instance_id]],
     constant FrameConstants& frameConstants [[buffer(2)]]
 ) {
-    auto staticData = statics[instanceId];
+    auto objectConstants = objectConstantsArray[instanceId];
     FragmentData out;
-    auto modelViewMatrix = frameConstants.viewMatrix * staticData.modelMatrix;
+    auto modelViewMatrix = frameConstants.viewMatrix * objectConstants.modelMatrix;
     out.positionClip = frameConstants.projectionMatrix * modelViewMatrix * float4(vertexData.position, 1);
-    out.positionWorld = staticData.modelMatrix * float4(vertexData.position, 1);
+    out.positionWorld = objectConstants.modelMatrix * float4(vertexData.position, 1);
     out.normal = normalize((modelViewMatrix * float4(vertexData.normal, 0)).xyz); // todo: model-view inverse transform
     out.color = vertexData.color;
     out.uv = vertexData.uv;
-    out.isTextured = staticData.isTextured.x == 1;
+    out.isTextured = objectConstants.isTextured.x == 1;
     return out;
 }
 
@@ -108,23 +105,13 @@ fragment float4 fragment_main(
 
 
 
-float4 checker_board(float2 uv, float scale)
-{
-    int x = floor(uv.x / scale);
-    int y = floor(uv.y / scale);
-    bool isEven = (x + y) % 2;
-    return isEven ? float4(1.0) : float4(0.0);
-}
-
-
-
 vertex float4 vertex_shadow(
     VertexInput vertexInput [[stage_in]],
-    const device ObjectStaticData* statics [[buffer(1)]],
-    const device FrameConstants& frameConstants [[buffer(2)]],
+    const device ObjectConstants* objectConstantsArray [[buffer(1)]],
+    const device FrameConstants&  frameConstants [[buffer(2)]],
     uint instanceId [[instance_id]])
 {
-    ObjectStaticData staticData = statics[instanceId];
+    ObjectConstants staticData = objectConstantsArray[instanceId];
     return frameConstants.lightProjectionMatrix * staticData.modelMatrix * float4(vertexInput.position, 1);
 }
 
@@ -152,6 +139,15 @@ fragment float4 fragment_depth_show
  sampler sampler [[sampler(0)]])
 {
     return texture.sample(sampler, fragmentData.uv);
+}
+
+
+float4 checker_board(float2 uv, float scale)
+{
+    int x = floor(uv.x / scale);
+    int y = floor(uv.y / scale);
+    bool isEven = (x + y) % 2;
+    return isEven ? float4(1.0) : float4(0.0);
 }
 
 /*

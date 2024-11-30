@@ -7,7 +7,7 @@ struct MetalView: NSViewRepresentable {
     
     func makeNSView(context: Context) -> MTKView {
         let mtkView = MTKView()
-        try! viewController.setMtkView(mtkView)
+        viewController.setMtkView(mtkView)
         mtkView.delegate = viewController
         return mtkView
     }

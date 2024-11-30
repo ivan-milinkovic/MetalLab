@@ -12,7 +12,7 @@ class MyScene {
     
     var instanceMesh: MeshObject!
     var instancePositions: [Position] = []
-    var instanceStaticsBuff: MTLBuffer!
+    var instanceConstantsBuff: MTLBuffer!
     let instanceCount = 4
     
     var shadowMapProjectionMatrix: float4x4 {
@@ -48,7 +48,7 @@ class MyScene {
     func prepareInstances(_ device: MTLDevice) {
         
         instanceMesh = Self.loadBox(device: device)
-        instanceStaticsBuff = device.makeBuffer(length: MemoryLayout<ObjectStaticData>.stride * instanceCount, options: .storageModeShared)
+        instanceConstantsBuff = device.makeBuffer(length: MemoryLayout<ObjectConstants>.stride * instanceCount, options: .storageModeShared)
         instanceMesh.metalMesh.setColor([0.1, 0.3, 0.8, 1])
         //instanceMesh.metalMesh.texture = MetalMesh.loadPlaceholderTexture(device)
         

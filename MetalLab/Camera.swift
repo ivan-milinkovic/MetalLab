@@ -8,9 +8,9 @@ class Camera {
     var viewMatrix: float4x4 { position.transform.inverse }
     
     func updateProjection(size: CGSize) {
-        let vFovRads: TFloat = 60 * TFloat.pi / 180.0
-        let near: TFloat = 1.0
-        let far: TFloat = 100.0
+        let vFovRads: Float = 60 * Float.pi / 180.0
+        let near: Float = 1.0
+        let far: Float = 100.0
         let aspect = Float(size.width) / Float(size.height)
         projectionMatrix = float4x4.perspectiveProjection(vFovRads: vFovRads, aspectRatio: aspect, near: near, far: far)
         

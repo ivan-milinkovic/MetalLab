@@ -1,7 +1,7 @@
 import simd
 
 struct Position {
-    var position: SIMD3<TFloat> = [0, 0, 0] {
+    var position: Float3 = [0, 0, 0] {
         didSet { updateTransform() }
     }
     
@@ -37,11 +37,11 @@ struct Position {
         orientation = simd_quatf(angle: angle, axis: axis)
     }
     
-    mutating func lookAt(_ p: SIMD3<TFloat>) {
+    mutating func lookAt(_ p: Float3) {
         look(from: position, at: p)
     }
     
-    mutating func rotate(dx: TFloat = 0.0, dy: TFloat = 0.0, dz: TFloat = 0.0) {
+    mutating func rotate(dx: Float = 0.0, dy: Float = 0.0, dz: Float = 0.0) {
         let xq = simd_quatf(angle: dx, axis: [1, 0, 0])
         let yq = simd_quatf(angle: dy, axis: [0, 1, 0])
         let zq = simd_quatf(angle: dz, axis: [0, 0, 1])

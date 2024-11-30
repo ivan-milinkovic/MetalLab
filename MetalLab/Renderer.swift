@@ -3,13 +3,6 @@ import Metal
 import MetalKit
 import QuartzCore
 
-typealias TFloat = Float
-
-enum MyError : Error {
-    case setup(String)
-    case loading(String)
-}
-
 
 class Renderer {
     
@@ -45,14 +38,11 @@ class Renderer {
     
     @MainActor
     func setupDevice() throws {
-        guard let dev = MTLCreateSystemDefaultDevice() else {
-            throw MyError.setup("No Device")
-        }
-        device = dev
+        device = MTLCreateSystemDefaultDevice()!
     }
     
     @MainActor
-    func setMtkView(_ mv: MTKView) throws(MyError) {
+    func setMtkView(_ mv: MTKView) {
         self.mtkView = mv
         mtkView.device = device
         mtkView.clearColor = clearColor
@@ -62,19 +52,17 @@ class Renderer {
         mtkView.clearDepth = clearDepth
         mtkView.preferredFramesPerSecond = fps
         mtkView.sampleCount = useCustomMsaaRenderPass ? 1 : sampleCount
-        try! setupPipeline()
+        setupPipeline()
     }
     
     @MainActor
-    func setupPipeline() throws(MyError) {
+    func setupPipeline() {
         
-        commandQueue = device.makeCommandQueue()
-        guard commandQueue != nil else { throw MyError.setup("No command queue") }
+        commandQueue = device.makeCommandQueue()!
         
-        library = device.makeDefaultLibrary()
-        if library == nil { throw MyError.setup("no library") }
-        guard let vertexFunction = library.makeFunction(name: "vertex_main") else { throw MyError.setup("no vertex shader") }
-        guard let fragmentFunction = library.makeFunction(name: "fragment_main") else { throw MyError.setup("no fragment shader") }
+        library = device.makeDefaultLibrary()!
+        let vertexFunction = library.makeFunction(name: "vertex_main")!
+        let fragmentFunction = library.makeFunction(name: "fragment_main")!
         
         let pipelineDesc = MTLRenderPipelineDescriptor()
         pipelineDesc.vertexFunction = vertexFunction
@@ -221,16 +209,16 @@ class Renderer {
         for meshObject in scene.sceneObjects {
             
             // update statics
-            let objectStaticData = meshObject.objectStaticDataBuff.contents().bindMemory(to: ObjectStaticData.self, capacity: 1)
+            let objectConstants = meshObject.objectStaticDataBuff.contents().bindMemory(to: ObjectConstants.self, capacity: 1)
             let modelMat = meshObject.position.transform
             
-            objectStaticData.pointee.modelMatrix = modelMat
+            objectConstants.pointee.modelMatrix = modelMat
             
             if let texture = meshObject.metalMesh.texture {
                 encoder.setFragmentTexture(texture, index: 0)
-                objectStaticData.pointee.textured = .one
+                objectConstants.pointee.textured = .one
             } else {
-                objectStaticData.pointee.textured = .zero
+                objectConstants.pointee.textured = .zero
             }
             
             // encode draw calls
@@ -250,8 +238,8 @@ class Renderer {
         // encode instanced geometry
         let instancedMesh = scene.instanceMesh!
         for i in 0..<scene.instanceCount {
-            let objectStaticData = scene.instanceStaticsBuff.contents().advanced(by: i * MemoryLayout<ObjectStaticData>.stride)
-                                .bindMemory(to: ObjectStaticData.self, capacity: 1)
+            let objectStaticData = scene.instanceConstantsBuff.contents().advanced(by: i * MemoryLayout<ObjectConstants>.stride)
+                                .bindMemory(to: ObjectConstants.self, capacity: 1)
             
             let modelMat = scene.instancePositions[i].transform
             objectStaticData.pointee.modelMatrix = modelMat
@@ -266,7 +254,7 @@ class Renderer {
         
         // encode draw calls
         encoder.setVertexBuffer(instancedMesh.metalMesh.vertexBuffer, offset: 0, index: 0)
-        encoder.setVertexBuffer(scene.instanceStaticsBuff, offset: 0, index: 1)
+        encoder.setVertexBuffer(scene.instanceConstantsBuff, offset: 0, index: 1)
         encoder.setFragmentTexture(scene.spotLight.texture, index: 1) // shadow map texture
         
         encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: instancedMesh.metalMesh.vertexCount, instanceCount: scene.instanceCount)

@@ -19,9 +19,9 @@ class ViewController: NSObject, ObservableObject {
         scene.camera.updateProjection(size: mtkView.drawableSize)
     }
     
-    func setMtkView(_ mtkView: MTKView) throws(MyError) {
+    func setMtkView(_ mtkView: MTKView) {
         self.mtkView = mtkView
-        try renderer.setMtkView(mtkView)
+        renderer.setMtkView(mtkView)
     }
 }
 

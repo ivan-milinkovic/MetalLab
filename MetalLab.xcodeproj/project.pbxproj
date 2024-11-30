@@ -18,6 +18,7 @@
 		2C53275D2CE27A270059CAA4 /* Camera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C53275C2CE27A270059CAA4 /* Camera.swift */; };
 		2C53275F2CE292BA0059CAA4 /* FloatN.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C53275E2CE292BA0059CAA4 /* FloatN.swift */; };
 		2C5327612CE292D90059CAA4 /* MetalMesh.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5327602CE292D90059CAA4 /* MetalMesh.swift */; };
+		2C54E5A52CFBA0BE00EC5F57 /* ConstantStructs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C54E5A42CFBA0AA00EC5F57 /* ConstantStructs.swift */; };
 		2C5A393D2CEFC94F0019AED7 /* ObjLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5A393C2CEFC94F0019AED7 /* ObjLoader.swift */; };
 		2C5A39412CEFC97A0019AED7 /* monkey.obj in Resources */ = {isa = PBXBuildFile; fileRef = 2C5A393F2CEFC97A0019AED7 /* monkey.obj */; };
 		2C5A39422CEFC97A0019AED7 /* monkey.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 2C5A393E2CEFC97A0019AED7 /* monkey.mtl */; };
@@ -43,6 +44,7 @@
 		2C53275E2CE292BA0059CAA4 /* FloatN.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatN.swift; sourceTree = "<group>"; };
 		2C5327602CE292D90059CAA4 /* MetalMesh.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalMesh.swift; sourceTree = "<group>"; };
 		2C54E5A32CFB3B2900EC5F57 /* readme.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
+		2C54E5A42CFBA0AA00EC5F57 /* ConstantStructs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConstantStructs.swift; sourceTree = "<group>"; };
 		2C5A393C2CEFC94F0019AED7 /* ObjLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjLoader.swift; sourceTree = "<group>"; };
 		2C5A393E2CEFC97A0019AED7 /* monkey.mtl */ = {isa = PBXFileReference; lastKnownFileType = text; path = monkey.mtl; sourceTree = "<group>"; };
 		2C5A393F2CEFC97A0019AED7 /* monkey.obj */ = {isa = PBXFileReference; lastKnownFileType = text; path = monkey.obj; sourceTree = "<group>"; };
@@ -111,6 +113,7 @@
 				2C007C162CF31D1600F6EEAE /* Position.swift */,
 				2C53275C2CE27A270059CAA4 /* Camera.swift */,
 				2CF9033029BE6824000D2729 /* Renderer.swift */,
+				2C54E5A42CFBA0AA00EC5F57 /* ConstantStructs.swift */,
 				2C007C1A2CF39D8F00F6EEAE /* SpotLight.swift */,
 				2CF9033229BE7402000D2729 /* Shaders.metal */,
 				2C53275E2CE292BA0059CAA4 /* FloatN.swift */,
@@ -211,6 +214,7 @@
 				2C53275D2CE27A270059CAA4 /* Camera.swift in Sources */,
 				2CF9033129BE6824000D2729 /* Renderer.swift in Sources */,
 				2C007C1B2CF39D9400F6EEAE /* SpotLight.swift in Sources */,
+				2C54E5A52CFBA0BE00EC5F57 /* ConstantStructs.swift in Sources */,
 				2CF9032F29BE653B000D2729 /* MetalView.swift in Sources */,
 				2C5327592CE26D4B0059CAA4 /* Scene.swift in Sources */,
 				2CF9032229BE6510000D2729 /* ContentView.swift in Sources */,
