@@ -11,7 +11,7 @@ struct ContentView: View {
                 let dx = f * TFloat(dragVal.velocity.height)
                 let dy = f * TFloat(dragVal.velocity.width)
                 //viewController.scene.camera.positionOrientation.rotate(dx: dx, dy: dy)
-                viewController.scene.monkey.positionOrientation.rotate(dx: dx, dz: -dy)
+                viewController.scene.monkey.positionOrientation.rotate(dx: dx, dy: dy)
             }))
             .task {
                 viewController.load()

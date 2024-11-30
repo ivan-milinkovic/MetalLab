@@ -22,13 +22,10 @@ class MyScene {
     }
     
     func load(device: MTLDevice) {
-        //let triangle = MeshObject(metalMesh: MetalMesh.triangle(device: device), device: device)
-        //triangle.positionOrientation.position = [0,1,0]
-        //sceneObjects.append(triangle)
         
         let monkey = Self.loadMonkey(device: device)
-        monkey.positionOrientation.rotate(dx: .pi*0.5, dy: 0)
         monkey.positionOrientation.moveBy([-1, 1.2, -0.5])
+        // monkey.positionOrientation.lookAt([0,0, 4]) // todo: fix look at
         monkey.metalMesh.setColor([0.8, 0.4, 0.2, 1])
         self.sceneObjects.append(monkey)
         self.monkey = monkey
@@ -40,17 +37,9 @@ class MyScene {
         
         spotLight = SpotLight(device: device)
         spotLight.color = .one // [0.8, 0.8, 1]
-        spotLight.positionOrientation.look(from: [-3, 5, 2.5], at: [2, 1, 0])
-        spotLight.positionOrientation.rotate(dx: -.pi*0.25, dy: -.pi*0.25, dz: 0)
+        spotLight.positionOrientation.look(from: [-3, 5, 2.5], at: [0, 0, 0])
         
-        //let rect = MeshObject(metalMesh: MetalMesh.rectangle(device: device), device: device)
-        //rect.positionOrientation.rotate(dx: -.pi*0.5)
-        //rect.positionOrientation.position = [-2.2, 0.5, 1]
-        //rect.positionOrientation.scale = 0.5
-        //rect.metalMesh.texture = spotLight.texture // show depth texture in rect
-        //sceneObjects.append(rect)
-        
-        self.camera.positionOrientation.look(from: [0, 1, 4], at: [0, 0, -1])
+        self.camera.positionOrientation.look(from: [0, 1.4, 3.2], at: [0, 1, -2])
         
         prepareInstances(device)
     }

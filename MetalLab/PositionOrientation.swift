@@ -25,12 +25,20 @@ struct PositionOrientation {
     
     mutating func look(from: Float3, at: Float3) {
         position = from
-        orientation = simd_quatf.init(angle: 0.0, axis: normalize(at - from))
+        let toDir = normalize(at - from)
+        let ref = Float3(0, 0, -1)
+        let dot = dot(ref, toDir)
+        let angle = acos(dot)
+        var axis = cross(ref, toDir)
+        if length(axis) < 0.001 {
+            axis = ref
+        }
+        axis = normalize(axis)
+        orientation = simd_quatf(angle: angle, axis: axis)
     }
     
-    mutating func lookAt(_ p2: SIMD3<TFloat>) {
-        let dir = normalize(p2 - position)
-        orientation = simd_quatf(angle: 0.0, axis: dir)
+    mutating func lookAt(_ p: SIMD3<TFloat>) {
+        look(from: position, at: p)
     }
     
     mutating func rotate(dx: TFloat = 0.0, dy: TFloat = 0.0, dz: TFloat = 0.0) {

@@ -42,6 +42,7 @@
 		2C53275C2CE27A270059CAA4 /* Camera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Camera.swift; sourceTree = "<group>"; };
 		2C53275E2CE292BA0059CAA4 /* FloatN.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatN.swift; sourceTree = "<group>"; };
 		2C5327602CE292D90059CAA4 /* MetalMesh.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalMesh.swift; sourceTree = "<group>"; };
+		2C54E5A32CFB3B2900EC5F57 /* readme.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
 		2C5A393C2CEFC94F0019AED7 /* ObjLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjLoader.swift; sourceTree = "<group>"; };
 		2C5A393E2CEFC97A0019AED7 /* monkey.mtl */ = {isa = PBXFileReference; lastKnownFileType = text; path = monkey.mtl; sourceTree = "<group>"; };
 		2C5A393F2CEFC97A0019AED7 /* monkey.obj */ = {isa = PBXFileReference; lastKnownFileType = text; path = monkey.obj; sourceTree = "<group>"; };
@@ -70,6 +71,7 @@
 		2C5A39402CEFC97A0019AED7 /* res */ = {
 			isa = PBXGroup;
 			children = (
+				2C54E5A32CFB3B2900EC5F57 /* readme.txt */,
 				2C5A393E2CEFC97A0019AED7 /* monkey.mtl */,
 				2C5A393F2CEFC97A0019AED7 /* monkey.obj */,
 				2C007C0B2CF0811200F6EEAE /* box.mtl */,
