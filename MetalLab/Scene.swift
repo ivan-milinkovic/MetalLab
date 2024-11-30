@@ -11,7 +11,7 @@ class MyScene {
     var spotLight: SpotLight!
     
     var instanceMesh: MeshObject!
-    var instancePositions: [PositionOrientation] = []
+    var instancePositions: [Position] = []
     var instanceStaticsBuff: MTLBuffer!
     let instanceCount = 4
     
@@ -24,8 +24,8 @@ class MyScene {
     func load(device: MTLDevice) {
         
         let monkey = Self.loadMonkey(device: device)
-        monkey.positionOrientation.moveBy([-1, 1.2, -0.5])
-        // monkey.positionOrientation.lookAt([0,0, 4]) // todo: fix look at
+        monkey.position.moveBy([-1, 1.2, -0.5])
+        // monkey.position.lookAt([0,0, 4]) // todo: fix look at
         monkey.metalMesh.setColor([0.8, 0.4, 0.2, 1])
         self.sceneObjects.append(monkey)
         self.monkey = monkey
@@ -37,9 +37,9 @@ class MyScene {
         
         spotLight = SpotLight(device: device)
         spotLight.color = .one // [0.8, 0.8, 1]
-        spotLight.positionOrientation.look(from: [-3, 5, 2.5], at: [0, 0, 0])
+        spotLight.position.look(from: [-3, 5, 2.5], at: [0, 0, 0])
         
-        self.camera.positionOrientation.look(from: [0, 1.4, 3.2], at: [0, 1, -2])
+        self.camera.position.look(from: [0, 1.4, 3.2], at: [0, 1, -2])
         
         prepareInstances(device)
     }
@@ -51,22 +51,22 @@ class MyScene {
         instanceMesh.metalMesh.setColor([0.1, 0.3, 0.8, 1])
         //instanceMesh.metalMesh.texture = MetalMesh.loadPlaceholderTexture(device)
         
-        var p = PositionOrientation()
+        var p = Position()
         p.position = [0, 0.25, 0]
         p.scale = 0.25
         instancePositions.append(p)
         
-        p = PositionOrientation()
+        p = Position()
         p.position = [1, 0.25, 0]
         p.scale = 0.25
         instancePositions.append(p)
         
-        p = PositionOrientation()
+        p = Position()
         p.position = [0, 0.25, -1]
         p.scale = 0.25
         instancePositions.append(p)
         
-        p = PositionOrientation()
+        p = Position()
         p.position = [1, 0.25, -1]
         p.scale = 0.25
         instancePositions.append(p)

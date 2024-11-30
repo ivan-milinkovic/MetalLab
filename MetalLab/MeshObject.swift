@@ -2,7 +2,7 @@ import Metal
 import simd
 
 class MeshObject {
-    var positionOrientation: PositionOrientation = .init()
+    var position: Position = .init()
     let metalMesh: MetalMesh
     var objectStaticDataBuff: MTLBuffer
     

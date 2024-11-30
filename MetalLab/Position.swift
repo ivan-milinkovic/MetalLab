@@ -1,6 +1,6 @@
 import simd
 
-struct PositionOrientation {
+struct Position {
     var position: SIMD3<TFloat> = [0, 0, 0] {
         didSet { updateTransform() }
     }

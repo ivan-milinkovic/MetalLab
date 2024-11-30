@@ -213,15 +213,15 @@ class Renderer {
         let projectionMat = scene.camera.projectionMatrix
         let shadowProjectionMat = scene.lightProjectionMatrix
         let viewMat = scene.camera.viewMatrix
-        //let viewMat = scene.spotLight.positionOrientation.transform.inverse // render scene from light position
+        //let viewMat = scene.spotLight.position.transform.inverse // render scene from light position
         let directionalLight = scene.directionalLightDir
-        let lightMat = scene.spotLight.positionOrientation.transform.inverse
+        let lightMat = scene.spotLight.position.transform.inverse
         
         for meshObject in scene.sceneObjects {
             
             // update statics
             let objectStaticData = meshObject.objectStaticDataBuff.contents().bindMemory(to: ObjectStaticData.self, capacity: 1)
-            let modelMat = meshObject.positionOrientation.transform
+            let modelMat = meshObject.position.transform
             let modelViewMat = viewMat * modelMat
             
             objectStaticData.pointee.modelViewProjectionMatrix = projectionMat * modelViewMat
@@ -229,8 +229,8 @@ class Renderer {
             objectStaticData.pointee.modelViewInverseTransposeMatrix = modelViewMat.inverse.transpose
             objectStaticData.pointee.directionalLightDir = viewMat * directionalLight
             
-            let lightPos = viewMat * Float4(scene.spotLight.positionOrientation.position, 1) // position in view space
-            let lightDir = viewMat.inverse.transpose * Float4(scene.spotLight.positionOrientation.orientation.axis, 0)
+            let lightPos = viewMat * Float4(scene.spotLight.position.position, 1) // position in view space
+            let lightDir = viewMat.inverse.transpose * Float4(scene.spotLight.position.orientation.axis, 0)
             objectStaticData.pointee.spotLight.position = Float3(lightPos.x, lightPos.y, lightPos.z)
             objectStaticData.pointee.spotLight.direction = Float3(lightDir.x, lightDir.y, lightDir.z)
             objectStaticData.pointee.spotLight.color = scene.spotLight.color
@@ -273,8 +273,8 @@ class Renderer {
             objectStaticData.pointee.directionalLightDir = viewMat * scene.directionalLightDir
             objectStaticData.pointee.modelLightProjectionMatrix = shadowProjectionMat * lightMat * modelMat
             
-            let lightPos = viewMat * Float4(scene.spotLight.positionOrientation.position, 1) // in view space
-            let lightDir = viewMat.inverse.transpose * Float4(scene.spotLight.positionOrientation.orientation.axis, 0)
+            let lightPos = viewMat * Float4(scene.spotLight.position.position, 1) // in view space
+            let lightDir = viewMat.inverse.transpose * Float4(scene.spotLight.position.orientation.axis, 0)
             objectStaticData.pointee.spotLight.position = Float3(lightPos.x, lightPos.y, lightPos.z)
             objectStaticData.pointee.spotLight.direction = Float3(lightDir.x, lightDir.y, lightDir.z)
             objectStaticData.pointee.spotLight.color = .one// scene.spotLight.color
