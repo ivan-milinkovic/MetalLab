@@ -208,56 +208,15 @@ class Renderer {
         
         for meshObject in scene.sceneObjects {
             
-            // update statics
-            let objectConstants = meshObject.objectStaticDataBuff.contents().bindMemory(to: ObjectConstants.self, capacity: 1)
-            let modelMat = meshObject.position.transform
+            meshObject.updateConstantsBuffer()
+            let instanceCount = (meshObject as? ClusterObject)?.count ?? 1
             
-            objectConstants.pointee.modelMatrix = modelMat
-            
-            if let texture = meshObject.metalMesh.texture {
-                encoder.setFragmentTexture(texture, index: 0)
-                objectConstants.pointee.textured = .one
-            } else {
-                objectConstants.pointee.textured = .zero
-            }
-            
-            // encode draw calls
             encoder.setVertexBuffer(meshObject.metalMesh.vertexBuffer, offset: 0, index: 0)
-            encoder.setVertexBuffer(meshObject.objectStaticDataBuff, offset: 0, index: 1)
-            
+            encoder.setVertexBuffer(meshObject.objectConstantsBuff, offset: 0, index: 1)
+            if let texture = meshObject.metalMesh.texture { encoder.setFragmentTexture(texture, index: 0) }
             encoder.setFragmentTexture(scene.spotLight.texture, index: 1)
-            
-            if let indexBuffer = meshObject.metalMesh.indexBuffer {
-                encoder.drawIndexedPrimitives(type: .triangle, indexCount: meshObject.metalMesh.indexCount,
-                                          indexType: .uint32, indexBuffer: indexBuffer, indexBufferOffset: 0)
-            } else {
-                encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: meshObject.metalMesh.vertexCount)
-            }
+            encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: meshObject.metalMesh.vertexCount, instanceCount: instanceCount)
         }
-        
-        // encode instanced geometry
-        let instancedMesh = scene.instanceMesh!
-        for i in 0..<scene.instanceCount {
-            let objectStaticData = scene.instanceConstantsBuff.contents().advanced(by: i * MemoryLayout<ObjectConstants>.stride)
-                                .bindMemory(to: ObjectConstants.self, capacity: 1)
-            
-            let modelMat = scene.instancePositions[i].transform
-            objectStaticData.pointee.modelMatrix = modelMat
-            
-            if let texture = instancedMesh.metalMesh.texture {
-                encoder.setFragmentTexture(texture, index: 0)
-                objectStaticData.pointee.textured = .one
-            } else {
-                objectStaticData.pointee.textured = .zero
-            }
-        }
-        
-        // encode draw calls
-        encoder.setVertexBuffer(instancedMesh.metalMesh.vertexBuffer, offset: 0, index: 0)
-        encoder.setVertexBuffer(scene.instanceConstantsBuff, offset: 0, index: 1)
-        encoder.setFragmentTexture(scene.spotLight.texture, index: 1) // shadow map texture
-        
-        encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: instancedMesh.metalMesh.vertexCount, instanceCount: scene.instanceCount)
     }
     
     

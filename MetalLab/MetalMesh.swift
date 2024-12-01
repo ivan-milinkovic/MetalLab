@@ -3,6 +3,7 @@ import Metal
 import MetalKit
 
 class MetalMesh {
+    
     let vertexBuffer: MTLBuffer
     let vertexCount: Int
     

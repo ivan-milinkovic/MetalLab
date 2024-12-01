@@ -10,10 +10,7 @@ class MyScene {
     let directionalLightDir: Float3 = [1, -1, -1]
     var spotLight: SpotLight!
     
-    var instanceMesh: MeshObject!
-    var instancePositions: [Position] = []
-    var instanceConstantsBuff: MTLBuffer!
-    let instanceCount = 4
+    let pool = Pool()
     
     var shadowMapProjectionMatrix: float4x4 {
         camera.projectionMatrix
@@ -23,7 +20,7 @@ class MyScene {
     
     func load(device: MTLDevice) {
         
-        let monkey = Self.loadMonkey(device: device)
+        let monkey = loadMonkey(device: device)
         monkey.position.moveBy([-1, 1.2, -0.5])
         // monkey.position.lookAt([0,0, 4]) // todo: fix look at
         monkey.metalMesh.setColor([0.8, 0.4, 0.2, 1])
@@ -46,12 +43,11 @@ class MyScene {
     }
     
     func prepareInstances(_ device: MTLDevice) {
-        
-        instanceMesh = Self.loadBox(device: device)
-        instanceConstantsBuff = device.makeBuffer(length: MemoryLayout<ObjectConstants>.stride * instanceCount, options: .storageModeShared)
+        let instanceMesh = loadBox(device: device)
         instanceMesh.metalMesh.setColor([0.1, 0.3, 0.8, 1])
         //instanceMesh.metalMesh.texture = MetalMesh.loadPlaceholderTexture(device)
         
+        var instancePositions: [Position] = []
         var p = Position()
         p.position = [0, 0.25, 0]
         p.scale = 0.25
@@ -71,18 +67,20 @@ class MyScene {
         p.position = [1, 0.25, -1]
         p.scale = 0.25
         instancePositions.append(p)
+        
+        let metalMesh = pool.loadMesh("box", device: device)
+        let boxesCluster = ClusterObject(metalMesh: metalMesh, positions: instancePositions, device: device)
+        sceneObjects.append(boxesCluster)
     }
     
-    static func loadMonkey(device: MTLDevice) -> MeshObject {
-        let url = Bundle.main.url(forResource: "monkey", withExtension: "obj")!
-        let metalMesh = MetalMesh.loadObjFile(url, device: device)
+    func loadMonkey(device: MTLDevice) -> MeshObject {
+        let metalMesh = pool.loadMesh("monkey", device: device)
         let meshObject = MeshObject(metalMesh: metalMesh, device: device)
         return meshObject
     }
     
-    static func loadBox(device: MTLDevice) -> MeshObject {
-        let url = Bundle.main.url(forResource: "box", withExtension: "obj")!
-        let metalMesh = MetalMesh.loadObjFile(url, device: device)
+    func loadBox(device: MTLDevice) -> MeshObject {
+        let metalMesh = pool.loadMesh("box", device: device)
         let meshObject = MeshObject(metalMesh: metalMesh, device: device)
         return meshObject
     }
