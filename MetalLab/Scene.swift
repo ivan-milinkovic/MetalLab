@@ -9,8 +9,8 @@ class MyScene {
     var sceneObjects: [MeshObject] = []
     let directionalLightDir: Float3 = [1, -1, -1]
     var spotLight: SpotLight!
-    
     let pool = Pool()
+    var isReady = false
     
     var shadowMapProjectionMatrix: float4x4 {
         camera.projectionMatrix
@@ -40,6 +40,8 @@ class MyScene {
         self.camera.position.look(from: [0, 1.4, 3.2], at: [0, 1, -2])
         
         prepareInstances(device)
+        
+        isReady = true
     }
     
     func prepareInstances(_ device: MTLDevice) {

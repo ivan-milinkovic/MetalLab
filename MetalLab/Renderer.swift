@@ -296,8 +296,8 @@ class Renderer {
     
     @MainActor
     func draw(scene: MyScene) {
-        guard let drawable = mtkView.currentDrawable else { return }
-        guard let commandBuffer = commandQueue.makeCommandBuffer() else { return }
+        guard scene.isReady, let drawable = mtkView.currentDrawable, let commandBuffer = commandQueue.makeCommandBuffer()
+        else { return }
         
         setupMsaaTextures() // there is no MTKView callback AFTER it changes size
         
