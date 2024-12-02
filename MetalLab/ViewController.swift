@@ -23,6 +23,11 @@ class ViewController: NSObject, ObservableObject {
         self.mtkView = mtkView
         renderer.setMtkView(mtkView)
     }
+    
+    func draw() {
+        scene.grass.updateShear()
+        renderer.draw(scene: scene)
+    }
 }
 
 
@@ -36,7 +41,7 @@ extension ViewController: MTKViewDelegate {
     func draw(in view: MTKView) {
         //let d0 = Date()
         
-        renderer.draw(scene: scene)
+        draw()
         
         //let dt = Date().timeIntervalSince(d0)
         //print(String(format: "render time: %.2fms, ~fps: %d", dt * 1000, Int(1 / dt)))

@@ -115,4 +115,23 @@ class MetalMesh {
         return MetalMesh(vertices: triangle, texture: nil, device: device)
         //return MetalMesh(vertices: triangle, texture: loadPlaceholderTexture(device), device: device)
     }
+    
+    static func grassStrand(_ device: MTLDevice) -> MetalMesh {
+        let n = Float3(0,0,1)
+        let colBot = Float4(  0, 0.25,  0, 1)
+        let colTop = Float4(0.6, 0.8, 0.4, 1)
+        let w: Float = 0.1
+        let fs: Float = 0.25 // shrink factor
+        let vertices: [VertexData] = [
+            VertexData(position: [fs*w, 1, 0], normal: n, color: colTop, uv: [ 0.0,  0.0]), // top left
+            VertexData(position: [   0, 0, 0], normal: n, color: colBot, uv: [ 0.0,  1.0]), // bot left
+            VertexData(position: [   w, 0, 0], normal: n, color: colBot, uv: [ 1.0,  1.0]), // bot right, counter-clockwise
+            
+            VertexData(position: [    fs*w, 1, 0], normal: n, color: colTop, uv: [ 0.0,  0.0]), // top left
+            VertexData(position: [       w, 0, 0], normal: n, color: colBot, uv: [ 1.0,  1.0]), // bot right
+            VertexData(position: [(1-fs)*w, 1, 0], normal: n, color: colTop, uv: [ 1.0,  0.0]), // top right, counter-clockwise
+        ]
+        let metalMesh = MetalMesh(vertices: vertices, texture: nil, device: device)
+        return metalMesh
+    }
 }

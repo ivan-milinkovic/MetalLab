@@ -11,7 +11,7 @@ struct ContentView: View {
                 let dx = f * Float(dragVal.velocity.height)
                 let dy = f * Float(dragVal.velocity.width)
                 //viewController.scene.camera.position.rotate(dx: dx, dy: dy)
-                viewController.scene.monkey.position.rotate(dx: dx, dy: dy)
+                viewController.scene.selection.position.rotate(dx: dx, dy: dy)
             }))
             .task {
                 viewController.load()

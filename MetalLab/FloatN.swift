@@ -59,4 +59,8 @@ extension float4x4 {
                         SIMD4<Float>( 0,  0, sz, 0),
                         SIMD4<Float>(tx, ty, tz, 1))
     }
+    
+    static func shear(_ shear: Float3) -> float4x4 {
+        return float4x4([1, shear.y, shear.z, 0], [shear.x, 1, shear.z, 0], [0, 0, 1, 0], [0, 0, 0, 1])
+    }
 }

@@ -5,12 +5,15 @@ import simd
 class MyScene {
     
     let camera = Camera()
-    var monkey: MeshObject!
     var sceneObjects: [MeshObject] = []
     let directionalLightDir: Float3 = [1, -1, -1]
     var spotLight: SpotLight!
+    
     let pool = Pool()
     var isReady = false
+    
+    var selection: MeshObject!
+    var grass: InstancedObject!
     
     var shadowMapProjectionMatrix: float4x4 {
         camera.projectionMatrix
@@ -22,15 +25,16 @@ class MyScene {
         
         let monkey = loadMonkey(device: device)
         monkey.position.moveBy([0, 1.2, -0.5])
-        // monkey.position.lookAt([0,0, 4]) // todo: fix look at
+        // selection.position.lookAt([0,0, 4]) // todo: fix look at
         monkey.metalMesh.setColor([0.8, 0.4, 0.2, 1])
         self.sceneObjects.append(monkey)
-        self.monkey = monkey
+        self.selection = monkey
         
         let planeSize: Float = 4
         let planeMesh = MetalMesh.rectangle(p1: [-planeSize, 0, -planeSize], p2: [planeSize, 0, planeSize], device: device)
         let plane = MeshObject(metalMesh: planeMesh, device: device)
         //plane.metalMesh.texture = MetalMesh.loadPlaceholderTexture(device)
+        plane.metalMesh.setColor([0.1, 0.1, 0.05, 1])
         self.sceneObjects.append(plane)
         
         spotLight = SpotLight(device: device)
@@ -39,15 +43,13 @@ class MyScene {
         
         self.camera.position.look(from: [0, 1.4, 3.2], at: [0, 1, -2])
         
-        prepareInstances(device)
+        makeInstancedBoxes(device)
+        makeGrass(device)
         
         isReady = true
     }
     
-    func prepareInstances(_ device: MTLDevice) {
-        let instanceMesh = loadBox(device: device)
-        instanceMesh.metalMesh.setColor([0.1, 0.3, 0.8, 1])
-        //instanceMesh.metalMesh.texture = MetalMesh.loadPlaceholderTexture(device)
+    func makeInstancedBoxes(_ device: MTLDevice) {
         
         var instancePositions: [Position] = []
         
@@ -56,7 +58,7 @@ class MyScene {
         //instancePositions.append(Position(position: [0, 0.25,-1], scale: 0.25))
         //instancePositions.append(Position(position: [1, 0.25,-1], scale: 0.25))
         
-        let rectSize: Float = 6
+        let rectSize: Float = 4
         let objectScale: Float = 1.0/8.0
         let densityStep: Float = 0.28
         for i in stride(from: 0, through: rectSize, by: densityStep) {
@@ -68,10 +70,48 @@ class MyScene {
         }
         
         let metalMesh = pool.loadMesh("box", device: device)
-        let boxesCluster = ClusterObject(metalMesh: metalMesh, positions: instancePositions, device: device)
-        boxesCluster.position.moveBy([-rectSize*0.5, 0, 1])
+        metalMesh.setColor([0.1, 0.3, 0.8, 1])
+        let boxesCluster = InstancedObject(metalMesh: metalMesh, positions: instancePositions, device: device)
+        boxesCluster.position.moveBy([-rectSize, 0, 1])
+        //metalMesh.texture = MetalMesh.loadPlaceholderTexture(device)
         
         sceneObjects.append(boxesCluster)
+    }
+    
+    func makeGrass(_ device: MTLDevice) {
+        
+//        let mesh = MetalMesh.grassStrand(device)
+//        let object = MeshObject(metalMesh: mesh, device: device)
+//        sceneObjects.append(object)
+//        selection = object
+//        return
+        
+        var instancePositions: [Position] = []
+        
+        let rectSize: Float = 4
+        let objectScale: Float = 0.2
+        var strandWidth: Float = 0.1
+        strandWidth = strandWidth * objectScale * 2 // 0.04
+        let offsetLimits = strandWidth * 0.5
+        for i in stride(from: 0, through: rectSize, by: strandWidth) {
+            for j in stride(from: 0, through: rectSize, by: strandWidth) {
+                let offset = Float.random(in: -offsetLimits...offsetLimits)
+                let scale = objectScale * Float.random(in: 0.8...1.2)
+                instancePositions.append(Position(position: [i + offset, 0.0, -j + offset], scale: scale))
+            }
+        }
+        
+        let mesh = MetalMesh.grassStrand(device)
+        let grass = InstancedObject(metalMesh: mesh, positions: instancePositions, device: device)
+        //grass.position.moveBy([-rectSize*0.5, 0, 1])
+        grass.position.moveBy([0, 0, 1])
+        
+        for i in 0..<grass.positions.count {
+            grass.flexibility[i] = Float.random(in: 0.3...1.0)
+        }
+        
+        sceneObjects.append(grass)
+        self.grass = grass
     }
     
     func loadMonkey(device: MTLDevice) -> MeshObject {
