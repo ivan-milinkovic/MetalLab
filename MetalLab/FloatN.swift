@@ -20,6 +20,10 @@ extension Float3 {
     var float4_w1: Float4 {
         Float4(x, y, z, 1)
     }
+    
+    var float4_w0: Float4 {
+        Float4(x, y, z, 0)
+    }
 }
 
 extension float4x4 {

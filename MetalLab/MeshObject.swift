@@ -52,6 +52,7 @@ class InstancedObject: MeshObject {
                                     .bindMemory(to: ObjectConstants.self, capacity: 1)
             
             let shearMat = float4x4.shear( shear[i] * flexibility[i] )
+            // ideally would be: scale -> shear -> rotation -> translation (move shear to Position), but good enough
             objectConstants.pointee.modelMatrix = modelMat * positions[i].transform * shearMat
             objectConstants.pointee.textured = isTextured ? .one : .zero
         }

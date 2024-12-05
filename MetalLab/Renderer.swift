@@ -281,16 +281,16 @@ class Renderer {
         fc.pointee.projectionMatrix = scene.camera.projectionMatrix
         fc.pointee.viewProjectionMatrix = fc.pointee.projectionMatrix * fc.pointee.viewMatrix
         
-        let dirLight = fc.pointee.viewMatrix * Float4(scene.directionalLightDir, 0)
-        fc.pointee.directionalLightDir = .init(dirLight.x, dirLight.y, dirLight.z)
+        let dirLight = fc.pointee.viewMatrix * scene.directionalLightDir.float4_w0
+        fc.pointee.directionalLightDir = dirLight.xyz
         
         let lightMatrix = scene.spotLight.position.transform.inverse
         fc.pointee.lightProjectionMatrix = scene.shadowMapProjectionMatrix * lightMatrix
         
-        let lightPos = viewMatrix * Float4(scene.spotLight.position.position, 1) // position in view space
-        let lightDir = viewMatrix.inverse.transpose * Float4(scene.spotLight.position.orientation.axis, 0)
-        fc.pointee.spotLight.position = Float3(lightPos.x, lightPos.y, lightPos.z)
-        fc.pointee.spotLight.direction = Float3(lightDir.x, lightDir.y, lightDir.z)
+        let lightPos = viewMatrix * scene.spotLight.position.position.float4_w1 // position in view space
+        let lightDir = viewMatrix.inverse.transpose * scene.spotLight.position.orientation.axis.float4_w0
+        fc.pointee.spotLight.position = lightPos.xyz
+        fc.pointee.spotLight.direction = lightDir.xyz
         fc.pointee.spotLight.color = scene.spotLight.color
     }
     
