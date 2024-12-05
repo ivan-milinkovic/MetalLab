@@ -6,6 +6,7 @@ class ViewController: NSObject, ObservableObject {
     let scene: MyScene
     let renderer: Renderer
     var mtkView: MTKView!
+    var timeCounter: Double = 0
     
     override init() {
         scene = MyScene()
@@ -22,10 +23,11 @@ class ViewController: NSObject, ObservableObject {
     func setMtkView(_ mtkView: MTKView) {
         self.mtkView = mtkView
         renderer.setMtkView(mtkView)
+        timeCounter = CACurrentMediaTime()
     }
     
-    func draw() {
-        scene.grass.updateShear()
+    func draw(_ dt: Float) {
+        scene.grass.updateShear(timeCounter: timeCounter, wind: scene.wind)
         renderer.draw(scene: scene)
     }
 }
@@ -39,9 +41,12 @@ extension ViewController: MTKViewDelegate {
     }
     
     func draw(in view: MTKView) {
-        //let d0 = Date()
+//        let d0 = Date()
+        let now = CACurrentMediaTime()
+        let dt = now - timeCounter
+        timeCounter = now
         
-        draw()
+        draw(Float(dt))
         
         //let dt = Date().timeIntervalSince(d0)
         //print(String(format: "render time: %.2fms, ~fps: %d", dt * 1000, Int(1 / dt)))

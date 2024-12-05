@@ -33,14 +33,14 @@ class InstancedObject: MeshObject {
     
     var cnt: Float = 0.0
     var flexibility: [Float] // additional shear factor per instance
-    var wind: [Float]
+    var shear: [Float3]
     
     init(metalMesh: MetalMesh, positions: [Position], device: MTLDevice) {
         self.positions = positions
         self.count = positions.count
         let constantsBuff = device.makeBuffer(length: count * MemoryLayout<ObjectConstants>.stride, options: .storageModeShared)!
         flexibility = .init(repeating: 0, count: count)
-        wind = .init(repeating: 0, count: count)
+        shear = .init(repeating: .zero, count: count)
         super.init(metalMesh: metalMesh, objectConstantsBuff: constantsBuff)
     }
     
@@ -51,20 +51,18 @@ class InstancedObject: MeshObject {
             let objectConstants = objectConstantsBuff.contents().advanced(by: i * MemoryLayout<ObjectConstants>.stride)
                                     .bindMemory(to: ObjectConstants.self, capacity: 1)
             
-            let shearMat = float4x4.shear([flexibility[i] * wind[i], 0, 0])
-            
-            objectConstants.pointee.modelMatrix = modelMat * shearMat * positions[i].transform
+            let shearMat = float4x4.shear( shear[i] * flexibility[i] )
+            objectConstants.pointee.modelMatrix = modelMat * positions[i].transform * shearMat
             objectConstants.pointee.textured = isTextured ? .one : .zero
         }
     }
     
-    func updateShear() {
-        cnt += 0.02
+    func updateShear(timeCounter: Double, wind: Wind) {
+        let modelMat = position.transform
         var i=0; while i<count { defer { i += 1 }
-            let progress = Float(i)/Float(count)
-            let t = 1.0*(cnt + progress)
-            let localAmp = 0.3 * (sin(t) + sin(2*t) + sin(4*t)) + 0.25
-            wind[i] = localAmp
+            let pos = (modelMat * positions[i].position.float4_w1).xyz
+            let sample = wind.sample(position: pos, timeCounter: timeCounter)
+            self.shear[i] = sample
         }
     }
 }

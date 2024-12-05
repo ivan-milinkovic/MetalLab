@@ -10,6 +10,16 @@ extension Float4 {
     static var randomOpaqueColor: Float4 {
         .init(Float.random(in: 0...1), Float.random(in: 0...1), Float.random(in: 0...1), 1)
     }
+    
+    var xyz: Float3 {
+        Float3(x, y, z)
+    }
+}
+
+extension Float3 {
+    var float4_w1: Float4 {
+        Float4(x, y, z, 1)
+    }
 }
 
 extension float4x4 {
@@ -61,6 +71,9 @@ extension float4x4 {
     }
     
     static func shear(_ shear: Float3) -> float4x4 {
-        return float4x4([1, shear.y, shear.z, 0], [shear.x, 1, shear.z, 0], [0, 0, 1, 0], [0, 0, 0, 1])
+        return float4x4([1, shear.y, shear.z, 0],
+                        [shear.x, 1, shear.z, 0],
+                        [0, 0, 1, 0],
+                        [0, 0, 0, 1])
     }
 }

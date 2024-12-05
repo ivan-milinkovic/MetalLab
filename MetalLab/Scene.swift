@@ -8,6 +8,7 @@ class MyScene {
     var sceneObjects: [MeshObject] = []
     let directionalLightDir: Float3 = [1, -1, -1]
     var spotLight: SpotLight!
+    let wind: Wind = .init()
     
     let pool = Pool()
     var isReady = false
