@@ -23,7 +23,7 @@ class MyScene {
     }
     
     func updateShear(timeCounter: Double, wind: Wind) {
-        let modelMat = grass.position.transform
+        let modelMat = grass.transform.matrix
         var i=0; while i<grass.count { defer { i += 1 }
             let pos = (modelMat * grass.positions[i].position.float4_w1).xyz
             let sample = wind.sample(position: pos, timeCounter: timeCounter)
@@ -34,8 +34,8 @@ class MyScene {
     func load(device: MTLDevice) {
         
         let monkey = loadMonkey(device: device)
-        monkey.position.moveBy([0, 1.2, -0.5])
-        // selection.position.lookAt([0,0, 4]) // todo: fix look at
+        monkey.transform.moveBy([0, 1.2, -0.5])
+        // selection.transform.lookAt([0,0, 4]) // todo: fix look at
         monkey.metalMesh.setColor([0.8, 0.4, 0.2, 1])
         self.sceneObjects.append(monkey)
         self.selection = monkey
@@ -82,7 +82,7 @@ class MyScene {
         let metalMesh = pool.loadMesh("box", device: device)
         metalMesh.setColor([0.1, 0.3, 0.8, 1])
         let boxesCluster = InstancedObject(metalMesh: metalMesh, positions: instancePositions, device: device)
-        boxesCluster.position.moveBy([-rectSize, 0, 1])
+        boxesCluster.transform.moveBy([-rectSize, 0, 1])
         //metalMesh.texture = MetalMesh.loadPlaceholderTexture(device)
         
         sceneObjects.append(boxesCluster)
@@ -106,8 +106,8 @@ class MyScene {
         
         let mesh = MetalMesh.grassStrand(device)
         let grass = InstancedObject(metalMesh: mesh, positions: instancePositions, device: device)
-        //grass.position.moveBy([-rectSize*0.5, 0, 1])
-        grass.position.moveBy([0, 0, 1])
+        //grass.transform.moveBy([-rectSize*0.5, 0, 1])
+        grass.transform.moveBy([0, 0, 1])
         
         for i in 0..<grass.positions.count {
             grass.flexibility[i] = Float.random(in: 0.3...1.0)

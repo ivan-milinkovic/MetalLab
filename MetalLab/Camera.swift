@@ -5,7 +5,7 @@ class Camera {
     var position: Transform = .init()
     
     var projectionMatrix: float4x4 = matrix_identity_float4x4
-    var viewMatrix: float4x4 { position.transform.inverse }
+    var viewMatrix: float4x4 { position.matrix.inverse }
     
     func updateProjection(size: CGSize) {
         let vFovRads: Float = 60 * Float.pi / 180.0

@@ -17,7 +17,7 @@ struct Transform {
         didSet { updateTransform() }
     }
     
-    var transform: float4x4 = matrix_identity_float4x4
+    var matrix: float4x4 = matrix_identity_float4x4
     
     init() {
         updateTransform()
@@ -65,6 +65,6 @@ struct Transform {
         let rotMat = float4x4(orientation)
         let transMat = float4x4.init([1,0,0,0], [0,1,0,0], [0,0,1,0], SIMD4(position, 1))
         let shearMat = float4x4.shear(shear)
-        transform = transMat * rotMat * scaleMat * shearMat
+        matrix = transMat * rotMat * scaleMat * shearMat
     }
 }

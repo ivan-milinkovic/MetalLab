@@ -4,7 +4,7 @@ import simd
 
 class MeshObject {
     
-    var position: Transform = .init()
+    var transform: Transform = .init()
     let metalMesh: MetalMesh
     var objectConstantsBuff: MTLBuffer
     
@@ -20,7 +20,7 @@ class MeshObject {
     
     func updateConstantsBuffer() {
         let objectConstants = objectConstantsBuff.contents().bindMemory(to: ObjectConstants.self, capacity: 1)
-        objectConstants.pointee.modelMatrix = position.transform
+        objectConstants.pointee.modelMatrix = transform.matrix
         objectConstants.pointee.textured = (metalMesh.texture != nil) ? .one : .zero
     }
 }
@@ -41,12 +41,12 @@ class InstancedObject: MeshObject {
     }
     
     override func updateConstantsBuffer() {
-        let modelMat = position.transform
+        let modelMat = transform.matrix
         let isTextured = metalMesh.texture != nil
         for i in 0..<count {
             let objectConstants = objectConstantsBuff.contents().advanced(by: i * MemoryLayout<ObjectConstants>.stride)
                                     .bindMemory(to: ObjectConstants.self, capacity: 1)
-            objectConstants.pointee.modelMatrix = modelMat * positions[i].transform
+            objectConstants.pointee.modelMatrix = modelMat * positions[i].matrix
             objectConstants.pointee.textured = isTextured ? .one : .zero
         }
     }

@@ -64,15 +64,15 @@ class Renderer {
         let vertexFunction = library.makeFunction(name: "vertex_main")!
         let fragmentFunction = library.makeFunction(name: "fragment_main")!
         
-        let pipelineDesc = MTLRenderPipelineDescriptor()
-        pipelineDesc.vertexFunction = vertexFunction
-        pipelineDesc.fragmentFunction = fragmentFunction
+        let mainPipelineDesc = MTLRenderPipelineDescriptor()
+        mainPipelineDesc.vertexFunction = vertexFunction
+        mainPipelineDesc.fragmentFunction = fragmentFunction
         
-        pipelineDesc.vertexDescriptor = VertexData.vertexDescriptor
-        pipelineDesc.colorAttachments[0].pixelFormat = colorPixelFormat
-        pipelineDesc.depthAttachmentPixelFormat = depthPixelFormat
-        pipelineDesc.rasterSampleCount = sampleCount
-        mainPipelineState = try! device.makeRenderPipelineState(descriptor: pipelineDesc)
+        mainPipelineDesc.vertexDescriptor = VertexData.vertexDescriptor
+        mainPipelineDesc.colorAttachments[0].pixelFormat = colorPixelFormat
+        mainPipelineDesc.depthAttachmentPixelFormat = depthPixelFormat
+        mainPipelineDesc.rasterSampleCount = sampleCount
+        mainPipelineState = try! device.makeRenderPipelineState(descriptor: mainPipelineDesc)
         
         let samplerDesc = MTLSamplerDescriptor()
         samplerDesc.normalizedCoordinates = true
@@ -274,7 +274,7 @@ class Renderer {
     
     func updateFrameConstants(_ scene: MyScene) {
         let viewMatrix = scene.camera.viewMatrix
-        //let viewMatrix = scene.spotLight.position.transform.inverse // render scene from light perspective
+        //let viewMatrix = scene.spotLight.transform.transform.inverse // render scene from light perspective
         
         let fc = frameConstantsBuff.contents().bindMemory(to: FrameConstants.self, capacity: 1)
         fc.pointee.viewMatrix = viewMatrix
@@ -284,7 +284,7 @@ class Renderer {
         let dirLight = fc.pointee.viewMatrix * scene.directionalLightDir.float4_w0
         fc.pointee.directionalLightDir = dirLight.xyz
         
-        let lightMatrix = scene.spotLight.position.transform.inverse
+        let lightMatrix = scene.spotLight.position.matrix.inverse
         fc.pointee.lightProjectionMatrix = scene.shadowMapProjectionMatrix * lightMatrix
         
         let lightPos = viewMatrix * scene.spotLight.position.position.float4_w1 // position in view space
