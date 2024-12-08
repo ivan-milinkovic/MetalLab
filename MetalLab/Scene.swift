@@ -22,6 +22,15 @@ class MyScene {
         //return float4x4.orthographicProjection(left: -size, right: size, bottom: -size, top: size, near: 1, far: 100)
     }
     
+    func updateShear(timeCounter: Double, wind: Wind) {
+        let modelMat = grass.position.transform
+        var i=0; while i<grass.count { defer { i += 1 }
+            let pos = (modelMat * grass.positions[i].position.float4_w1).xyz
+            let sample = wind.sample(position: pos, timeCounter: timeCounter)
+            grass.positions[i].shear = sample * grass.flexibility[i]
+        }
+    }
+    
     func load(device: MTLDevice) {
         
         let monkey = loadMonkey(device: device)
@@ -52,12 +61,12 @@ class MyScene {
     
     func makeInstancedBoxes(_ device: MTLDevice) {
         
-        var instancePositions: [Position] = []
+        var instancePositions: [Transform] = []
         
-        //instancePositions.append(Position(position: [0, 0.25, 0], scale: 0.25))
-        //instancePositions.append(Position(position: [1, 0.25, 0], scale: 0.25))
-        //instancePositions.append(Position(position: [0, 0.25,-1], scale: 0.25))
-        //instancePositions.append(Position(position: [1, 0.25,-1], scale: 0.25))
+        //instancePositions.append(Transform(position: [0, 0.25, 0], scale: 0.25))
+        //instancePositions.append(Transform(position: [1, 0.25, 0], scale: 0.25))
+        //instancePositions.append(Transform(position: [0, 0.25,-1], scale: 0.25))
+        //instancePositions.append(Transform(position: [1, 0.25,-1], scale: 0.25))
         
         let rectSize: Float = 4
         let objectScale: Float = 1.0/8.0
@@ -66,7 +75,7 @@ class MyScene {
             for j in stride(from: 0, through: rectSize, by: densityStep) {
                 let offset = Float.random(in: -0.1...0.1)
                 let scale = objectScale * Float.random(in: 0.5...1.0)
-                instancePositions.append(Position(position: [i + offset, scale, -j + offset], scale: scale))
+                instancePositions.append(Transform(position: [i + offset, scale, -j + offset], scale: scale))
             }
         }
         
@@ -80,14 +89,7 @@ class MyScene {
     }
     
     func makeGrass(_ device: MTLDevice) {
-        
-//        let mesh = MetalMesh.grassStrand(device)
-//        let object = MeshObject(metalMesh: mesh, device: device)
-//        sceneObjects.append(object)
-//        selection = object
-//        return
-        
-        var instancePositions: [Position] = []
+        var instancePositions: [Transform] = []
         
         let rectSize: Float = 4
         let objectScale: Float = 0.2
@@ -98,7 +100,7 @@ class MyScene {
             for j in stride(from: 0, through: rectSize, by: strandWidth) {
                 let offset = Float.random(in: -offsetLimits...offsetLimits)
                 let scale = objectScale * Float.random(in: 0.8...1.2)
-                instancePositions.append(Position(position: [i + offset, 0.0, -j + offset], scale: scale))
+                instancePositions.append(Transform(position: [i + offset, 0.0, -j + offset], scale: scale))
             }
         }
         

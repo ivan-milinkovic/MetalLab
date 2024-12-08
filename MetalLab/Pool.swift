@@ -2,7 +2,7 @@ import Metal
 
 class Pool {
     var metalMeshes: [String: MetalMesh] = [:]
-    var positions: [Int: [Position]] = [:] // object id -> instances (positions)
+    var positions: [Int: [Transform]] = [:] // object id -> instances (positions)
     
     func loadMesh(_ name: String, device: MTLDevice) -> MetalMesh {
         if let metalMesh = metalMeshes[name] {

@@ -2,7 +2,7 @@ import Foundation
 import simd
 
 class Camera {
-    var position: Position = .init()
+    var position: Transform = .init()
     
     var projectionMatrix: float4x4 = matrix_identity_float4x4
     var viewMatrix: float4x4 { position.transform.inverse }

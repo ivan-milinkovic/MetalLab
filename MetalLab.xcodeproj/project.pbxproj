@@ -10,7 +10,7 @@
 		2C007C0D2CF0811200F6EEAE /* box.obj in Resources */ = {isa = PBXBuildFile; fileRef = 2C007C0C2CF0811200F6EEAE /* box.obj */; };
 		2C007C0E2CF0811200F6EEAE /* box.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 2C007C0B2CF0811200F6EEAE /* box.mtl */; };
 		2C007C132CF31B0B00F6EEAE /* MeshObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C007C122CF31B0000F6EEAE /* MeshObject.swift */; };
-		2C007C172CF31D1A00F6EEAE /* Position.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C007C162CF31D1600F6EEAE /* Position.swift */; };
+		2C007C172CF31D1A00F6EEAE /* Transform.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C007C162CF31D1600F6EEAE /* Transform.swift */; };
 		2C007C192CF323EC00F6EEAE /* VertexData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C007C182CF323E800F6EEAE /* VertexData.swift */; };
 		2C007C1B2CF39D9400F6EEAE /* SpotLight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C007C1A2CF39D8F00F6EEAE /* SpotLight.swift */; };
 		2C2ED3892D021C5300739E4C /* Wind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C2ED3882D021C5100739E4C /* Wind.swift */; };
@@ -37,7 +37,7 @@
 		2C007C0B2CF0811200F6EEAE /* box.mtl */ = {isa = PBXFileReference; lastKnownFileType = text; path = box.mtl; sourceTree = "<group>"; };
 		2C007C0C2CF0811200F6EEAE /* box.obj */ = {isa = PBXFileReference; lastKnownFileType = text; path = box.obj; sourceTree = "<group>"; };
 		2C007C122CF31B0000F6EEAE /* MeshObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeshObject.swift; sourceTree = "<group>"; };
-		2C007C162CF31D1600F6EEAE /* Position.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Position.swift; sourceTree = "<group>"; };
+		2C007C162CF31D1600F6EEAE /* Transform.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transform.swift; sourceTree = "<group>"; };
 		2C007C182CF323E800F6EEAE /* VertexData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VertexData.swift; sourceTree = "<group>"; };
 		2C007C1A2CF39D8F00F6EEAE /* SpotLight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotLight.swift; sourceTree = "<group>"; };
 		2C2ED3882D021C5100739E4C /* Wind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Wind.swift; sourceTree = "<group>"; };
@@ -115,7 +115,7 @@
 				2C54E5A62CFBA41E00EC5F57 /* Pool.swift */,
 				2C5327602CE292D90059CAA4 /* MetalMesh.swift */,
 				2C007C182CF323E800F6EEAE /* VertexData.swift */,
-				2C007C162CF31D1600F6EEAE /* Position.swift */,
+				2C007C162CF31D1600F6EEAE /* Transform.swift */,
 				2C53275C2CE27A270059CAA4 /* Camera.swift */,
 				2CF9033029BE6824000D2729 /* Renderer.swift */,
 				2C54E5A42CFBA0AA00EC5F57 /* ConstantStructs.swift */,
@@ -227,7 +227,7 @@
 				2C2ED3892D021C5300739E4C /* Wind.swift in Sources */,
 				2C53275B2CE271780059CAA4 /* ViewController.swift in Sources */,
 				2CF9032029BE6510000D2729 /* MetalLabApp.swift in Sources */,
-				2C007C172CF31D1A00F6EEAE /* Position.swift in Sources */,
+				2C007C172CF31D1A00F6EEAE /* Transform.swift in Sources */,
 				2C5327612CE292D90059CAA4 /* MetalMesh.swift in Sources */,
 				2C54E5A72CFBA42100EC5F57 /* Pool.swift in Sources */,
 				2CF9033329BE7402000D2729 /* Shaders.metal in Sources */,

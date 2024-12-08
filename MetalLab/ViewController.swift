@@ -26,8 +26,9 @@ class ViewController: NSObject, ObservableObject {
         timeCounter = CACurrentMediaTime()
     }
     
-    func draw(_ dt: Float) {
-        scene.grass.updateShear(timeCounter: timeCounter, wind: scene.wind)
+    func frameCallback(_ dt: Float) {
+        if !scene.isReady { return }
+        scene.updateShear(timeCounter: timeCounter, wind: scene.wind)
         renderer.draw(scene: scene)
     }
 }
@@ -41,14 +42,13 @@ extension ViewController: MTKViewDelegate {
     }
     
     func draw(in view: MTKView) {
-//        let d0 = Date()
-        let now = CACurrentMediaTime()
-        let dt = now - timeCounter
-        timeCounter = now
+        let t = CACurrentMediaTime()
+        let dt = t - timeCounter
+        timeCounter = t
         
-        draw(Float(dt))
+        frameCallback(Float(dt))
         
-        //let dt = Date().timeIntervalSince(d0)
-        //print(String(format: "render time: %.2fms, ~fps: %d", dt * 1000, Int(1 / dt)))
+        //let updateTime = CACurrentMediaTime() - t
+        //print(String(format: "render time: %.2fms, ~fps: %d", updateTime * 1000, Int(1 / updateTime)))
     }
 }

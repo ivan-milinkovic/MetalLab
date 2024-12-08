@@ -1,6 +1,6 @@
 import simd
 
-struct Position {
+struct Transform {
     var position: Float3 = [0, 0, 0] {
         didSet { updateTransform() }
     }
@@ -10,6 +10,10 @@ struct Position {
     }
     
     var scale: Float = 1.0 {
+        didSet { updateTransform() }
+    }
+    
+    var shear: Float3 = .zero {
         didSet { updateTransform() }
     }
     
@@ -60,6 +64,7 @@ struct Position {
         scaleMat.columns.3.w = 1
         let rotMat = float4x4(orientation)
         let transMat = float4x4.init([1,0,0,0], [0,1,0,0], [0,0,1,0], SIMD4(position, 1))
-        transform = transMat * rotMat * scaleMat
+        let shearMat = float4x4.shear(shear)
+        transform = transMat * rotMat * scaleMat * shearMat
     }
 }
