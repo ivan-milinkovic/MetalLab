@@ -56,6 +56,26 @@ class MyScene {
         makeInstancedBoxes(device)
         makeGrass(device)
         
+        
+        let alphaRectMesh = MetalMesh.rectangle(p1: [-1, 0, -1], p2: [1, 0, 0.5], device: device)
+        alphaRectMesh.setColor([0.3, 0.5, 0.8, 0.6])
+        let alphaRect = MeshObject(metalMesh: alphaRectMesh, device: device)
+        alphaRect.transform.moveBy([-1.5, 0.5, 0])
+        alphaRect.transform.scale = 0.5
+        alphaRect.transform.rotate(dx: .pi * 0.5)
+        
+        let alphaRectMesh2 = MetalMesh.rectangle(p1: [-1, 0, -1], p2: [1, 0, 0.5], device: device)
+        alphaRectMesh2.setColor([0.3, 0.5, 0.8, 0.6])
+        let alphaRect2 = MeshObject(metalMesh: alphaRectMesh2, device: device)
+        alphaRect2.transform.moveBy([-1.5, 0.5, -1])
+        alphaRect2.transform.scale = 0.5
+        alphaRect2.transform.rotate(dx: .pi * 0.5)
+        
+        // transparent objects need to be sorted from back to front
+        // for alpha blending to work properly
+        self.sceneObjects.append(alphaRect2)
+        self.sceneObjects.append(alphaRect)
+        
         isReady = true
     }
     

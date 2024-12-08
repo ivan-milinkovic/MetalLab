@@ -98,9 +98,16 @@ fragment float4 fragment_main(
     fShadow = 1 - fShadow;
     
     float f_light2 = fShadow * fSpotLight + 0.2 * fDirLight;
-    float4 finalColor = f_light2 * (lightColor * color);
-    finalColor.w = 1;
-    return finalColor;
+    float4 color2 = f_light2 * (lightColor * color);
+    color2.w = color.w; // restore the original alpha channel after multiplications
+    //finalColor.w = 1; // avoids transparency
+    
+    float4 color3 = float4(color2.xyz*color2.w, color2.w); // pre-multiply alpha
+    
+    // Gamma correction usage depends on pixel format of the frame-buffer, srgb will convert automatically from linear
+    //return sqrt(color3); // manual gamma correction
+    
+    return color3;
 }
 
 

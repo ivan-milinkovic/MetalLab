@@ -11,6 +11,7 @@ class Renderer {
     var mainPipelineState: MTLRenderPipelineState!
     var shadowPipelineState: MTLRenderPipelineState!
     let colorPixelFormat: MTLPixelFormat = .rgba8Unorm;
+    //let colorPixelFormat: MTLPixelFormat = .rgba8Unorm_srgb; // automatic gamma-correction
     var depthStencilState: MTLDepthStencilState!
     var textureSamplerState: MTLSamplerState!
     var commandQueue: MTLCommandQueue!
@@ -72,6 +73,13 @@ class Renderer {
         mainPipelineDesc.colorAttachments[0].pixelFormat = colorPixelFormat
         mainPipelineDesc.depthAttachmentPixelFormat = depthPixelFormat
         mainPipelineDesc.rasterSampleCount = sampleCount
+        mainPipelineDesc.colorAttachments[0].isBlendingEnabled = true
+        mainPipelineDesc.colorAttachments[0].sourceRGBBlendFactor = .one
+        mainPipelineDesc.colorAttachments[0].destinationRGBBlendFactor = .oneMinusSourceAlpha
+        mainPipelineDesc.colorAttachments[0].rgbBlendOperation = .add
+        mainPipelineDesc.colorAttachments[0].sourceAlphaBlendFactor = .one
+        mainPipelineDesc.colorAttachments[0].destinationAlphaBlendFactor = .oneMinusSourceAlpha
+        mainPipelineDesc.colorAttachments[0].alphaBlendOperation = .add
         mainPipelineState = try! device.makeRenderPipelineState(descriptor: mainPipelineDesc)
         
         let samplerDesc = MTLSamplerDescriptor()
