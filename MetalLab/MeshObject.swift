@@ -32,11 +32,16 @@ class InstancedObject: MeshObject {
     let count: Int
     var flexibility: [Float] // additional shear factor per instance
     
+    let shearConstantsBuff: MTLBuffer
+    let shearStrandDataBuff: MTLBuffer
+    
     init(metalMesh: MetalMesh, positions: [Transform], device: MTLDevice) {
         self.positions = positions
         self.count = positions.count
         let constantsBuff = device.makeBuffer(length: count * MemoryLayout<ObjectConstants>.stride, options: .storageModeShared)!
         flexibility = .init(repeating: 0, count: count)
+        shearConstantsBuff = device.makeBuffer(length: MemoryLayout<UpdateShearConstants>.stride)!
+        shearStrandDataBuff = device.makeBuffer(length: count * MemoryLayout<UpdateShearStrandData>.stride)!
         super.init(metalMesh: metalMesh, objectConstantsBuff: constantsBuff)
     }
     

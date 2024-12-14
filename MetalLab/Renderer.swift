@@ -10,6 +10,8 @@ class Renderer {
     var library: MTLLibrary!
     var mainPipelineState: MTLRenderPipelineState!
     var shadowPipelineState: MTLRenderPipelineState!
+    var updateShearPipelineState: MTLComputePipelineState!
+    
     let colorPixelFormat: MTLPixelFormat = .rgba8Unorm;
     //let colorPixelFormat: MTLPixelFormat = .rgba8Unorm_srgb; // automatic gamma-correction
     var depthStencilState: MTLDepthStencilState!
@@ -103,6 +105,8 @@ class Renderer {
         shadowPipelineState = try! device.makeRenderPipelineState(descriptor: shadowRPD)
         
         frameConstantsBuff = device.makeBuffer(length: MemoryLayout<FrameConstants>.stride, options: .storageModeShared)
+        
+        updateShearPipelineState = try! device.makeComputePipelineState(function: library.makeFunction(name: "update_shear")!)
     }
     
     @MainActor
@@ -320,4 +324,5 @@ class Renderer {
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
     }
+    
 }

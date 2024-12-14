@@ -157,6 +157,38 @@ float4 checker_board(float2 uv, float scale)
     return isEven ? float4(1.0) : float4(0.0);
 }
 
-/*
-vertex float4 basic_vertex( const device packed_float3* vertices [[ buffer(0) ]], unsigned int i [[ vertex_id ]]) { ... }
- */
+// vertex float4 basic_vertex( const device packed_float3* vertices [[ buffer(0) ]], unsigned int i [[ vertex_id ]]) { ... }
+
+struct UpdateShearConstants {
+    float time_counter;
+    uint count;
+    float windStrength;
+    float3 windDir;
+};
+
+struct UpdateShearStrandData {
+    float3 position;
+    float flexibility;
+    float3 outShear;
+};
+
+kernel void update_shear (
+ constant UpdateShearConstants&  constants     [[buffer(0)]],
+ device   UpdateShearStrandData* stradDataBuff [[buffer(1)]],
+ uint index [[thread_position_in_grid]])
+{
+    if (index >= constants.count) {
+        stradDataBuff[index].outShear = float3(1,0,0);
+        return;
+    }
+    
+    auto t = stradDataBuff[index].position + constants.time_counter;
+    t *= 0.75; // adjust wave length
+    auto x = constants.windStrength * (sin(t.x) + sin(2*t.x) + sin(4*t.x)) + 0.25;
+    auto y = constants.windStrength * (sin(t.y) + sin(2*t.y) + sin(4*t.y)) + 0.25;
+    auto z = constants.windStrength * (sin(t.z) + sin(2*t.z) + sin(4*t.z)) + 0.25;
+    x *= constants.windDir.x;
+    y *= constants.windDir.y;
+    z *= constants.windDir.z;
+    stradDataBuff[index].outShear = float3(x, y, z);
+}

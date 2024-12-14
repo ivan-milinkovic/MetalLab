@@ -16,18 +16,69 @@ class MyScene {
     var selection: MeshObject!
     var grass: InstancedObject!
     
+    var renderer: Renderer!
+    
     var shadowMapProjectionMatrix: float4x4 {
         camera.projectionMatrix
         //let size: Float = 4
         //return float4x4.orthographicProjection(left: -size, right: size, bottom: -size, top: size, near: 1, far: 100)
     }
     
+    let updateShearOnGpu = true
+    
     func updateShear(timeCounter: Double, wind: Wind) {
+        if updateShearOnGpu {
+            updateShearGpu(timeCounter: timeCounter)
+            return
+        }
+        
         let modelMat = grass.transform.matrix
         var i=0; while i<grass.count { defer { i += 1 }
             let pos = (modelMat * grass.positions[i].position.float4_w1).xyz
             let sample = wind.sample(position: pos, timeCounter: timeCounter)
             grass.positions[i].shear = sample * grass.flexibility[i]
+        }
+    }
+    
+    func updateShearGpu(timeCounter: Double) {
+        guard let renderer else { return }
+        
+        let cmdBuff = renderer.commandQueue.makeCommandBuffer()!
+        cmdBuff.pushDebugGroup("Update Shear")
+        let enc = cmdBuff.makeComputeCommandEncoder()!
+        
+        enc.setComputePipelineState(renderer.updateShearPipelineState)
+        
+        let shearConstants = grass.shearConstantsBuff.contents().bindMemory(to: UpdateShearConstants.self, capacity: 1)
+        shearConstants.pointee.timeCounter = Float(timeCounter)
+        shearConstants.pointee.count = UInt32(grass.count)
+        shearConstants.pointee.windStrength = wind.strength
+        shearConstants.pointee.windDir = wind.dir
+        
+        let modelMat = grass.transform.matrix
+        let shearPtr = grass.shearStrandDataBuff.contents().bindMemory(to: UpdateShearStrandData.self, capacity: grass.count)
+        for i in 0..<grass.count {
+            shearPtr.advanced(by: i).pointee.position = (modelMat * grass.positions[i].position.float4_w1).xyz
+            shearPtr.advanced(by: i).pointee.flexibility = grass.flexibility[i]
+        }
+        
+        enc.setBuffer(grass.shearConstantsBuff, offset: 0, index: 0)
+        enc.setBuffer(grass.shearStrandDataBuff, offset: 0, index: 1)
+        
+        let tnum = 32
+        let threadsPerThreadgroup = MTLSize(width: tnum, height: 1, depth: 1)
+        let tgCnt = (grass.count / tnum) + 1
+        let threadgroupCount = MTLSize(width: tgCnt, height: 1, depth: 1)
+        enc.dispatchThreadgroups(threadgroupCount, threadsPerThreadgroup: threadsPerThreadgroup)
+        
+        enc.endEncoding()
+        cmdBuff.popDebugGroup()
+        
+        cmdBuff.commit()
+        cmdBuff.waitUntilCompleted()
+        
+        for i in 0..<grass.count {
+            grass.positions[i].shear = shearPtr.advanced(by: i).pointee.outShear
         }
     }
     

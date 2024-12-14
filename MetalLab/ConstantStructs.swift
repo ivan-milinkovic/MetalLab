@@ -19,3 +19,16 @@ struct SpotLightConstants {
     var direction: Float3
     var color: Float3
 }
+
+struct UpdateShearConstants {
+    var timeCounter: Float
+    var count: UInt32
+    var windStrength: Float
+    var windDir: Float3
+}
+
+struct UpdateShearStrandData {
+    var position: Float3
+    var flexibility: Float
+    var outShear: Float3
+}

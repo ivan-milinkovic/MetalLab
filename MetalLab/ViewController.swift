@@ -11,6 +11,7 @@ class ViewController: NSObject, ObservableObject {
     override init() {
         scene = MyScene()
         renderer = Renderer()
+        scene.renderer = renderer
         try! renderer.setupDevice()
     }
     
@@ -49,6 +50,6 @@ extension ViewController: MTKViewDelegate {
         frameCallback(Float(dt))
         
         //let updateTime = CACurrentMediaTime() - t
-        //print(String(format: "render time: %.2fms, ~fps: %d", updateTime * 1000, Int(1 / updateTime)))
+        //print(String(format: "frame time: %.2fms, ~fps: %d", updateTime * 1000, Int(1 / updateTime)))
     }
 }
