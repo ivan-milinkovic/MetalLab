@@ -23,10 +23,11 @@ struct Transform {
         updateTransform()
     }
     
-    init(position: Float3 = .zero, orientation: simd_quatf = simd_quatf(angle: 0.0, axis: [0, 0, 1]), scale: Float = 1.0) {
+    init(position: Float3 = .zero, orientation: simd_quatf = simd_quatf(angle: 0.0, axis: [0, 0, 1]), scale: Float = 1.0, shear: Float3 = .zero) {
         self.position = position
         self.orientation = orientation
         self.scale = scale
+        self.shear = shear
         updateTransform()
     }
     

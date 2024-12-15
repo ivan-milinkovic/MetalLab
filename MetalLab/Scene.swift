@@ -35,13 +35,19 @@ class MyScene {
         let modelMat = grass.transform.matrix
         let instanceDataPtr = grass.instanceDataBuff.contents().assumingMemoryBound(to: UpdateShearStrandData.self)
         var i=0; while i<grass.count { defer { i += 1 }
-            let pos = (modelMat * grass.positions[i].position.float4_w1).xyz
-            let sample = wind.sample(position: pos, timeCounter: timeCounter)
-            grass.positions[i].shear = sample * grass.flexibility[i]
-            
-            // this is for compatibility with the GPU version, see AnimatedInstancedObject.updateConstantsBuffer, it reads from the buffer, not positions
+            // using buffer for compatibility with the GPU version, see AnimatedInstancedObject.updateConstantsBuffer, it reads from the buffer, not positions
             var data = instanceDataPtr.advanced(by: i).pointee
-            data.matrix = modelMat * grass.positions[i].matrix
+            
+            // sample wind based on world position and update shear
+            let pos = (modelMat * data.position.float4_w1).xyz
+            let sample = wind.sample(position: pos, timeCounter: timeCounter)
+            data.shear = sample * data.flexibility
+            
+            // calculate the model to world matrix
+            let transform = Transform(position: data.position, orientation: simd_quatf(vector: data.orientQuat), scale: data.scale, shear: data.shear)
+            data.matrix = modelMat * transform.matrix
+            
+            // data is a copy, store it back
             instanceDataPtr.advanced(by: i).pointee = data
         }
     }
@@ -63,8 +69,6 @@ class MyScene {
         shearConstants.pointee.windStrength = wind.strength
         shearConstants.pointee.windDir = wind.dir
         shearConstants.pointee.containerMat = modelMat
-        
-        grass.updateInstanceDataBuff()
         
         enc.setBuffer(grass.instanceConstantsBuff, offset: 0, index: 0)
         enc.setBuffer(grass.instanceDataBuff, offset: 0, index: 1)

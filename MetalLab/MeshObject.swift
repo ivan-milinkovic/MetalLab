@@ -61,27 +61,22 @@ class InstancedObject: MeshObject {
 
 class AnimatedInstancedObject: MeshObject {
     
-    var positions: [Transform]
-    let flexibility: [Float] // additional shear factor per instance
     let count: Int
-    
     let instanceConstantsBuff: MTLBuffer
     let instanceDataBuff: MTLBuffer
     
     init(metalMesh: MetalMesh, positions: [Transform], flexibility: [Float], device: MTLDevice) {
-        self.positions = positions
         self.count = positions.count
-        self.flexibility = flexibility
         let constantsBuff = device.makeBuffer(length: count * MemoryLayout<ObjectConstants>.stride, options: .storageModeShared)!
         instanceConstantsBuff = device.makeBuffer(length: MemoryLayout<UpdateShearConstants>.stride)!
         instanceDataBuff      = device.makeBuffer(length: count * MemoryLayout<UpdateShearStrandData>.stride)!
         
         super.init(metalMesh: metalMesh, objectConstantsBuff: constantsBuff)
         
-        updateConstantsBuffer()
+        updateInstanceDataBuff(positions: positions, flexibility: flexibility)
     }
     
-    func updateInstanceDataBuff() {
+    func updateInstanceDataBuff(positions: [Transform], flexibility: [Float]) {
         let instanceDataPtr = instanceDataBuff.contents().assumingMemoryBound(to: UpdateShearStrandData.self)
         for i in 0..<count {
             var data = instanceDataPtr.advanced(by: i).pointee

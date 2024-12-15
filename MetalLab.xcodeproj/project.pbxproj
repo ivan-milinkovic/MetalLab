@@ -13,6 +13,7 @@
 		2C007C172CF31D1A00F6EEAE /* Transform.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C007C162CF31D1600F6EEAE /* Transform.swift */; };
 		2C007C192CF323EC00F6EEAE /* VertexData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C007C182CF323E800F6EEAE /* VertexData.swift */; };
 		2C007C1B2CF39D9400F6EEAE /* SpotLight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C007C1A2CF39D8F00F6EEAE /* SpotLight.swift */; };
+		2C2316462D0F2C4A006B421E /* Wind.metal in Sources */ = {isa = PBXBuildFile; fileRef = 2C2316452D0F2C4A006B421E /* Wind.metal */; };
 		2C2ED3892D021C5300739E4C /* Wind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C2ED3882D021C5100739E4C /* Wind.swift */; };
 		2C5327592CE26D4B0059CAA4 /* Scene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5327582CE26D4B0059CAA4 /* Scene.swift */; };
 		2C53275B2CE271780059CAA4 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C53275A2CE271780059CAA4 /* ViewController.swift */; };
@@ -40,6 +41,7 @@
 		2C007C162CF31D1600F6EEAE /* Transform.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transform.swift; sourceTree = "<group>"; };
 		2C007C182CF323E800F6EEAE /* VertexData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VertexData.swift; sourceTree = "<group>"; };
 		2C007C1A2CF39D8F00F6EEAE /* SpotLight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotLight.swift; sourceTree = "<group>"; };
+		2C2316452D0F2C4A006B421E /* Wind.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Wind.metal; sourceTree = "<group>"; };
 		2C2ED3882D021C5100739E4C /* Wind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Wind.swift; sourceTree = "<group>"; };
 		2C5327582CE26D4B0059CAA4 /* Scene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scene.swift; sourceTree = "<group>"; };
 		2C53275A2CE271780059CAA4 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -122,6 +124,7 @@
 				2C007C1A2CF39D8F00F6EEAE /* SpotLight.swift */,
 				2C2ED3882D021C5100739E4C /* Wind.swift */,
 				2CF9033229BE7402000D2729 /* Shaders.metal */,
+				2C2316452D0F2C4A006B421E /* Wind.metal */,
 				2C53275E2CE292BA0059CAA4 /* FloatN.swift */,
 				2C5A393C2CEFC94F0019AED7 /* ObjLoader.swift */,
 				2CF9032329BE6515000D2729 /* Assets.xcassets */,
@@ -222,6 +225,7 @@
 				2C007C1B2CF39D9400F6EEAE /* SpotLight.swift in Sources */,
 				2C54E5A52CFBA0BE00EC5F57 /* ConstantStructs.swift in Sources */,
 				2CF9032F29BE653B000D2729 /* MetalView.swift in Sources */,
+				2C2316462D0F2C4A006B421E /* Wind.metal in Sources */,
 				2C5327592CE26D4B0059CAA4 /* Scene.swift in Sources */,
 				2CF9032229BE6510000D2729 /* ContentView.swift in Sources */,
 				2C2ED3892D021C5300739E4C /* Wind.swift in Sources */,
