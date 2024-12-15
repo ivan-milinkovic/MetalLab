@@ -221,7 +221,7 @@ class Renderer {
         for meshObject in scene.sceneObjects {
             
             meshObject.updateConstantsBuffer()
-            let instanceCount = (meshObject as? InstancedObject)?.count ?? 1
+            let instanceCount = meshObject.instanceCount()
             
             encoder.setVertexBuffer(meshObject.metalMesh.vertexBuffer, offset: 0, index: 0)
             encoder.setVertexBuffer(meshObject.objectConstantsBuff, offset: 0, index: 1)

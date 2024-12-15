@@ -25,10 +25,14 @@ struct UpdateShearConstants {
     var count: UInt32
     var windStrength: Float
     var windDir: Float3
+    var containerMat: float4x4
 }
 
 struct UpdateShearStrandData {
+    var matrix: float4x4
     var position: Float3
+    var scale: Float
+    var orientQuat: Float4
+    var shear: Float3
     var flexibility: Float
-    var outShear: Float3
 }

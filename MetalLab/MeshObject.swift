@@ -23,6 +23,10 @@ class MeshObject {
         objectConstants.pointee.modelMatrix = transform.matrix
         objectConstants.pointee.textured = (metalMesh.texture != nil) ? .one : .zero
     }
+    
+    func instanceCount() -> Int {
+        1
+    }
 }
 
 
@@ -30,18 +34,11 @@ class InstancedObject: MeshObject {
     
     var positions: [Transform]
     let count: Int
-    var flexibility: [Float] // additional shear factor per instance
-    
-    let shearConstantsBuff: MTLBuffer
-    let shearStrandDataBuff: MTLBuffer
     
     init(metalMesh: MetalMesh, positions: [Transform], device: MTLDevice) {
         self.positions = positions
         self.count = positions.count
         let constantsBuff = device.makeBuffer(length: count * MemoryLayout<ObjectConstants>.stride, options: .storageModeShared)!
-        flexibility = .init(repeating: 0, count: count)
-        shearConstantsBuff = device.makeBuffer(length: MemoryLayout<UpdateShearConstants>.stride)!
-        shearStrandDataBuff = device.makeBuffer(length: count * MemoryLayout<UpdateShearStrandData>.stride)!
         super.init(metalMesh: metalMesh, objectConstantsBuff: constantsBuff)
     }
     
@@ -54,5 +51,62 @@ class InstancedObject: MeshObject {
             objectConstants.pointee.modelMatrix = modelMat * positions[i].matrix
             objectConstants.pointee.textured = isTextured ? .one : .zero
         }
+    }
+    
+    override func instanceCount() -> Int {
+        count
+    }
+}
+
+
+class AnimatedInstancedObject: MeshObject {
+    
+    var positions: [Transform]
+    let flexibility: [Float] // additional shear factor per instance
+    let count: Int
+    
+    let instanceConstantsBuff: MTLBuffer
+    let instanceDataBuff: MTLBuffer
+    
+    init(metalMesh: MetalMesh, positions: [Transform], flexibility: [Float], device: MTLDevice) {
+        self.positions = positions
+        self.count = positions.count
+        self.flexibility = flexibility
+        let constantsBuff = device.makeBuffer(length: count * MemoryLayout<ObjectConstants>.stride, options: .storageModeShared)!
+        instanceConstantsBuff = device.makeBuffer(length: MemoryLayout<UpdateShearConstants>.stride)!
+        instanceDataBuff      = device.makeBuffer(length: count * MemoryLayout<UpdateShearStrandData>.stride)!
+        
+        super.init(metalMesh: metalMesh, objectConstantsBuff: constantsBuff)
+        
+        updateConstantsBuffer()
+    }
+    
+    func updateInstanceDataBuff() {
+        let instanceDataPtr = instanceDataBuff.contents().assumingMemoryBound(to: UpdateShearStrandData.self)
+        for i in 0..<count {
+            var data = instanceDataPtr.advanced(by: i).pointee
+            data.position = positions[i].position
+            data.orientQuat = positions[i].orientation.vector
+            data.scale = positions[i].scale
+            data.shear = positions[i].shear
+            data.matrix = matrix_identity_float4x4
+            data.flexibility = flexibility[i]
+            instanceDataPtr.advanced(by: i).pointee = data
+        }
+    }
+    
+    override func updateConstantsBuffer() {
+        let isTextured = metalMesh.texture != nil
+        let instanceDataPtr = instanceDataBuff.contents().assumingMemoryBound(to: UpdateShearStrandData.self)
+        for i in 0..<count {
+            let objectConstants = objectConstantsBuff.contents().advanced(by: i * MemoryLayout<ObjectConstants>.stride)
+                                    .bindMemory(to: ObjectConstants.self, capacity: 1)
+            objectConstants.pointee.modelMatrix = instanceDataPtr.advanced(by: i).pointee.matrix
+            objectConstants.pointee.textured = isTextured ? .one : .zero
+        }
+    }
+    
+    override func instanceCount() -> Int {
+        count
     }
 }

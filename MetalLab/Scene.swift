@@ -14,7 +14,7 @@ class MyScene {
     var isReady = false
     
     var selection: MeshObject!
-    var grass: InstancedObject!
+    var grass: AnimatedInstancedObject!
     
     var renderer: Renderer!
     
@@ -33,10 +33,16 @@ class MyScene {
         }
         
         let modelMat = grass.transform.matrix
+        let instanceDataPtr = grass.instanceDataBuff.contents().assumingMemoryBound(to: UpdateShearStrandData.self)
         var i=0; while i<grass.count { defer { i += 1 }
             let pos = (modelMat * grass.positions[i].position.float4_w1).xyz
             let sample = wind.sample(position: pos, timeCounter: timeCounter)
             grass.positions[i].shear = sample * grass.flexibility[i]
+            
+            // this is for compatibility with the GPU version, see AnimatedInstancedObject.updateConstantsBuffer, it reads from the buffer, not positions
+            var data = instanceDataPtr.advanced(by: i).pointee
+            data.matrix = modelMat * grass.positions[i].matrix
+            instanceDataPtr.advanced(by: i).pointee = data
         }
     }
     
@@ -49,21 +55,19 @@ class MyScene {
         
         enc.setComputePipelineState(renderer.updateShearPipelineState)
         
-        let shearConstants = grass.shearConstantsBuff.contents().bindMemory(to: UpdateShearConstants.self, capacity: 1)
+        let modelMat = grass.transform.matrix
+        
+        let shearConstants = grass.instanceConstantsBuff.contents().bindMemory(to: UpdateShearConstants.self, capacity: 1)
         shearConstants.pointee.timeCounter = Float(timeCounter)
         shearConstants.pointee.count = UInt32(grass.count)
         shearConstants.pointee.windStrength = wind.strength
         shearConstants.pointee.windDir = wind.dir
+        shearConstants.pointee.containerMat = modelMat
         
-        let modelMat = grass.transform.matrix
-        let shearPtr = grass.shearStrandDataBuff.contents().bindMemory(to: UpdateShearStrandData.self, capacity: grass.count)
-        for i in 0..<grass.count {
-            shearPtr.advanced(by: i).pointee.position = (modelMat * grass.positions[i].position.float4_w1).xyz
-            shearPtr.advanced(by: i).pointee.flexibility = grass.flexibility[i]
-        }
+        grass.updateInstanceDataBuff()
         
-        enc.setBuffer(grass.shearConstantsBuff, offset: 0, index: 0)
-        enc.setBuffer(grass.shearStrandDataBuff, offset: 0, index: 1)
+        enc.setBuffer(grass.instanceConstantsBuff, offset: 0, index: 0)
+        enc.setBuffer(grass.instanceDataBuff, offset: 0, index: 1)
         
         let tnum = 32
         let threadsPerThreadgroup = MTLSize(width: tnum, height: 1, depth: 1)
@@ -76,10 +80,6 @@ class MyScene {
         
         cmdBuff.commit()
         cmdBuff.waitUntilCompleted()
-        
-        for i in 0..<grass.count {
-            grass.positions[i].shear = shearPtr.advanced(by: i).pointee.outShear
-        }
     }
     
     func load(device: MTLDevice) {
@@ -174,15 +174,17 @@ class MyScene {
                 instancePositions.append(Transform(position: [i + offset, 0.0, -j + offset], scale: scale))
             }
         }
+        let count = instancePositions.count
+        
+        var flexibility = [Float](repeating: 0, count: count)
+        for i in 0..<count {
+            flexibility[i] = Float.random(in: 0.3...1.0)
+        }
         
         let mesh = MetalMesh.grassStrand(device)
-        let grass = InstancedObject(metalMesh: mesh, positions: instancePositions, device: device)
-        //grass.transform.moveBy([-rectSize*0.5, 0, 1])
-        grass.transform.moveBy([0, 0, 1])
+        let grass = AnimatedInstancedObject(metalMesh: mesh, positions: instancePositions, flexibility: flexibility, device: device)
         
-        for i in 0..<grass.positions.count {
-            grass.flexibility[i] = Float.random(in: 0.3...1.0)
-        }
+        grass.transform.moveBy([0, 0, 1])
         
         sceneObjects.append(grass)
         self.grass = grass
