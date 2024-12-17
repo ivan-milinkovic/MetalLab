@@ -1,5 +1,6 @@
 import Foundation
 import Metal
+import MetalKit
 import simd
 
 class MyScene {
@@ -88,30 +89,47 @@ class MyScene {
     
     func load(device: MTLDevice) {
         
+        makeMonkey(device)
+        makeFloor(device)
+        makeInstancedBoxes(device)
+        makeGrass(device)
+        makeReflectiveCubes(device: device)
+        makeTransparentPlanes(device: device) // transparent objects last
+        
+        loadCubeMap(device: device)
+        makeLight(device)
+        
+        self.camera.position.look(from: [0, 1.4, 3.2], at: [0, 1, -2])
+        
+        isReady = true
+    }
+    
+    func makeMonkey(_ device: MTLDevice) {
         let monkey = loadMonkey(device: device)
         monkey.transform.moveBy([0, 1.2, -0.5])
         // selection.transform.lookAt([0,0, 4]) // todo: fix look at
         monkey.metalMesh.setColor([0.8, 0.4, 0.2, 1])
+        monkey.setEnvMapReflectedAmount(0.5)
         self.sceneObjects.append(monkey)
         self.selection = monkey
-        
+    }
+    
+    func makeFloor(_ device: MTLDevice) {
         let planeSize: Float = 4
         let planeMesh = MetalMesh.rectangle(p1: [-planeSize, 0, -planeSize], p2: [planeSize, 0, planeSize], device: device)
         let plane = MeshObject(metalMesh: planeMesh, device: device)
         //plane.metalMesh.texture = MetalMesh.loadPlaceholderTexture(device)
         plane.metalMesh.setColor([0.1, 0.1, 0.05, 1])
         self.sceneObjects.append(plane)
-        
+    }
+    
+    func makeLight(_ device: MTLDevice) {
         spotLight = SpotLight(device: device)
         spotLight.color = .one // [0.8, 0.8, 1]
         spotLight.position.look(from: [-3, 5, 2.5], at: [0, 0, 0])
-        
-        self.camera.position.look(from: [0, 1.4, 3.2], at: [0, 1, -2])
-        
-        makeInstancedBoxes(device)
-        makeGrass(device)
-        
-        
+    }
+    
+    func makeTransparentPlanes(device: MTLDevice) {
         let alphaRectMesh = MetalMesh.rectangle(p1: [-1, 0, -1], p2: [1, 0, 0.5], device: device)
         alphaRectMesh.setColor([0.3, 0.5, 0.8, 0.6])
         let alphaRect = MeshObject(metalMesh: alphaRectMesh, device: device)
@@ -130,8 +148,32 @@ class MyScene {
         // for alpha blending to work properly
         self.sceneObjects.append(alphaRect2)
         self.sceneObjects.append(alphaRect)
+    }
+    
+    func makeReflectiveCubes(device: MTLDevice) {
+        let scale: Float = 0.2
+        let pos = Float3(-2.5, 0.5, 0.5)
+        do {
+            let metalMesh = pool.loadMesh("box", device: device)
+            metalMesh.setColor([0.1, 0.3, 0.8, 1])
+            let cube = MeshObject(metalMesh: metalMesh, device: device)
+            cube.setEnvMapReflectedAmount(1.0)
+            cube.transform.scale = scale
+            cube.transform.moveBy(pos)
+            cube.transform.orientation = simd_quatf(angle: -.pi*0.0, axis: Float3(1, 0, 0))
+            sceneObjects.append(cube)
+        }
         
-        isReady = true
+        do {
+            let metalMesh = pool.loadMesh("box", device: device)
+            metalMesh.setColor([0.1, 0.3, 0.8, 1])
+            let cube = MeshObject(metalMesh: metalMesh, device: device)
+            cube.setEnvMapRefractedAmount(1.0)
+            cube.transform.scale = scale
+            cube.transform.moveBy(pos + Float3(2 * scale + 0.1, 0, 0))
+            cube.transform.orientation = simd_quatf(angle: -.pi*0.0, axis: Float3(1, 0, 0))
+            sceneObjects.append(cube)
+        }
     }
     
     func makeInstancedBoxes(_ device: MTLDevice) {
@@ -158,7 +200,7 @@ class MyScene {
         metalMesh.setColor([0.1, 0.3, 0.8, 1])
         let boxesCluster = InstancedObject(metalMesh: metalMesh, positions: instancePositions, device: device)
         boxesCluster.transform.moveBy([-rectSize, 0, 1])
-        //metalMesh.texture = MetalMesh.loadPlaceholderTexture(device)
+        // metalMesh.texture = MetalMesh.loadPlaceholderTexture(device)
         
         sceneObjects.append(boxesCluster)
     }
@@ -204,5 +246,59 @@ class MyScene {
         let metalMesh = pool.loadMesh("box", device: device)
         let meshObject = MeshObject(metalMesh: metalMesh, device: device)
         return meshObject
+    }
+        
+    func loadCubeMap(device: MTLDevice) {
+        let size = 2048
+        let td = MTLTextureDescriptor()
+        td.textureType = .typeCube
+        td.pixelFormat = .bgra8Unorm
+        td.width = size
+        td.height = size
+        td.mipmapLevelCount = 1
+        td.usage = .shaderRead
+        td.storageMode = .shared
+        renderer.cubeTex = device.makeTexture(descriptor: td)!
+        
+        func cubeFileName(forIndex i: Int) -> String {
+            switch i { case 0: "posx"; case 1: "negx"; case 2: "posy"; case 3: "negy"; case 4: "posz"; case 5: "negz"; default: fatalError() }
+        }
+        let bytesPerRow = size * 4
+        let region = MTLRegionMake2D(0, 0, size, size)
+        
+        for i in 0..<6 {
+            let fileName = cubeFileName(forIndex: i)
+            let url = Bundle.main.url(forResource: fileName, withExtension: "jpg")!
+            
+            // extract pixel bytes
+            let dp = CGDataProvider(url: url as CFURL)!
+            let img = CGImage(jpegDataProviderSource: dp, decode: nil, shouldInterpolate: false, intent: .defaultIntent)!
+            var pixelBuff = [UInt8].init(repeating: 0, count: bytesPerRow*size)
+            let ctx: CGContext = CGContext(data: &pixelBuff,
+                                           width: size,
+                                           height: size,
+                                           bitsPerComponent: img.bitsPerComponent,
+                                           bytesPerRow: bytesPerRow,
+                                           space: CGColorSpaceCreateDeviceRGB(),
+                                           bitmapInfo: img.bitmapInfo.rawValue)!
+            ctx.draw(img, in: CGRect(x: 0, y: 0, width: size, height: size))
+            
+            // copy into cube map texture
+            renderer.cubeTex.replace(region: region, mipmapLevel: 0, slice: i, withBytes: &pixelBuff,
+                            bytesPerRow: bytesPerRow, bytesPerImage: 0)
+        }
+        
+        /*
+         Alternatively, make a single texture strip, vertical, arranged from top to bottom: +x, -x, +y, -y, +z, -z
+         
+        let texOpts: [MTKTextureLoader.Option : Any] = [
+            .textureUsage : MTLTextureUsage.shaderRead.rawValue,
+            .textureStorageMode : MTLStorageMode.private.rawValue,
+            .generateMipmaps : true,
+            .cubeLayout : MTKTextureLoader.CubeLayout.vertical
+        ]
+        let url = Bundle.main.url(forResource: "env_map_strip", withExtension: "png")!
+        cubeMapTexture = try? textureLoader.newTexture(URL: url, options: texOpts)
+         */
     }
 }

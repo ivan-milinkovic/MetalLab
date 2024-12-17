@@ -10,7 +10,7 @@ class MeshObject {
     
     init(metalMesh: MetalMesh, device: MTLDevice) {
         self.metalMesh = metalMesh
-        objectConstantsBuff = device.makeBuffer(length: MemoryLayout<ObjectConstants>.size, options: .storageModeShared)!
+        objectConstantsBuff = device.makeBuffer(length: MemoryLayout<ObjectConstants>.stride, options: .storageModeShared)!
     }
     
     fileprivate init(metalMesh: MetalMesh, objectConstantsBuff: MTLBuffer) {
@@ -21,11 +21,21 @@ class MeshObject {
     func updateConstantsBuffer() {
         let objectConstants = objectConstantsBuff.contents().bindMemory(to: ObjectConstants.self, capacity: 1)
         objectConstants.pointee.modelMatrix = transform.matrix
-        objectConstants.pointee.textured = (metalMesh.texture != nil) ? .one : .zero
+        objectConstants.pointee.textureAmount = (metalMesh.texture != nil) ? 1 : 0
     }
     
     func instanceCount() -> Int {
         1
+    }
+    
+    func setEnvMapReflectedAmount(_ f: Float) {
+        objectConstantsBuff.contents().bindMemory(to: ObjectConstants.self, capacity: 1)
+            .pointee.envMapReflectedAmount = f
+    }
+    
+    func setEnvMapRefractedAmount(_ f: Float) {
+        objectConstantsBuff.contents().bindMemory(to: ObjectConstants.self, capacity: 1)
+            .pointee.envMapRefractedAmount = f
     }
 }
 
@@ -49,7 +59,7 @@ class InstancedObject: MeshObject {
             let objectConstants = objectConstantsBuff.contents().advanced(by: i * MemoryLayout<ObjectConstants>.stride)
                                     .bindMemory(to: ObjectConstants.self, capacity: 1)
             objectConstants.pointee.modelMatrix = modelMat * positions[i].matrix
-            objectConstants.pointee.textured = isTextured ? .one : .zero
+            objectConstants.pointee.textureAmount = isTextured ? 1.0 : 0.0
         }
     }
     
@@ -97,7 +107,7 @@ class AnimatedInstancedObject: MeshObject {
             let objectConstants = objectConstantsBuff.contents().advanced(by: i * MemoryLayout<ObjectConstants>.stride)
                                     .bindMemory(to: ObjectConstants.self, capacity: 1)
             objectConstants.pointee.modelMatrix = instanceDataPtr.advanced(by: i).pointee.matrix
-            objectConstants.pointee.textured = isTextured ? .one : .zero
+            objectConstants.pointee.textureAmount = isTextured ? 1.0 : 0.0
         }
     }
     

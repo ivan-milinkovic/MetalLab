@@ -10,6 +10,7 @@ class Renderer {
     var library: MTLLibrary!
     var mainPipelineState: MTLRenderPipelineState!
     var shadowPipelineState: MTLRenderPipelineState!
+    var envMapPipelineState: MTLRenderPipelineState!
     var updateShearPipelineState: MTLComputePipelineState!
     
     let colorPixelFormat: MTLPixelFormat = .rgba8Unorm;
@@ -28,6 +29,8 @@ class Renderer {
     let clearColor = MTLClearColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0)
     let clearDepth = 1.0
     let fps = 60
+    
+    var cubeTex: MTLTexture!
     
     var mtkView: MTKView!
     
@@ -94,9 +97,9 @@ class Renderer {
         
         let depthDesc = MTLDepthStencilDescriptor()
         depthDesc.isDepthWriteEnabled = true
-        depthDesc.depthCompareFunction = .less
+        depthDesc.depthCompareFunction = .lessEqual // set to lessEqual for env map z=1 to work, otherwise use z=0.98, see env. map shader
         depthStencilState = device.makeDepthStencilState(descriptor: depthDesc)
-        
+
         // shadow pipeline
         let shadowRPD = MTLRenderPipelineDescriptor()
         shadowRPD.vertexDescriptor = VertexData.vertexDescriptor
@@ -107,6 +110,14 @@ class Renderer {
         frameConstantsBuff = device.makeBuffer(length: MemoryLayout<FrameConstants>.stride, options: .storageModeShared)
         
         updateShearPipelineState = try! device.makeComputePipelineState(function: library.makeFunction(name: "update_shear")!)
+        
+        let envPD = MTLRenderPipelineDescriptor()
+        envPD.colorAttachments[0].pixelFormat = colorPixelFormat
+        envPD.depthAttachmentPixelFormat = depthPixelFormat
+        envPD.rasterSampleCount = sampleCount
+        envPD.vertexFunction = library.makeFunction(name: "env_map_vertex")!
+        envPD.fragmentFunction = library.makeFunction(name: "env_map_fragment")!
+        envMapPipelineState = try! device.makeRenderPipelineState(descriptor: envPD)
     }
     
     @MainActor
@@ -170,6 +181,18 @@ class Renderer {
         return msaaRenderPassDesc
     }
     
+    func drawEnvironmentMap(enc: MTLRenderCommandEncoder) {
+        
+        let fc = frameConstantsBuff.contents().bindMemory(to: FrameConstants.self, capacity: 1)
+        var invViewProjectMat = fc.pointee.viewProjectionMatrix.inverse
+        
+        enc.setRenderPipelineState(envMapPipelineState)
+        enc.setFragmentBytes(&invViewProjectMat, length: MemoryLayout<float4x4>.stride, index: 0)
+        enc.setFragmentTexture(cubeTex, index: 0)
+        enc.setFragmentSamplerState(textureSamplerState, index: 0)
+        
+        enc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
+    }
     
     @MainActor
     func drawShadowMap(scene: MyScene, cmdBuff: MTLCommandBuffer)
@@ -203,8 +226,11 @@ class Renderer {
         
         enc.setFrontFacing(winding)
         enc.setCullMode(.back)
-        enc.setRenderPipelineState(mainPipelineState)
         enc.setDepthStencilState(depthStencilState)
+        
+        drawEnvironmentMap(enc: enc)
+        
+        enc.setRenderPipelineState(mainPipelineState)
         enc.setFragmentSamplerState(textureSamplerState, index: 0)
         
         encodeGeometry(scene: scene, encoder: enc)
@@ -225,8 +251,9 @@ class Renderer {
             
             encoder.setVertexBuffer(meshObject.metalMesh.vertexBuffer, offset: 0, index: 0)
             encoder.setVertexBuffer(meshObject.objectConstantsBuff, offset: 0, index: 1)
-            if let texture = meshObject.metalMesh.texture { encoder.setFragmentTexture(texture, index: 0) }
+            encoder.setFragmentTexture(meshObject.metalMesh.texture, index: 0)
             encoder.setFragmentTexture(scene.spotLight.texture, index: 1)
+            encoder.setFragmentTexture(cubeTex, index: 2)
             encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: meshObject.metalMesh.vertexCount, instanceCount: instanceCount)
         }
     }

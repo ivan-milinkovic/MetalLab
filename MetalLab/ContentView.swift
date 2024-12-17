@@ -10,8 +10,11 @@ struct ContentView: View {
                 let f: Float = 0.000008
                 let dx = f * Float(dragVal.velocity.height)
                 let dy = f * Float(dragVal.velocity.width)
-                //viewController.scene.camera.transform.rotate(dx: dx, dy: dy)
-                viewController.scene.selection.transform.rotate(dx: dx, dy: dy)
+                if NSEvent.modifierFlags.contains(.option) {
+                    viewController.scene.camera.position.rotate(dx: dx, dy: dy)
+                } else {
+                    viewController.scene.selection.transform.rotate(dx: dx, dy: dy)
+                }
             }))
             .task {
                 viewController.load()

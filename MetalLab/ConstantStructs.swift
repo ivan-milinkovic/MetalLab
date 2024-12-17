@@ -2,7 +2,9 @@ import simd
 
 struct ObjectConstants {
     var modelMatrix: float4x4 = matrix_identity_float4x4
-    var textured: SIMD2<Int> = .zero // treat as a boolean, boolean and int types have size issues with metal
+    var textureAmount: Float = 0 // how much of texture color to take and blend with vertex color
+    var envMapReflectedAmount: Float = 0
+    var envMapRefractedAmount: Float = 0
 }
 
 struct FrameConstants {

@@ -15,7 +15,9 @@ struct FragmentData {
     float3 normal;
     float4 color;
     float2 uv;
-    bool isTextured;
+    float textureAmount;
+    float envMapReflectedAmount;
+    float envMapRefractedAmount;
 };
 
 struct SpotLight {
@@ -26,7 +28,9 @@ struct SpotLight {
 
 struct ObjectConstants {
     float4x4 modelMatrix;
-    int2 isTextured; // boolean and int have size issues with swift
+    float textureAmount; // factor how much texture color to take
+    float envMapReflectedAmount;
+    float envMapRefractedAmount;
 };
 
 struct FrameConstants {
@@ -56,24 +60,50 @@ vertex FragmentData vertex_main(
     out.normal = normalize((modelViewMatrix * float4(vertexData.normal, 0)).xyz); // todo: model-view inverse transform
     out.color = vertexData.color;
     out.uv = vertexData.uv;
-    out.isTextured = objectConstants.isTextured.x == 1;
+    out.textureAmount = objectConstants.textureAmount;
+    out.envMapReflectedAmount = objectConstants.envMapReflectedAmount;
+    out.envMapRefractedAmount = objectConstants.envMapRefractedAmount;
     return out;
 }
 
 
-fragment float4 fragment_main(
+fragment float4 fragment_main
+(
              FragmentData      fragmentData    [[stage_in]],
     constant FrameConstants&   frameConstants  [[buffer(0)]],
-    texture2d<float, access::sample> texture   [[texture(0)]],
-    depth2d  <float, access::sample> shadowMap [[texture(1)]],
+    texture2d   <float, access::sample> texture   [[texture(0)]],
+    depth2d     <float, access::sample> shadowMap [[texture(1)]],
+    texturecube <float, access::sample> cubeMap   [[texture(2)]],
     sampler                          sampler   [[sampler(0)]])
 {
     //return {0, 0.2, 0.6, 1};
     //return shadowMap.sample(sampler, fragmentData.uv);
     
     float4 color = fragmentData.color;
-    if (fragmentData.isTextured) {
-        color = texture.sample(sampler, fragmentData.uv);
+    if (fragmentData.textureAmount > 0.0) {
+        auto tcolor = texture.sample(sampler, fragmentData.uv);
+        color = fragmentData.textureAmount * tcolor + (1 - fragmentData.textureAmount) * color;
+    }
+    
+    // environment mapping
+    if (fragmentData.envMapReflectedAmount > 0.0) { // if because of transparent objects, see alpha component bellow
+        // reflection
+        auto fRefl = fragmentData.envMapReflectedAmount;
+        auto posView = frameConstants.viewMatrix * fragmentData.positionWorld; // position in view space
+        auto pointToCameraDir = normalize(-posView.xyz); // in view space, the direction is just towards the position
+        auto reflected = reflect(-pointToCameraDir, fragmentData.normal);
+        auto reflectionEnvColor = cubeMap.sample(sampler, reflected).rgb;
+        
+        color = fRefl * float4(reflectionEnvColor, 1) + (1 - fRefl) * color;
+    }
+    if (fragmentData.envMapRefractedAmount > 0.0) {
+        // refraction
+        auto fRefr = fragmentData.envMapRefractedAmount;
+        auto posView = frameConstants.viewMatrix * fragmentData.positionWorld; // position in view space
+        auto pointToCameraDir = normalize(-posView.xyz);
+        auto refracted = refract(-pointToCameraDir, fragmentData.normal, 1.33);
+        auto refractionEnvColor = cubeMap.sample(sampler, refracted).rgb;
+        color = fRefr * float4(refractionEnvColor, 1) + (1 - fRefr) * color;
     }
     
     // directional light
