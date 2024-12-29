@@ -121,7 +121,7 @@ class MetalMesh {
         let colBot = Float4(  0, 0.25,  0, 1)
         let colTop = Float4(0.6, 0.8, 0.4, 1)
         let w: Float = 0.1
-        let fs: Float = 0.25 // shrink factor
+        let fs: Float = 0.35 // shrink factor
         let vertices: [VertexData] = [
             VertexData(position: [fs*w, 1, 0], normal: n, color: colTop, uv: [ 0.0,  0.0]), // top left
             VertexData(position: [   0, 0, 0], normal: n, color: colBot, uv: [ 0.0,  1.0]), // bot left

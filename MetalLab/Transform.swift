@@ -60,6 +60,13 @@ struct Transform {
         orientation = orientation * xq * yq * zq
     }
     
+    // avoid roll https://gamedev.stackexchange.com/a/136175
+    mutating func rotate2(dx: Float = 0.0, dy: Float = 0.0) {
+        let xq = simd_quatf(angle: dx, axis: [1, 0, 0])
+        let yq = simd_quatf(angle: dy, axis: [0, 1, 0])
+        orientation = yq * orientation * xq
+    }
+    
     mutating func updateTransform() {
         var scaleMat = matrix_identity_float4x4 * scale;
         scaleMat.columns.3.w = 1

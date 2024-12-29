@@ -6,7 +6,7 @@ class SpotLight {
     let texture: MTLTexture
     
     init(device: MTLDevice) {
-        let size = 1024
+        let size = 2048 // 1024
         let texDesc = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .depth32Float, width: size, height: size, mipmapped: false)
         texDesc.storageMode = .private
         texDesc.usage = [.renderTarget, .shaderRead]
