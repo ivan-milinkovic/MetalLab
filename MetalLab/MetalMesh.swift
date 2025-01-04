@@ -38,13 +38,27 @@ class MetalMesh {
     static func nonIndexedVertexDataFromObjMesh(_ objMesh: ObjMesh) -> [VertexData] {
         var vertexData: [VertexData] = []
         for face in objMesh.faces {
-            for faceFTN in face.indices {
-                let vdata = VertexData(position: objMesh.vertices[Int(faceFTN.vertexIndex)],
-                                       normal: objMesh.normals[Int(faceFTN.normalIndex)],
-                                       color: Float4.one,
-                                       uv: objMesh.uvs[Int(faceFTN.uvIndex)])
-                vertexData.append(vdata)
-            }
+            
+            let p0 = objMesh.vertices[Int(face.indices[0].vertexIndex)]
+            let p1 = objMesh.vertices[Int(face.indices[1].vertexIndex)]
+            let p2 = objMesh.vertices[Int(face.indices[2].vertexIndex)]
+            let n0 = objMesh.normals[Int(face.indices[0].normalIndex)]
+            let n1 = objMesh.normals[Int(face.indices[1].normalIndex)]
+            let n2 = objMesh.normals[Int(face.indices[2].normalIndex)]
+            let uv0 = objMesh.uvs[Int(face.indices[0].uvIndex)]
+            let uv1 = objMesh.uvs[Int(face.indices[1].uvIndex)]
+            let uv2 = objMesh.uvs[Int(face.indices[2].uvIndex)]
+            let (tan0, btan0) = makeTangent(p0: p0, p1: p1, p2: p2, uv0: uv0, uv1: uv1, uv2: uv2, n: n0)
+            let (tan1, btan1) = makeTangent(p0: p0, p1: p1, p2: p2, uv0: uv0, uv1: uv1, uv2: uv2, n: n1)
+            let (tan2, btan2) = makeTangent(p0: p0, p1: p1, p2: p2, uv0: uv0, uv1: uv1, uv2: uv2, n: n2)
+            
+            let vdata0 = VertexData(position: p0, normal: n0, color: Float4.one, uv: uv0, tan: tan0, btan: btan0)
+            let vdata1 = VertexData(position: p1, normal: n1, color: Float4.one, uv: uv1, tan: tan1, btan: btan1)
+            let vdata2 = VertexData(position: p2, normal: n2, color: Float4.one, uv: uv2, tan: tan2, btan: btan2)
+            
+            vertexData.append(vdata0)
+            vertexData.append(vdata1)
+            vertexData.append(vdata2)
         }
         return vertexData
     }
@@ -68,9 +82,9 @@ class MetalMesh {
     static func triangle(device: MTLDevice) -> MetalMesh {
         let n:Float3 = [0, 0, -1]
         let triangle: [VertexData] = [
-            VertexData(position: [ 0,  1, 0], normal: n, color: [0, 0, 1, 1], uv: [ 0.5,    0]), // top
-            VertexData(position: [-1, -1, 0], normal: n, color: [0, 1, 0, 1], uv: [ 0.0,  1.0]), // bot left
-            VertexData(position: [ 1, -1, 0], normal: n, color: [1, 0, 0, 1], uv: [ 1.0,  1.0]), // bot right, counter-clockwise
+            VertexData(position: [ 0,  1, 0], normal: n, color: [0, 0, 1, 1], uv: [ 0.5,    0], tan: VertexData.xTan, btan: VertexData.yTan), // top
+            VertexData(position: [-1, -1, 0], normal: n, color: [0, 1, 0, 1], uv: [ 0.0,  1.0], tan: VertexData.xTan, btan: VertexData.yTan), // bot left
+            VertexData(position: [ 1, -1, 0], normal: n, color: [1, 0, 0, 1], uv: [ 1.0,  1.0], tan: VertexData.xTan, btan: VertexData.yTan), // bot right, counter-clockwise
         ]
         return MetalMesh(vertices: triangle, texture: nil, device: device)
     }
@@ -78,13 +92,13 @@ class MetalMesh {
     static func rectangle(device: MTLDevice) -> MetalMesh {
         let n:Float3 = [0, 0, -1]
         let triangle: [VertexData] = [
-            VertexData(position: [-1,  1, 0], normal: n, color: .one, uv: [ 0.0,  0.0]), // top left
-            VertexData(position: [-1, -1, 0], normal: n, color: .one, uv: [ 0.0,  1.0]), // bot left
-            VertexData(position: [ 1, -1, 0], normal: n, color: .one, uv: [ 1.0,  1.0]), // bot right, counter-clockwise
+            VertexData(position: [-1,  1, 0], normal: n, color: .one, uv: [ 0.0,  0.0], tan: VertexData.xTan, btan: VertexData.yTan), // top left
+            VertexData(position: [-1, -1, 0], normal: n, color: .one, uv: [ 0.0,  1.0], tan: VertexData.xTan, btan: VertexData.yTan), // bot left
+            VertexData(position: [ 1, -1, 0], normal: n, color: .one, uv: [ 1.0,  1.0], tan: VertexData.xTan, btan: VertexData.yTan), // bot right, counter-clockwise
             
-            VertexData(position: [-1,  1, 0], normal: n, color: .one, uv: [ 0.0,  0.0]), // top left
-            VertexData(position: [ 1, -1, 0], normal: n, color: .one, uv: [ 1.0,  1.0]), // bot right
-            VertexData(position: [ 1,  1, 0], normal: n, color: .one, uv: [ 1.0,  0.0]), // top right, counter-clockwise
+            VertexData(position: [-1,  1, 0], normal: n, color: .one, uv: [ 0.0,  0.0], tan: VertexData.xTan, btan: VertexData.yTan), // top left
+            VertexData(position: [ 1, -1, 0], normal: n, color: .one, uv: [ 1.0,  1.0], tan: VertexData.xTan, btan: VertexData.yTan), // bot right
+            VertexData(position: [ 1,  1, 0], normal: n, color: .one, uv: [ 1.0,  0.0], tan: VertexData.xTan, btan: VertexData.yTan), // top right, counter-clockwise
         ]
         let tex = loadPlaceholderTexture(device)
         return MetalMesh(vertices: triangle, texture: tex, device: device)
@@ -104,13 +118,13 @@ class MetalMesh {
         let color = Float4(0.5, 0.5, 0.6, 1)
         
         let triangle: [VertexData] = [
-            VertexData(position: [x_min, y_max, z_min], normal: n, color: color, uv: [ 0.0,  0.0]), // top left front
-            VertexData(position: [x_min, y_min, z_max], normal: n, color: color, uv: [ 0.0,  1.0]), // bot left front
-            VertexData(position: [x_max, y_min, z_max], normal: n, color: color, uv: [ 1.0,  1.0]), // bot right front, counter-clockwise
+            VertexData(position: [x_min, y_max, z_min], normal: n, color: color, uv: [ 0.0,  0.0], tan: VertexData.xTan, btan: VertexData.yTan), // top left front
+            VertexData(position: [x_min, y_min, z_max], normal: n, color: color, uv: [ 0.0,  1.0], tan: VertexData.xTan, btan: VertexData.yTan), // bot left front
+            VertexData(position: [x_max, y_min, z_max], normal: n, color: color, uv: [ 1.0,  1.0], tan: VertexData.xTan, btan: VertexData.yTan), // bot right front, counter-clockwise
             
-            VertexData(position: [x_min, y_max, z_min], normal: n, color: color, uv: [ 0.0,  0.0]), // top left back
-            VertexData(position: [x_max, y_min, z_max], normal: n, color: color, uv: [ 1.0,  1.0]), // bot right back
-            VertexData(position: [x_max, y_max, z_min], normal: n, color: color, uv: [ 1.0,  0.0]), // top right back, counter-clockwise
+            VertexData(position: [x_min, y_max, z_min], normal: n, color: color, uv: [ 0.0,  0.0], tan: VertexData.xTan, btan: VertexData.yTan), // top left back
+            VertexData(position: [x_max, y_min, z_max], normal: n, color: color, uv: [ 1.0,  1.0], tan: VertexData.xTan, btan: VertexData.yTan), // bot right back
+            VertexData(position: [x_max, y_max, z_min], normal: n, color: color, uv: [ 1.0,  0.0], tan: VertexData.xTan, btan: VertexData.yTan), // top right back, counter-clockwise
         ]
         return MetalMesh(vertices: triangle, texture: nil, device: device)
         //return MetalMesh(vertices: triangle, texture: loadPlaceholderTexture(device), device: device)
@@ -123,13 +137,13 @@ class MetalMesh {
         let w: Float = 0.1
         let fs: Float = 0.35 // shrink factor
         let vertices: [VertexData] = [
-            VertexData(position: [fs*w, 1, 0], normal: n, color: colTop, uv: [ 0.0,  0.0]), // top left
-            VertexData(position: [   0, 0, 0], normal: n, color: colBot, uv: [ 0.0,  1.0]), // bot left
-            VertexData(position: [   w, 0, 0], normal: n, color: colBot, uv: [ 1.0,  1.0]), // bot right, counter-clockwise
+            VertexData(position: [fs*w, 1, 0], normal: n, color: colTop, uv: [ 0.0,  0.0], tan: VertexData.xTan, btan: VertexData.yTan), // top left
+            VertexData(position: [   0, 0, 0], normal: n, color: colBot, uv: [ 0.0,  1.0], tan: VertexData.xTan, btan: VertexData.yTan), // bot left
+            VertexData(position: [   w, 0, 0], normal: n, color: colBot, uv: [ 1.0,  1.0], tan: VertexData.xTan, btan: VertexData.yTan), // bot right, counter-clockwise
             
-            VertexData(position: [    fs*w, 1, 0], normal: n, color: colTop, uv: [ 0.0,  0.0]), // top left
-            VertexData(position: [       w, 0, 0], normal: n, color: colBot, uv: [ 1.0,  1.0]), // bot right
-            VertexData(position: [(1-fs)*w, 1, 0], normal: n, color: colTop, uv: [ 1.0,  0.0]), // top right, counter-clockwise
+            VertexData(position: [    fs*w, 1, 0], normal: n, color: colTop, uv: [ 0.0,  0.0], tan: VertexData.xTan, btan: VertexData.yTan), // top left
+            VertexData(position: [       w, 0, 0], normal: n, color: colBot, uv: [ 1.0,  1.0], tan: VertexData.xTan, btan: VertexData.yTan), // bot right
+            VertexData(position: [(1-fs)*w, 1, 0], normal: n, color: colTop, uv: [ 1.0,  0.0], tan: VertexData.xTan, btan: VertexData.yTan), // top right, counter-clockwise
         ]
         let metalMesh = MetalMesh(vertices: vertices, texture: nil, device: device)
         return metalMesh

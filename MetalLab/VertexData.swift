@@ -5,7 +5,11 @@ struct VertexData {
     let normal: Float3
     var color: Float4
     let uv: Float2
+    let tan: Float3
+    let btan: Float3
     
+    static let xTan: Float3 = [1, 0, 0]
+    static let yTan: Float3 = [0, 1, 0]
     
     @MainActor
     static let vertexDescriptor: MTLVertexDescriptor = {
@@ -13,6 +17,8 @@ struct VertexData {
         let positionSize = MemoryLayout<Float3>.size
         let normalSize = MemoryLayout<Float3>.size
         let colorSize = MemoryLayout<Float4>.size
+        let uvSize = MemoryLayout<Float2>.size
+        let tanSize = MemoryLayout<Float3>.size
         
         let vertexDesc = MTLVertexDescriptor()
         
@@ -35,6 +41,16 @@ struct VertexData {
         vertexDesc.attributes[3].format = .float4;
         vertexDesc.attributes[3].offset = positionSize + normalSize + colorSize;
         vertexDesc.attributes[3].bufferIndex = 0;
+        
+        // tangent
+        vertexDesc.attributes[4].format = .float4;
+        vertexDesc.attributes[4].offset = positionSize + normalSize + colorSize + uvSize;
+        vertexDesc.attributes[4].bufferIndex = 0;
+        
+        // bitangent
+        vertexDesc.attributes[5].format = .float4;
+        vertexDesc.attributes[5].offset = positionSize + normalSize + colorSize + uvSize + tanSize;
+        vertexDesc.attributes[5].bufferIndex = 0;
         
         vertexDesc.layouts[0].stride = MemoryLayout<VertexData>.stride
         

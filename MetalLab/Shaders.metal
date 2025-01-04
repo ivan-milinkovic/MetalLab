@@ -7,6 +7,8 @@ struct VertexInput {
     float3 normal [[attribute(1)]];
     float4 color [[attribute(2)]];
     float2 uv [[attribute(3)]];
+    float3 tan [[attribute(4)]];
+    float3 btan [[attribute(5)]];
 };
 
 struct FragmentData {
@@ -15,6 +17,8 @@ struct FragmentData {
     float3 normal;
     float4 color;
     float2 uv;
+    float3 tan;
+    float3 btan;
     float textureAmount;
     float envMapReflectedAmount;
     float envMapRefractedAmount;
@@ -63,6 +67,8 @@ vertex FragmentData vertex_main(
     out.textureAmount = objectConstants.textureAmount;
     out.envMapReflectedAmount = objectConstants.envMapReflectedAmount;
     out.envMapRefractedAmount = objectConstants.envMapRefractedAmount;
+    out.tan = normalize((modelViewMatrix * float4(vertexData.tan, 0)).xyz); // todo: model-view inverse transform
+    out.btan = normalize((modelViewMatrix * float4(vertexData.btan, 0)).xyz); // todo: model-view inverse transform
     return out;
 }
 
