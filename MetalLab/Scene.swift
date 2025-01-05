@@ -112,6 +112,7 @@ class MyScene {
         monkey.setEnvMapReflectedAmount(0.5)
         self.sceneObjects.append(monkey)
         self.selection = monkey
+        // monkey.metalMesh.texture = MetalMesh.loadPlaceholderTexture(device)
     }
     
     func makeFloor(_ device: MTLDevice) {

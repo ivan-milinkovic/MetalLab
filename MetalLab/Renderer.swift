@@ -91,8 +91,8 @@ class Renderer {
         samplerDesc.normalizedCoordinates = true
         samplerDesc.magFilter = .linear
         samplerDesc.minFilter = .linear
-        samplerDesc.sAddressMode = .clampToZero
-        samplerDesc.tAddressMode = .clampToZero
+        samplerDesc.sAddressMode = .repeat
+        samplerDesc.tAddressMode = .repeat
         textureSamplerState = device.makeSamplerState(descriptor: samplerDesc)
         
         let depthDesc = MTLDepthStencilDescriptor()

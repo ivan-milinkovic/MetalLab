@@ -10,7 +10,7 @@ struct ObjectConstants {
 struct FrameConstants {
     var viewMatrix: float4x4 = matrix_identity_float4x4
     var projectionMatrix: float4x4 = matrix_identity_float4x4
-    var viewProjectionMatrix: float4x4 = matrix_identity_float4x4
+    var viewProjectionMatrix: float4x4 = matrix_identity_float4x4 // used for the environment map
     var directionalLightDir: Float3 = .zero
     var lightProjectionMatrix: float4x4 = matrix_identity_float4x4
     var spotLight: SpotLightConstants
