@@ -2,9 +2,10 @@ import Foundation
 import simd
 
 // https://gamedev.stackexchange.com/questions/68612/how-to-compute-tangent-and-bitangent-vectors/68617#68617
+// https://web.archive.org/web/20110708081637/http://www.terathon.com/code/tangent.html
 /*
- t - tangent float 3
- b - bitangent float 3
+ t - tangent float3
+ b - bitangent float3
  e1 - p0 to p1
  e2 - p0 to p2
  
@@ -74,6 +75,10 @@ func makeTangent(p0: Float3, p1: Float3, p2: Float3, uv0: Float2, uv1: Float2, u
     
     t = normalize(t - n*dot(n,t))
     b = normalize(b - n*dot(n,b))
+    //b = cross(n, t) // alternative way to make the bitangent
+    
+    let btanSign: Float = (dot(cross(n, t), b) < 0.0) ? -1.0 : 1.0
+    b *= btanSign
     
     return (t, b)
 }

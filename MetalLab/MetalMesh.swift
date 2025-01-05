@@ -11,6 +11,7 @@ class MetalMesh {
     let indexCount: Int
     
     var texture: MTLTexture?
+    var normalMap: MTLTexture?
     
     init(vertices: [VertexData], indices: [VertexIndexType]? = nil, texture: MTLTexture?, device: MTLDevice) {
         var vs = vertices
@@ -42,12 +43,15 @@ class MetalMesh {
             let p0 = objMesh.vertices[Int(face.indices[0].vertexIndex)]
             let p1 = objMesh.vertices[Int(face.indices[1].vertexIndex)]
             let p2 = objMesh.vertices[Int(face.indices[2].vertexIndex)]
+            
             let n0 = objMesh.normals[Int(face.indices[0].normalIndex)]
             let n1 = objMesh.normals[Int(face.indices[1].normalIndex)]
             let n2 = objMesh.normals[Int(face.indices[2].normalIndex)]
+            
             let uv0 = objMesh.uvs[Int(face.indices[0].uvIndex)]
             let uv1 = objMesh.uvs[Int(face.indices[1].uvIndex)]
             let uv2 = objMesh.uvs[Int(face.indices[2].uvIndex)]
+            
             let (tan0, btan0) = makeTangent(p0: p0, p1: p1, p2: p2, uv0: uv0, uv1: uv1, uv2: uv2, n: n0)
             let (tan1, btan1) = makeTangent(p0: p0, p1: p1, p2: p2, uv0: uv0, uv1: uv1, uv2: uv2, n: n1)
             let (tan2, btan2) = makeTangent(p0: p0, p1: p1, p2: p2, uv0: uv0, uv1: uv1, uv2: uv2, n: n2)
@@ -68,6 +72,15 @@ class MetalMesh {
         let tex = try! tl.newTexture(name: "tex", scaleFactor: 1.0, bundle: .main,
                                      options: [.textureUsage: MTLTextureUsage.shaderRead.rawValue,
                                                .textureStorageMode: MTLStorageMode.private.rawValue])
+        return tex
+    }
+    
+    static func loadNormalMapTexture(_ device: MTLDevice) -> MTLTexture {
+        let tl = MTKTextureLoader(device: device)
+        let url = Bundle.main.url(forResource: "cobblestone_normals", withExtension: "png")!
+        let tex = try! tl.newTexture(URL: url, options: [.textureUsage: MTLTextureUsage.shaderRead.rawValue,
+                                                         .textureStorageMode: MTLStorageMode.private.rawValue,
+                                                         .SRGB : false])
         return tex
     }
     

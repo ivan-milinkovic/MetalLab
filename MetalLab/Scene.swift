@@ -16,6 +16,8 @@ class MyScene {
     
     var selection: MeshObject!
     var grass: AnimatedInstancedObject!
+    var monkey: MeshObject!
+    var normalMapCube: MeshObject!
     
     var renderer: Renderer!
     
@@ -54,7 +56,7 @@ class MyScene {
     }
     
     func updateShearGpu(timeCounter: Double) {
-        guard let renderer else { return }
+        guard let renderer, grass != nil else { return }
         
         let cmdBuff = renderer.commandQueue.makeCommandBuffer()!
         cmdBuff.pushDebugGroup("Update Shear")
@@ -95,6 +97,7 @@ class MyScene {
         makeGrass(device)
         makeReflectiveCubes(device: device)
         makeTransparentPlanes(device: device) // transparent objects last
+        //makeCubeForNormalMapping(device)
         
         loadCubeMap(device: device)
         makeLight(device)
@@ -105,14 +108,45 @@ class MyScene {
     }
     
     func makeMonkey(_ device: MTLDevice) {
-        let monkey = loadMonkey(device: device)
-        monkey.transform.moveBy([0, 1.2, -0.5])
+        let url = Bundle.main.url(forResource: "monkey", withExtension: "obj")!
+        let metalMesh = MetalMesh.loadObjFile(url, device: device)
+        //metalMesh.texture = MetalMesh.loadPlaceholderTexture(device)
+        //metalMesh.normalMap = MetalMesh.loadNormalMapTexture(device)
+        metalMesh.setColor([0.8, 0.4, 0.2, 1])
+        
+        let monkey = MeshObject(metalMesh: metalMesh, device: device)
+        monkey.transform.moveBy([0, 1.4, -0.5])
         // selection.transform.lookAt([0,0, 4]) // todo: fix look at
-        monkey.metalMesh.setColor([0.8, 0.4, 0.2, 1])
         monkey.setEnvMapReflectedAmount(0.5)
-        self.sceneObjects.append(monkey)
+        monkey.setNormalMapTiling(3)
+        
+        self.monkey = monkey
+        self.sceneObjects.append(monkey)        
         self.selection = monkey
-        // monkey.metalMesh.texture = MetalMesh.loadPlaceholderTexture(device)
+    }
+    
+    func makeCubeForNormalMapping(_ device: MTLDevice) {
+        let url = Bundle.main.url(forResource: "box", withExtension: "obj")!
+        let metalMesh = MetalMesh.loadObjFile(url, device: device)
+        metalMesh.normalMap = MetalMesh.loadNormalMapTexture(device)
+        let cube = MeshObject(metalMesh: metalMesh, device: device)
+        metalMesh.setColor([0.5, 0.5, 0.5, 1])
+        cube.setNormalMapTiling(2)
+        cube.transform.scale = 0.3
+        cube.transform.moveBy([0, 0, 0.5])
+        cube.transform.orientation = simd_quatf(angle: -0.0 * .pi, axis: Float3(0, 1, 0))
+        
+        //selection = cube
+        sceneObjects.append(cube)
+        self.normalMapCube = cube
+    }
+    
+    func updateNormalMapping() {
+        if monkey.metalMesh.normalMap != nil {
+            monkey.metalMesh.normalMap = nil
+        } else {
+            monkey.metalMesh.normalMap = MetalMesh.loadNormalMapTexture(renderer.device)
+        }
     }
     
     func makeFloor(_ device: MTLDevice) {
@@ -237,10 +271,15 @@ class MyScene {
         self.grass = grass
     }
     
-    func loadMonkey(device: MTLDevice) -> MeshObject {
-        let metalMesh = pool.loadMesh("monkey", device: device)
-        let meshObject = MeshObject(metalMesh: metalMesh, device: device)
-        return meshObject
+    func makeTestTriangle(device: MTLDevice) {
+        let triangle: [VertexData] = [
+            VertexData(position: [ 0,  1, 0], normal: [0.1, 0.1, 0.1], color: [0.2, 0.2, 0.2, 0.2], uv: [ 0.5,  0.5], tan: [0.8, 0.8, 0.8], btan: [0.9, 0.9, 0.9]), // top
+            VertexData(position: [-1, -1, 0], normal: [0.1, 0.1, 0.1], color: [0.2, 0.2, 0.2, 0.2], uv: [ 0.5,  0.5], tan: [0.8, 0.8, 0.8], btan: [0.9, 0.9, 0.9]), // bot left
+            VertexData(position: [ 1, -1, 0], normal: [0.1, 0.1, 0.1], color: [0.2, 0.2, 0.2, 0.2], uv: [ 0.5,  0.5], tan: [0.8, 0.8, 0.8], btan: [0.9, 0.9, 0.9]), // bot right, counter-clockwise
+        ]
+        let mm = MetalMesh(vertices: triangle, texture: nil, device: device)
+        let tri = MeshObject(metalMesh: mm, device: device)
+        sceneObjects.append(tri)
     }
     
     func loadBox(device: MTLDevice) -> MeshObject {

@@ -29,13 +29,20 @@ class MeshObject {
     }
     
     func setEnvMapReflectedAmount(_ f: Float) {
-        objectConstantsBuff.contents().bindMemory(to: ObjectConstants.self, capacity: 1)
-            .pointee.envMapReflectedAmount = f
+        getObjectConstantsPointer().pointee.envMapReflectedAmount = f
     }
     
     func setEnvMapRefractedAmount(_ f: Float) {
+        getObjectConstantsPointer().pointee.envMapRefractedAmount = f
+    }
+    
+    func setNormalMapTiling(_ f: Float) {
+        getObjectConstantsPointer().pointee.normalMapTiling = f;
+    }
+    
+    @inline(__always)
+    func getObjectConstantsPointer() -> UnsafeMutablePointer<ObjectConstants> {
         objectConstantsBuff.contents().bindMemory(to: ObjectConstants.self, capacity: 1)
-            .pointee.envMapRefractedAmount = f
     }
 }
 

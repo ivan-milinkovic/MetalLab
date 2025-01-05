@@ -254,6 +254,7 @@ class Renderer {
             encoder.setFragmentTexture(meshObject.metalMesh.texture, index: 0)
             encoder.setFragmentTexture(scene.spotLight.texture, index: 1)
             encoder.setFragmentTexture(cubeTex, index: 2)
+            encoder.setFragmentTexture(meshObject.metalMesh.normalMap, index: 3)
             encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: meshObject.metalMesh.vertexCount, instanceCount: instanceCount)
         }
     }

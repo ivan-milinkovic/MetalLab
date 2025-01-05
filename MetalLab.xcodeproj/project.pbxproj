@@ -41,6 +41,7 @@
 		2CF9032F29BE653B000D2729 /* MetalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF9032E29BE653B000D2729 /* MetalView.swift */; };
 		2CF9033129BE6824000D2729 /* Renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF9033029BE6824000D2729 /* Renderer.swift */; };
 		2CF9033329BE7402000D2729 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 2CF9033229BE7402000D2729 /* Shaders.metal */; };
+		2CFCBFD52D2AC8750062B8A7 /* cobblestone_normals.png in Resources */ = {isa = PBXBuildFile; fileRef = 2CFCBFD42D2AC8750062B8A7 /* cobblestone_normals.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -81,6 +82,7 @@
 		2CF9032E29BE653B000D2729 /* MetalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalView.swift; sourceTree = "<group>"; };
 		2CF9033029BE6824000D2729 /* Renderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Renderer.swift; sourceTree = "<group>"; };
 		2CF9033229BE7402000D2729 /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
+		2CFCBFD42D2AC8750062B8A7 /* cobblestone_normals.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = cobblestone_normals.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -116,6 +118,7 @@
 				2C5A393F2CEFC97A0019AED7 /* monkey.obj */,
 				2C007C0B2CF0811200F6EEAE /* box.mtl */,
 				2C007C0C2CF0811200F6EEAE /* box.obj */,
+				2CFCBFD42D2AC8750062B8A7 /* cobblestone_normals.png */,
 				2C01D6DD2D11ADA700657FDE /* cube map */,
 			);
 			path = res;
@@ -242,6 +245,7 @@
 				2C5A39412CEFC97A0019AED7 /* monkey.obj in Resources */,
 				2C5A39422CEFC97A0019AED7 /* monkey.mtl in Resources */,
 				2C01D6DE2D11ADA700657FDE /* readme.txt in Resources */,
+				2CFCBFD52D2AC8750062B8A7 /* cobblestone_normals.png in Resources */,
 				2C01D6DF2D11ADA700657FDE /* negz.jpg in Resources */,
 				2C01D6E02D11ADA700657FDE /* posz.jpg in Resources */,
 				2C01D6E12D11ADA700657FDE /* posy.jpg in Resources */,

@@ -3,6 +3,7 @@ import simd
 struct ObjectConstants {
     var modelMatrix: float4x4 = matrix_identity_float4x4
     var textureAmount: Float = 0 // how much of texture color to take and blend with vertex color
+    var normalMapTiling: Float = 1
     var envMapReflectedAmount: Float = 0
     var envMapRefractedAmount: Float = 0
 }

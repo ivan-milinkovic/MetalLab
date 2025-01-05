@@ -4,11 +4,11 @@ using namespace metal;
 
 struct VertexInput {
     float3 position [[attribute(0)]];
-    float3 normal [[attribute(1)]];
-    float4 color [[attribute(2)]];
-    float2 uv [[attribute(3)]];
-    float3 tan [[attribute(4)]];
-    float3 btan [[attribute(5)]];
+    float3 normal   [[attribute(1)]];
+    float4 color    [[attribute(2)]];
+    float2 uv       [[attribute(3)]];
+    float3 tan      [[attribute(4)]];
+    float3 btan     [[attribute(5)]];
 };
 
 struct FragmentData {
@@ -20,6 +20,7 @@ struct FragmentData {
     float3 tan;
     float3 btan;
     float textureAmount;
+    float normalMapTiling;
     float envMapReflectedAmount;
     float envMapRefractedAmount;
 };
@@ -33,6 +34,7 @@ struct SpotLight {
 struct ObjectConstants {
     float4x4 modelMatrix;
     float textureAmount; // factor how much texture color to take
+    float normalMapTiling;
     float envMapReflectedAmount;
     float envMapRefractedAmount;
 };
@@ -62,13 +64,14 @@ vertex FragmentData vertex_main(
     out.positionClip = frameConstants.projectionMatrix * modelViewMatrix * float4(vertexData.position, 1);
     out.positionWorld = objectConstants.modelMatrix * float4(vertexData.position, 1);
     out.normal = normalize((modelViewMatrix * float4(vertexData.normal, 0)).xyz); // todo: model-view inverse transform
+    out.tan    = normalize((modelViewMatrix * float4(vertexData.tan,    0)).xyz); // todo: model-view inverse transform
+    out.btan   = normalize((modelViewMatrix * float4(vertexData.btan,   0)).xyz); // todo: model-view inverse transform
     out.color = vertexData.color;
     out.uv = vertexData.uv;
     out.textureAmount = objectConstants.textureAmount;
+    out.normalMapTiling = objectConstants.normalMapTiling;
     out.envMapReflectedAmount = objectConstants.envMapReflectedAmount;
     out.envMapRefractedAmount = objectConstants.envMapRefractedAmount;
-    out.tan = normalize((modelViewMatrix * float4(vertexData.tan, 0)).xyz); // todo: model-view inverse transform
-    out.btan = normalize((modelViewMatrix * float4(vertexData.btan, 0)).xyz); // todo: model-view inverse transform
     return out;
 }
 
@@ -80,15 +83,29 @@ fragment float4 fragment_main
     texture2d   <float, access::sample> texture   [[texture(0)]],
     depth2d     <float, access::sample> shadowMap [[texture(1)]],
     texturecube <float, access::sample> cubeMap   [[texture(2)]],
+    texture2d   <float, access::sample> normalMap [[texture(3)]],
     sampler                          sampler   [[sampler(0)]])
 {
     //return {0, 0.2, 0.6, 1};
     //return shadowMap.sample(sampler, fragmentData.uv);
+    //return normalMap.sample(sampler, fragmentData.uv * fragmentData.normalMapTiling);
     
     float4 color = fragmentData.color;
     if (fragmentData.textureAmount > 0.0) {
         auto tcolor = texture.sample(sampler, fragmentData.uv);
         color = fragmentData.textureAmount * tcolor + (1 - fragmentData.textureAmount) * color;
+    }
+    
+    float3 N = fragmentData.normal;
+    if (!is_null_texture(normalMap))
+    {
+        auto normalSampler = sampler;
+        //constexpr struct sampler trilinearSampler(coord::normalized, filter::linear, mip_filter::linear, address::repeat);
+        //auto normalSampler = trilinearSampler;
+        float3 mappedNormal = normalMap.sample(normalSampler, fragmentData.uv * fragmentData.normalMapTiling).xyz; // tangent space
+        mappedNormal = mappedNormal * 2 - 1;
+        float3x3 TBN = { fragmentData.tan, fragmentData.btan, fragmentData.normal }; // columns, multiply with vectors on the right side, view space
+        N = normalize( TBN * mappedNormal );
     }
     
     // environment mapping
@@ -97,7 +114,7 @@ fragment float4 fragment_main
         auto fRefl = fragmentData.envMapReflectedAmount;
         auto posView = frameConstants.viewMatrix * fragmentData.positionWorld; // position in view space
         auto pointToCameraDir = normalize(-posView.xyz); // in view space, the direction is just towards the position
-        auto reflected = reflect(-pointToCameraDir, fragmentData.normal);
+        auto reflected = reflect(-pointToCameraDir, N);
         auto reflectionEnvColor = cubeMap.sample(sampler, reflected).rgb;
         
         color = fRefl * float4(reflectionEnvColor, 1) + (1 - fRefl) * color;
@@ -107,7 +124,7 @@ fragment float4 fragment_main
         auto fRefr = fragmentData.envMapRefractedAmount;
         auto posView = frameConstants.viewMatrix * fragmentData.positionWorld; // position in view space
         auto pointToCameraDir = normalize(-posView.xyz);
-        auto refracted = refract(-pointToCameraDir, fragmentData.normal, 1.33);
+        auto refracted = refract(-pointToCameraDir, N, 1.33);
         auto refractionEnvColor = cubeMap.sample(sampler, refracted).rgb;
         color = fRefr * float4(refractionEnvColor, 1) + (1 - fRefr) * color;
     }
@@ -116,12 +133,12 @@ fragment float4 fragment_main
     float3 lightDir = frameConstants.directionalLightDir;
     lightDir = normalize(-lightDir);
     //float f_dirLight = max(0.1, dot(fragmentData.normal, lightDir)); // no backlight
-    float fDirLight = abs(dot(fragmentData.normal, lightDir)); // light from both lightDir and -lightDir, looks better
+    float fDirLight = abs(dot(N, lightDir)); // light from both lightDir and -lightDir, looks better
     
     // point light
     float3 lightPos = frameConstants.spotLight.position;
     float3 toLight = normalize(lightPos - (frameConstants.viewMatrix * fragmentData.positionWorld).xyz);
-    float fSpotLight = max(0.0, dot(fragmentData.normal, toLight));
+    float fSpotLight = max(0.0, dot(N, toLight));
     float4 lightColor = float4(frameConstants.spotLight.color, 1);
     
     // read shadow map
