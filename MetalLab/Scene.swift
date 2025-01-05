@@ -231,11 +231,12 @@ class MyScene {
             }
         }
         
-        let metalMesh = pool.loadMesh("box", device: device)
+        let url = Bundle.main.url(forResource: "box", withExtension: "obj")!
+        let metalMesh = MetalMesh.loadObjFile(url, device: device)
         metalMesh.setColor([0.1, 0.3, 0.8, 1])
         let boxesCluster = InstancedObject(metalMesh: metalMesh, positions: instancePositions, device: device)
         boxesCluster.transform.moveBy([-rectSize, 0, 1])
-        // metalMesh.texture = MetalMesh.loadPlaceholderTexture(device)
+        metalMesh.texture = MetalMesh.loadPlaceholderTexture(device)
         
         sceneObjects.append(boxesCluster)
     }

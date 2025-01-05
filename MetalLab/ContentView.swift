@@ -22,7 +22,7 @@ struct ContentView: View {
                 Text("Normal Mapping")
             }
             .toggleStyle(.checkbox)
-            .padding()
+            .padding(.bottom, 8)
         }
         .task {
             viewController.load()

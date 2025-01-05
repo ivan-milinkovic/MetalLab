@@ -69,7 +69,7 @@ class MetalMesh {
     
     static func loadPlaceholderTexture(_ device: MTLDevice) -> MTLTexture {
         let tl = MTKTextureLoader(device: device)
-        let url = Bundle.main.url(forResource: "placeholder", withExtension: "png")!
+        let url = Bundle.main.url(forResource: "placeholder2", withExtension: "png")!
         let tex = try! tl.newTexture(URL: url,options: [.textureUsage: MTLTextureUsage.shaderRead.rawValue,
                                                         .textureStorageMode: MTLStorageMode.private.rawValue])
         return tex
