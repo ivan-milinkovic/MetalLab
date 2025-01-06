@@ -133,10 +133,10 @@ class MyScene {
         metalMesh.setColor([0.5, 0.5, 0.5, 1])
         cube.setNormalMapTiling(2)
         cube.transform.scale = 0.3
-        cube.transform.moveBy([0, 0, 0.5])
+        cube.transform.moveBy([0, 1, 0.5])
         cube.transform.orientation = simd_quatf(angle: -0.0 * .pi, axis: Float3(0, 1, 0))
         
-        //selection = cube
+        selection = cube
         sceneObjects.append(cube)
         self.normalMapCube = cube
     }

@@ -134,7 +134,7 @@ fragment float4 fragment_main
     // directional light
     float3 lightDir = frameConstants.directionalLightDir;
     lightDir = normalize(-lightDir);
-    //float f_dirLight = max(0.1, dot(fragmentData.normal, lightDir)); // no backlight
+    //float fDirLight = max(0.1, dot(fragmentData.normal, lightDir)); // no backlight
     float fDirLight = abs(dot(N, lightDir)); // light from both lightDir and -lightDir, fakes ambient light, looks better
     
     // point light
@@ -154,8 +154,10 @@ fragment float4 fragment_main
     
     // specular
     float3 H = normalize(toLight + pointToCameraDir); // half vector
-    //H = reflect(-pointToCameraDir, N); // specular around mirror reflection ray
     float fSpec = powr(saturate(dot(N, H)), fragmentData.specularExponent);
+    //float3 R = reflect(-pointToCameraDir, N); // specular around mirror reflection ray
+    //fSpec = saturate(dot(N, R));
+    //if (fSpec < 0.9) { fSpec = 0.0; }
     
     // final color
     float f_light2 = fShadow * fSpotLight + 0.2 * fDirLight;
