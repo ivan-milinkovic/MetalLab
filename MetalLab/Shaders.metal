@@ -23,6 +23,7 @@ struct FragmentData {
     float normalMapTiling;
     float envMapReflectedAmount;
     float envMapRefractedAmount;
+    float specularExponent;
 };
 
 struct SpotLight {
@@ -37,6 +38,7 @@ struct ObjectConstants {
     float normalMapTiling;
     float envMapReflectedAmount;
     float envMapRefractedAmount;
+    float specularExponent;
 };
 
 struct FrameConstants {
@@ -72,6 +74,7 @@ vertex FragmentData vertex_main(
     out.normalMapTiling = objectConstants.normalMapTiling;
     out.envMapReflectedAmount = objectConstants.envMapReflectedAmount;
     out.envMapRefractedAmount = objectConstants.envMapRefractedAmount;
+    out.specularExponent = objectConstants.specularExponent;
     return out;
 }
 
@@ -101,19 +104,20 @@ fragment float4 fragment_main
     {
         auto normalSampler = sampler;
         //constexpr struct sampler trilinearSampler(coord::normalized, filter::linear, mip_filter::linear, address::repeat);
-        //auto normalSampler = trilinearSampler;
+        //normalSampler = trilinearSampler;
         float3 mappedNormal = normalMap.sample(normalSampler, fragmentData.uv * fragmentData.normalMapTiling).xyz; // tangent space
         mappedNormal = mappedNormal * 2 - 1;
         float3x3 TBN = { fragmentData.tan, fragmentData.btan, fragmentData.normal }; // columns, multiply with vectors on the right side, view space
         N = normalize( TBN * mappedNormal );
     }
     
+    float4 posView = frameConstants.viewMatrix * fragmentData.positionWorld; // position in view space
+    float3 pointToCameraDir = normalize(-posView.xyz);
+    
     // environment mapping
     if (fragmentData.envMapReflectedAmount > 0.0) { // if because of transparent objects, see alpha component bellow
         // reflection
         auto fRefl = fragmentData.envMapReflectedAmount;
-        auto posView = frameConstants.viewMatrix * fragmentData.positionWorld; // position in view space
-        auto pointToCameraDir = normalize(-posView.xyz); // in view space, the direction is just towards the position
         auto reflected = reflect(-pointToCameraDir, N);
         auto reflectionEnvColor = cubeMap.sample(sampler, reflected).rgb;
         
@@ -122,8 +126,6 @@ fragment float4 fragment_main
     if (fragmentData.envMapRefractedAmount > 0.0) {
         // refraction
         auto fRefr = fragmentData.envMapRefractedAmount;
-        auto posView = frameConstants.viewMatrix * fragmentData.positionWorld; // position in view space
-        auto pointToCameraDir = normalize(-posView.xyz);
         auto refracted = refract(-pointToCameraDir, N, 1.33);
         auto refractionEnvColor = cubeMap.sample(sampler, refracted).rgb;
         color = fRefr * float4(refractionEnvColor, 1) + (1 - fRefr) * color;
@@ -133,12 +135,12 @@ fragment float4 fragment_main
     float3 lightDir = frameConstants.directionalLightDir;
     lightDir = normalize(-lightDir);
     //float f_dirLight = max(0.1, dot(fragmentData.normal, lightDir)); // no backlight
-    float fDirLight = abs(dot(N, lightDir)); // light from both lightDir and -lightDir, looks better
+    float fDirLight = abs(dot(N, lightDir)); // light from both lightDir and -lightDir, fakes ambient light, looks better
     
     // point light
     float3 lightPos = frameConstants.spotLight.position;
-    float3 toLight = normalize(lightPos - (frameConstants.viewMatrix * fragmentData.positionWorld).xyz);
-    float fSpotLight = max(0.0, dot(N, toLight));
+    float3 toLight = normalize(lightPos - posView.xyz);
+    float fSpotLight = saturate(dot(N, toLight));
     float4 lightColor = float4(frameConstants.spotLight.color, 1);
     
     // read shadow map
@@ -150,17 +152,25 @@ fragment float4 fragment_main
     float fShadow = shadowMap.sample_compare(shadowSampler, shadowUV, shadowNDC.z - 5e-3f);
     fShadow = 1 - fShadow;
     
+    // specular
+    float3 H = normalize(toLight + pointToCameraDir); // half vector
+    //H = reflect(-pointToCameraDir, N); // specular around mirror reflection ray
+    float fSpec = powr(saturate(dot(N, H)), fragmentData.specularExponent);
+    
+    // final color
     float f_light2 = fShadow * fSpotLight + 0.2 * fDirLight;
-    float4 color2 = f_light2 * (lightColor * color);
-    color2.w = color.w; // restore the original alpha channel after multiplications
+    float4 outColor = f_light2 * (lightColor * color);
+    outColor += float4(fShadow * fSpec * frameConstants.spotLight.color, 0);
+    outColor.w = color.w; // restore the original alpha channel after multiplications
     //finalColor.w = 1; // avoids transparency
     
-    float4 color3 = float4(color2.xyz*color2.w, color2.w); // pre-multiply alpha
+    outColor.xyz *= outColor.w; // pre-multiply alpha?
     
     // Gamma correction usage depends on pixel format of the frame-buffer, srgb will convert automatically from linear
-    //return sqrt(color3); // manual gamma correction
+    //outColor = sqrt(outColor); // manual gamma correction
+    //outColor.w = color.w; // restore the original alpha channel again after gamma correction
     
-    return color3;
+    return outColor;
 }
 
 

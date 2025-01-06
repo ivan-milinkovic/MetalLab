@@ -10,7 +10,8 @@ class MeshObject {
     
     init(metalMesh: MetalMesh, device: MTLDevice) {
         self.metalMesh = metalMesh
-        objectConstantsBuff = device.makeBuffer(length: MemoryLayout<ObjectConstants>.stride, options: .storageModeShared)!
+        var prototype = ObjectConstants() // in order to have default values set in the buffer
+        objectConstantsBuff = device.makeBuffer(bytes: &prototype, length: MemoryLayout<ObjectConstants>.stride, options: .storageModeShared)!
     }
     
     fileprivate init(metalMesh: MetalMesh, objectConstantsBuff: MTLBuffer) {
@@ -55,7 +56,8 @@ class InstancedObject: MeshObject {
     init(metalMesh: MetalMesh, positions: [Transform], device: MTLDevice) {
         self.positions = positions
         self.count = positions.count
-        let constantsBuff = device.makeBuffer(length: count * MemoryLayout<ObjectConstants>.stride, options: .storageModeShared)!
+        var prototypes = [ObjectConstants].init(repeating: ObjectConstants(), count: count) // in order to have default values set in the buffer
+        let constantsBuff = device.makeBuffer(bytes: &prototypes, length: count * MemoryLayout<ObjectConstants>.stride, options: .storageModeShared)!
         super.init(metalMesh: metalMesh, objectConstantsBuff: constantsBuff)
     }
     
@@ -84,7 +86,8 @@ class AnimatedInstancedObject: MeshObject {
     
     init(metalMesh: MetalMesh, positions: [Transform], flexibility: [Float], device: MTLDevice) {
         self.count = positions.count
-        let constantsBuff = device.makeBuffer(length: count * MemoryLayout<ObjectConstants>.stride, options: .storageModeShared)!
+        var prototypes = [ObjectConstants].init(repeating: ObjectConstants(), count: count) // in order to have default values set in the buffer
+        let constantsBuff = device.makeBuffer(bytes: &prototypes, length: count * MemoryLayout<ObjectConstants>.stride, options: .storageModeShared)!
         instanceConstantsBuff = device.makeBuffer(length: MemoryLayout<UpdateShearConstants>.stride)!
         instanceDataBuff      = device.makeBuffer(length: count * MemoryLayout<UpdateShearStrandData>.stride)!
         

@@ -6,6 +6,7 @@ struct ObjectConstants {
     var normalMapTiling: Float = 1
     var envMapReflectedAmount: Float = 0
     var envMapRefractedAmount: Float = 0
+    var specularExponent: Float = 150
 }
 
 struct FrameConstants {
