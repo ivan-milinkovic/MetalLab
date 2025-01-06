@@ -93,6 +93,7 @@ class Renderer {
         samplerDesc.minFilter = .linear
         samplerDesc.sAddressMode = .repeat
         samplerDesc.tAddressMode = .repeat
+        //samplerDesc.maxAnisotropy = 8
         textureSamplerState = device.makeSamplerState(descriptor: samplerDesc)
         
         let depthDesc = MTLDepthStencilDescriptor()

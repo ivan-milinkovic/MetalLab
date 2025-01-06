@@ -160,7 +160,7 @@ fragment float4 fragment_main
     // final color
     float f_light2 = fShadow * fSpotLight + 0.2 * fDirLight;
     float4 outColor = f_light2 * (lightColor * color);
-    outColor += float4(fShadow * fSpec * frameConstants.spotLight.color, 0);
+    outColor += float4(fShadow * fSpec * frameConstants.spotLight.color, 0); // apply specular
     outColor.w = color.w; // restore the original alpha channel after multiplications
     //finalColor.w = 1; // avoids transparency
     
