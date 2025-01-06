@@ -89,6 +89,14 @@ class MyScene {
         cmdBuff.waitUntilCompleted()
     }
     
+    func updateNormalMapping() {
+        if monkey.metalMesh.normalMap != nil {
+            monkey.metalMesh.normalMap = nil
+        } else {
+            monkey.metalMesh.normalMap = MetalMesh.loadTexture("cobblestone_normals_512.png", renderer.device)
+        }
+    }
+    
     func load(device: MTLDevice) {
         
         makeMonkey(device)
@@ -110,8 +118,6 @@ class MyScene {
     func makeMonkey(_ device: MTLDevice) {
         let url = Bundle.main.url(forResource: "monkey", withExtension: "obj")!
         let metalMesh = MetalMesh.loadObjFile(url, device: device)
-        //metalMesh.texture = MetalMesh.loadPlaceholderTexture(device)
-        //metalMesh.normalMap = MetalMesh.loadNormalMapTexture(device)
         metalMesh.setColor([0.8, 0.4, 0.2, 1])
         
         let monkey = MeshObject(metalMesh: metalMesh, device: device)
@@ -128,10 +134,13 @@ class MyScene {
     func makeCubeForNormalMapping(_ device: MTLDevice) {
         let url = Bundle.main.url(forResource: "box", withExtension: "obj")!
         let metalMesh = MetalMesh.loadObjFile(url, device: device)
-        metalMesh.normalMap = MetalMesh.loadNormalMapTexture(device)
+        metalMesh.texture = MetalMesh.loadTexture("cobblestone_diffuse_2048.png", device)
+        metalMesh.normalMap = MetalMesh.loadTexture("cobblestone_normals_512.png", device)
         let cube = MeshObject(metalMesh: metalMesh, device: device)
         metalMesh.setColor([0.5, 0.5, 0.5, 1])
-        cube.setNormalMapTiling(2)
+        let tiling: Float = 1
+        cube.setTextureTiling(tiling)
+        cube.setNormalMapTiling(tiling)
         cube.transform.scale = 0.3
         cube.transform.moveBy([0, 1, 0.5])
         cube.transform.orientation = simd_quatf(angle: -0.0 * .pi, axis: Float3(0, 1, 0))
@@ -139,14 +148,6 @@ class MyScene {
         selection = cube
         sceneObjects.append(cube)
         self.normalMapCube = cube
-    }
-    
-    func updateNormalMapping() {
-        if monkey.metalMesh.normalMap != nil {
-            monkey.metalMesh.normalMap = nil
-        } else {
-            monkey.metalMesh.normalMap = MetalMesh.loadNormalMapTexture(renderer.device)
-        }
     }
     
     func makeFloor(_ device: MTLDevice) {

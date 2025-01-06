@@ -37,6 +37,10 @@ class MeshObject {
         getObjectConstantsPointer().pointee.envMapRefractedAmount = f
     }
     
+    func setTextureTiling(_ f: Float) {
+        getObjectConstantsPointer().pointee.textureTiling = f;
+    }
+    
     func setNormalMapTiling(_ f: Float) {
         getObjectConstantsPointer().pointee.normalMapTiling = f;
     }

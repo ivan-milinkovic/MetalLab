@@ -20,6 +20,7 @@ struct FragmentData {
     float3 tan;
     float3 btan;
     float textureAmount;
+    float textureTiling;
     float normalMapTiling;
     float envMapReflectedAmount;
     float envMapRefractedAmount;
@@ -35,6 +36,7 @@ struct SpotLight {
 struct ObjectConstants {
     float4x4 modelMatrix;
     float textureAmount; // factor how much texture color to take
+    float textureTiling;
     float normalMapTiling;
     float envMapReflectedAmount;
     float envMapRefractedAmount;
@@ -71,6 +73,7 @@ vertex FragmentData vertex_main(
     out.color = vertexData.color;
     out.uv = vertexData.uv;
     out.textureAmount = objectConstants.textureAmount;
+    out.textureTiling = objectConstants.textureTiling;
     out.normalMapTiling = objectConstants.normalMapTiling;
     out.envMapReflectedAmount = objectConstants.envMapReflectedAmount;
     out.envMapRefractedAmount = objectConstants.envMapRefractedAmount;
@@ -93,9 +96,11 @@ fragment float4 fragment_main
     //return shadowMap.sample(sampler, fragmentData.uv);
     //return normalMap.sample(sampler, fragmentData.uv * fragmentData.normalMapTiling);
     
+    float2 uv = fragmentData.uv * fragmentData.textureTiling;
+    
     float4 color = fragmentData.color;
     if (fragmentData.textureAmount > 0.0) {
-        auto tcolor = texture.sample(sampler, fragmentData.uv);
+        auto tcolor = texture.sample(sampler, uv);
         color = fragmentData.textureAmount * tcolor + (1 - fragmentData.textureAmount) * color;
     }
     
@@ -105,7 +110,7 @@ fragment float4 fragment_main
         auto normalSampler = sampler;
         //constexpr struct sampler trilinearSampler(coord::normalized, filter::linear, mip_filter::linear, address::repeat);
         //normalSampler = trilinearSampler;
-        float3 mappedNormal = normalMap.sample(normalSampler, fragmentData.uv * fragmentData.normalMapTiling).xyz; // tangent space
+        float3 mappedNormal = normalMap.sample(normalSampler, uv * fragmentData.normalMapTiling).xyz; // tangent space
         mappedNormal = mappedNormal * 2 - 1;
         float3x3 TBN = { fragmentData.tan, fragmentData.btan, fragmentData.normal }; // columns, multiply with vectors on the right side, view space
         N = normalize( TBN * mappedNormal );
@@ -155,7 +160,7 @@ fragment float4 fragment_main
     // specular
     float3 H = normalize(toLight + pointToCameraDir); // half vector
     float fSpec = powr(saturate(dot(N, H)), fragmentData.specularExponent);
-    //float3 R = reflect(-pointToCameraDir, N); // specular around mirror reflection ray
+    //float3 R = reflect(-pointToCameraDir, N); // specular based on mirror reflection ray
     //fSpec = saturate(dot(N, R));
     //if (fSpec < 0.9) { fSpec = 0.0; }
     
