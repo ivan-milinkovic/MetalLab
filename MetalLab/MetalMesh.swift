@@ -76,13 +76,13 @@ class MetalMesh {
         return tex
     }
     
-    static func loadTexture(_ name: String, _ device: MTLDevice) -> MTLTexture {
+    static func loadTexture(_ name: String, srgb: Bool = false, _ device: MTLDevice) -> MTLTexture {
         let tl = MTKTextureLoader(device: device)
         let url = Bundle.main.url(forResource: name, withExtension: nil)!
         let tex = try! tl.newTexture(URL: url, options: [.textureUsage: MTLTextureUsage.shaderRead.rawValue,
                                                          .textureStorageMode: MTLStorageMode.private.rawValue,
                                                          .generateMipmaps: true,
-                                                         .SRGB : false])
+                                                         .SRGB : srgb])
         return tex
     }
     
