@@ -91,6 +91,7 @@ class Renderer {
         samplerDesc.normalizedCoordinates = true
         samplerDesc.magFilter = .linear
         samplerDesc.minFilter = .linear
+        samplerDesc.mipFilter = .linear
         samplerDesc.sAddressMode = .repeat
         samplerDesc.tAddressMode = .repeat
         //samplerDesc.maxAnisotropy = 8

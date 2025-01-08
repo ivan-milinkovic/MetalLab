@@ -34,10 +34,8 @@
 		2C5A39412CEFC97A0019AED7 /* monkey.obj in Resources */ = {isa = PBXBuildFile; fileRef = 2C5A393F2CEFC97A0019AED7 /* monkey.obj */; };
 		2C5A39422CEFC97A0019AED7 /* monkey.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 2C5A393E2CEFC97A0019AED7 /* monkey.mtl */; };
 		2CDCBFBC2D29715B009A004B /* Tangents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CDCBFBB2D29715B009A004B /* Tangents.swift */; };
-		2CF205E12D2BF5030077D4FB /* cobblestone_normals_2048.png in Resources */ = {isa = PBXBuildFile; fileRef = 2CF205E02D2BF5030077D4FB /* cobblestone_normals_2048.png */; };
-		2CF205E22D2BF5030077D4FB /* cobblestone_normals_1024.png in Resources */ = {isa = PBXBuildFile; fileRef = 2CF205DF2D2BF5030077D4FB /* cobblestone_normals_1024.png */; };
-		2CF205E32D2BF5030077D4FB /* cobblestone_normals_512.png in Resources */ = {isa = PBXBuildFile; fileRef = 2CF205DE2D2BF5030077D4FB /* cobblestone_normals_512.png */; };
-		2CF205EB2D2C055C0077D4FB /* cobblestone_diffuse_2048.png in Resources */ = {isa = PBXBuildFile; fileRef = 2CF205EA2D2C055C0077D4FB /* cobblestone_diffuse_2048.png */; };
+		2CF205E12D2BF5030077D4FB /* cobblestone_normals.png in Resources */ = {isa = PBXBuildFile; fileRef = 2CF205E02D2BF5030077D4FB /* cobblestone_normals.png */; };
+		2CF205EB2D2C055C0077D4FB /* cobblestone_diffuse.png in Resources */ = {isa = PBXBuildFile; fileRef = 2CF205EA2D2C055C0077D4FB /* cobblestone_diffuse.png */; };
 		2CF9032029BE6510000D2729 /* MetalLabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF9031F29BE6510000D2729 /* MetalLabApp.swift */; };
 		2CF9032229BE6510000D2729 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF9032129BE6510000D2729 /* ContentView.swift */; };
 		2CF9032429BE6515000D2729 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2CF9032329BE6515000D2729 /* Assets.xcassets */; };
@@ -78,10 +76,8 @@
 		2C5A393E2CEFC97A0019AED7 /* monkey.mtl */ = {isa = PBXFileReference; lastKnownFileType = text; path = monkey.mtl; sourceTree = "<group>"; };
 		2C5A393F2CEFC97A0019AED7 /* monkey.obj */ = {isa = PBXFileReference; lastKnownFileType = text; path = monkey.obj; sourceTree = "<group>"; };
 		2CDCBFBB2D29715B009A004B /* Tangents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tangents.swift; sourceTree = "<group>"; };
-		2CF205DE2D2BF5030077D4FB /* cobblestone_normals_512.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = cobblestone_normals_512.png; sourceTree = "<group>"; };
-		2CF205DF2D2BF5030077D4FB /* cobblestone_normals_1024.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = cobblestone_normals_1024.png; sourceTree = "<group>"; };
-		2CF205E02D2BF5030077D4FB /* cobblestone_normals_2048.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = cobblestone_normals_2048.png; sourceTree = "<group>"; };
-		2CF205EA2D2C055C0077D4FB /* cobblestone_diffuse_2048.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = cobblestone_diffuse_2048.png; sourceTree = "<group>"; };
+		2CF205E02D2BF5030077D4FB /* cobblestone_normals.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = cobblestone_normals.png; sourceTree = "<group>"; };
+		2CF205EA2D2C055C0077D4FB /* cobblestone_diffuse.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = cobblestone_diffuse.png; sourceTree = "<group>"; };
 		2CF9031C29BE6510000D2729 /* MetalLab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalLab.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2CF9031F29BE6510000D2729 /* MetalLabApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalLabApp.swift; sourceTree = "<group>"; };
 		2CF9032129BE6510000D2729 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -130,10 +126,8 @@
 				2C5A393F2CEFC97A0019AED7 /* monkey.obj */,
 				2C007C0B2CF0811200F6EEAE /* box.mtl */,
 				2C007C0C2CF0811200F6EEAE /* box.obj */,
-				2CF205EA2D2C055C0077D4FB /* cobblestone_diffuse_2048.png */,
-				2CF205DE2D2BF5030077D4FB /* cobblestone_normals_512.png */,
-				2CF205DF2D2BF5030077D4FB /* cobblestone_normals_1024.png */,
-				2CF205E02D2BF5030077D4FB /* cobblestone_normals_2048.png */,
+				2CF205EA2D2C055C0077D4FB /* cobblestone_diffuse.png */,
+				2CF205E02D2BF5030077D4FB /* cobblestone_normals.png */,
 				2C01D6DD2D11ADA700657FDE /* cube map */,
 			);
 			path = res;
@@ -260,10 +254,8 @@
 				2C5A39412CEFC97A0019AED7 /* monkey.obj in Resources */,
 				2C5A39422CEFC97A0019AED7 /* monkey.mtl in Resources */,
 				2C01D6DE2D11ADA700657FDE /* readme.txt in Resources */,
-				2CF205E12D2BF5030077D4FB /* cobblestone_normals_2048.png in Resources */,
-				2CF205EB2D2C055C0077D4FB /* cobblestone_diffuse_2048.png in Resources */,
-				2CF205E22D2BF5030077D4FB /* cobblestone_normals_1024.png in Resources */,
-				2CF205E32D2BF5030077D4FB /* cobblestone_normals_512.png in Resources */,
+				2CF205E12D2BF5030077D4FB /* cobblestone_normals.png in Resources */,
+				2CF205EB2D2C055C0077D4FB /* cobblestone_diffuse.png in Resources */,
 				2C01D6DF2D11ADA700657FDE /* negz.jpg in Resources */,
 				2C01D6E02D11ADA700657FDE /* posz.jpg in Resources */,
 				2CFCBFDA2D2B0E550062B8A7 /* placeholder2.png in Resources */,

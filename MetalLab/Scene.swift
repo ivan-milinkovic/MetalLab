@@ -93,7 +93,7 @@ class MyScene {
         if monkey.metalMesh.normalMap != nil {
             monkey.metalMesh.normalMap = nil
         } else {
-            monkey.metalMesh.normalMap = MetalMesh.loadTexture("cobblestone_normals_512.png", renderer.device)
+            monkey.metalMesh.normalMap = MetalMesh.loadTexture("cobblestone_normals.png", renderer.device)
         }
     }
     
@@ -134,8 +134,8 @@ class MyScene {
     func makeCubeForNormalMapping(_ device: MTLDevice) {
         let url = Bundle.main.url(forResource: "box", withExtension: "obj")!
         let metalMesh = MetalMesh.loadObjFile(url, device: device)
-        metalMesh.texture = MetalMesh.loadTexture("cobblestone_diffuse_2048.png", device)
-        metalMesh.normalMap = MetalMesh.loadTexture("cobblestone_normals_512.png", device)
+        metalMesh.texture = MetalMesh.loadTexture("cobblestone_diffuse.png", device)
+        metalMesh.normalMap = MetalMesh.loadTexture("cobblestone_normals.png", device)
         let cube = MeshObject(metalMesh: metalMesh, device: device)
         metalMesh.setColor([0.5, 0.5, 0.5, 1])
         let tiling: Float = 1
