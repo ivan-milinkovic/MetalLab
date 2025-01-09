@@ -11,18 +11,16 @@ struct ContentView: View {
                     let f: Float = 0.000008
                     let dx = f * Float(dragVal.velocity.height)
                     let dy = f * Float(dragVal.velocity.width)
-                    if NSEvent.modifierFlags.contains(.option) {
-                        viewController.scene.camera.position.rotate2(dx: dx, dy: dy)
-                    } else {
-                        viewController.scene.selection.transform.rotate2(dx: dx, dy: dy)
-                    }
+                    viewController.scene.rotateSelection(dx: dx, dy: dy)
                 }))
-
-            Toggle(isOn: $viewController.isNormalMappingOn) {
-                Text("Normal Mapping")
+            GroupBox {
+                HStack {
+                    Text("Select:")
+                    Button("camera") { viewController.scene.selection = viewController.scene.camera }
+                    Button("monkey") { viewController.scene.selection = viewController.scene.monkey }
+                    Button("cube")   { viewController.scene.selection = viewController.scene.normalMapCube }
+                }
             }
-            .toggleStyle(.checkbox)
-            .padding(.bottom, 8)
         }
         .task {
             viewController.load()

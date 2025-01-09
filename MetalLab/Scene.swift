@@ -14,12 +14,44 @@ class MyScene {
     let pool = Pool()
     var isReady = false
     
-    var selection: MeshObject!
+    var selection: AnyObject?
     var grass: AnimatedInstancedObject!
     var monkey: MeshObject!
     var normalMapCube: MeshObject!
     
     var renderer: Renderer!
+    
+    let updateShearOnGpu = true
+    
+    func load(device: MTLDevice) {
+        
+        makeMonkey(device)
+        makeFloor(device)
+        makeInstancedBoxes(device)
+        makeGrass(device)
+        makeReflectiveCubes(device: device)
+        makeTransparentPlanes(device: device) // transparent objects last
+        makeCubeForNormalMapping(device)
+        
+        loadCubeMap(device: device)
+        makeLight(device)
+        
+        self.camera.transform.look(from: [0, 1.4, 3.2], at: [0, 1, -2])
+        
+        selection = monkey
+        
+        isReady = true
+    }
+    
+    func rotateSelection(dx: Float, dy: Float) {
+        switch selection {
+        case let camera as Camera:
+            camera.transform.rotate2(dx: dx, dy: dy)
+        case let meshObject as MeshObject:
+            meshObject.transform.rotate2(dx: dx, dy: dy)
+        default: break
+        }
+    }
     
     var shadowMapProjectionMatrix: float4x4 {
         camera.projectionMatrix
@@ -27,7 +59,6 @@ class MyScene {
         //return float4x4.orthographicProjection(left: -size, right: size, bottom: -size, top: size, near: 1, far: 100)
     }
     
-    let updateShearOnGpu = true
     
     func updateShear(timeCounter: Double, wind: Wind) {
         if updateShearOnGpu {
@@ -89,32 +120,6 @@ class MyScene {
         cmdBuff.waitUntilCompleted()
     }
     
-    func updateNormalMapping() {
-        if monkey.metalMesh.normalMap != nil {
-            monkey.metalMesh.normalMap = nil
-        } else {
-            monkey.metalMesh.normalMap = MetalMesh.loadTexture("cobblestone_normals.png", renderer.device)
-        }
-    }
-    
-    func load(device: MTLDevice) {
-        
-        makeMonkey(device)
-        makeFloor(device)
-        makeInstancedBoxes(device)
-        makeGrass(device)
-        makeReflectiveCubes(device: device)
-        makeTransparentPlanes(device: device) // transparent objects last
-        //makeCubeForNormalMapping(device)
-        
-        loadCubeMap(device: device)
-        makeLight(device)
-        
-        self.camera.position.look(from: [0, 1.4, 3.2], at: [0, 1, -2])
-        
-        isReady = true
-    }
-    
     func makeMonkey(_ device: MTLDevice) {
         let url = Bundle.main.url(forResource: "monkey", withExtension: "obj")!
         let metalMesh = MetalMesh.loadObjFile(url, device: device)
@@ -127,8 +132,7 @@ class MyScene {
         monkey.setNormalMapTiling(3)
         
         self.monkey = monkey
-        self.sceneObjects.append(monkey)        
-        self.selection = monkey
+        self.sceneObjects.append(monkey)
     }
     
     func makeCubeForNormalMapping(_ device: MTLDevice) {
@@ -142,10 +146,10 @@ class MyScene {
         cube.setTextureTiling(tiling)
         cube.setNormalMapTiling(tiling)
         cube.transform.scale = 0.3
-        cube.transform.moveBy([0, 1, 0.5])
+        //cube.transform.moveBy([0, 1, 0.5])
+        cube.transform.moveBy([2, 1.5, 0.5])
         cube.transform.orientation = simd_quatf(angle: -0.0 * .pi, axis: Float3(0, 1, 0))
         
-        selection = cube
         sceneObjects.append(cube)
         self.normalMapCube = cube
     }

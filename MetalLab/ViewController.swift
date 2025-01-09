@@ -8,12 +8,6 @@ class ViewController: NSObject, ObservableObject {
     var mtkView: MTKView!
     var timeCounter: Double = 0
     
-    @Published var isNormalMappingOn = false {
-        didSet {
-            scene.updateNormalMapping()
-        }
-    }
-    
     override init() {
         scene = MyScene()
         renderer = Renderer()
