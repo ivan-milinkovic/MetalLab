@@ -84,18 +84,14 @@ vertex FragmentData vertex_main(
 
 fragment float4 fragment_main
 (
-             FragmentData      fragmentData    [[stage_in]],
-    constant FrameConstants&   frameConstants  [[buffer(0)]],
+             FragmentData    fragmentData         [[stage_in]],
+    constant FrameConstants& frameConstants       [[buffer(0)]],
     texture2d   <float, access::sample> texture   [[texture(0)]],
     depth2d     <float, access::sample> shadowMap [[texture(1)]],
     texturecube <float, access::sample> cubeMap   [[texture(2)]],
     texture2d   <float, access::sample> normalMap [[texture(3)]],
-    sampler                          sampler   [[sampler(0)]])
+    sampler                             sampler   [[sampler(0)]])
 {
-    //return {0, 0.2, 0.6, 1};
-    //return shadowMap.sample(sampler, fragmentData.uv);
-    //return normalMap.sample(sampler, fragmentData.uv * fragmentData.normalMapTiling);
-    
     float2 uv = fragmentData.uv * fragmentData.textureTiling;
     
     float4 color = fragmentData.color;
@@ -107,10 +103,7 @@ fragment float4 fragment_main
     float3 N = fragmentData.normal;
     if (!is_null_texture(normalMap))
     {
-        auto normalSampler = sampler;
-        //constexpr struct sampler trilinearSampler(coord::normalized, filter::linear, mip_filter::linear, address::repeat);
-        //normalSampler = trilinearSampler;
-        float3 mappedNormal = normalMap.sample(normalSampler, uv * fragmentData.normalMapTiling).xyz; // tangent space
+        float3 mappedNormal = normalMap.sample(sampler, uv * fragmentData.normalMapTiling).xyz; // tangent space
         mappedNormal = mappedNormal * 2 - 1;
         float3x3 TBN = { fragmentData.tan, fragmentData.btan, fragmentData.normal }; // columns, multiply with vectors on the right side, view space
         N = normalize( TBN * mappedNormal );
@@ -160,9 +153,6 @@ fragment float4 fragment_main
     // specular
     float3 H = normalize(toLight + pointToCameraDir); // half vector
     float fSpec = powr(saturate(dot(N, H)), fragmentData.specularExponent);
-    //float3 R = reflect(-pointToCameraDir, N); // specular based on mirror reflection ray
-    //fSpec = saturate(dot(N, R));
-    //if (fSpec < 0.9) { fSpec = 0.0; }
     
     // final color
     float f_light2 = fShadow * fSpotLight + 0.2 * fDirLight;
