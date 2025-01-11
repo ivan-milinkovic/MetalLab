@@ -32,16 +32,21 @@ struct ContentView: View {
                 Text("controls: w s a d q e, click-drag")
             }
         }
-        .focusable()
-        .focused($focused)
         .task {
             focused = true
             viewController.load()
         }
+        /*
+        // If using this code, then comment out input.startMonitoringEvents()
+        // This approach has issues: press and hold a key, click-drag with the mouse -> loses focus and misses key events
+        .focusable()
+        .focused($focused)
         .onKeyPress(characters: CharacterSet.init(charactersIn: "wsadqe"), phases: [.down, .repeat, .up]) { keyPress in
+            if keyPress.modifiers.isEmpty == false { return .ignored }
             let isActive = keyPress.phase == .down || keyPress.phase == .repeat
-            viewController.keyEvent(char: keyPress.key.character, isActive: isActive)
-            return .handled
+            let isHandled = viewController.input.keyEvent(char: keyPress.key.character, isActive: isActive)
+            return isHandled ? .handled : .ignored
         }
+        */
     }
 }

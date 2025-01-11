@@ -19,8 +19,8 @@ class ViewController: NSObject, ObservableObject {
     }
     
     func load() {
+        input.startMonitoringEvents()
         scene.load(device: renderer.device)
-        
         scene.camera.updateProjection(size: mtkView.drawableSize)
     }
     
@@ -34,19 +34,6 @@ class ViewController: NSObject, ObservableObject {
         if !scene.isReady { return }
         scene.update(dt: dt, timeCounter: timeCounter)
         renderer.draw(scene: scene)
-    }
-    
-    func keyEvent(char: Character, isActive: Bool) {
-        let f: Float = isActive ? 1.0 : 0.0
-        switch char {
-        case "w": input.forward = f
-        case "s": input.back = f
-        case "a": input.left = f
-        case "d": input.right = f
-        case "e": input.up = f
-        case "q": input.down = f
-        default: break
-        }
     }
 }
 
