@@ -112,11 +112,8 @@ extension Renderer {
     
     @MainActor
     func encodeTesselatedGeometry(scene: MyScene, encoder enc: MTLRenderCommandEncoder) {
-        guard let meshObject = scene.normalMapCube,
-        let tessellationFactorsBuff = meshObject.tessellationFactorsBuff
-        else { return }
-        
         for meshObject in scene.tessObjects {
+            guard let tessellationFactorsBuff = meshObject.tessellationFactorsBuff else { continue }
             
             meshObject.updateConstantsBuffer()
             

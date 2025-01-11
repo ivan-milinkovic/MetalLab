@@ -99,6 +99,8 @@ T barycentric_interpolate(T c0, T c1, T c2, float3 bary_coords) {
     return c0 * bary_coords[0] + c1 * bary_coords[1] + c2 * bary_coords[2];
 }
 
+#define displacementFactor 0.15
+
 [[patch(triangle, 3)]]
 vertex FragmentData vertex_tesselation
 (
@@ -123,7 +125,7 @@ vertex FragmentData vertex_tesselation
     float2 uv   = barycentric_interpolate(v0.uv,       v1.uv,       v2.uv,       posInPatch);
     
     auto d = displacementMap.sample(sampler, uv).r;
-    pos += norm * d * 0.6;
+    pos += norm * d * displacementFactor;
     
     // help make the rest of the code the same as the main vertex shader
     VertexInput vertexData = { pos, norm, col, uv, tan, btan};
@@ -270,7 +272,7 @@ vertex float4 vertex_shadow_tess
     float2 uv   = barycentric_interpolate(v0.uv,       v1.uv,       v2.uv,       posInPatch);
     
     auto d = displacementMap.sample(sampler, uv).r;
-    pos += norm * d * 0.6;
+    pos += norm * d * displacementFactor;
     
     ObjectConstants staticData = objectConstantsArray[instanceId];
     return frameConstants.lightProjectionMatrix * staticData.modelMatrix * float4(pos, 1);

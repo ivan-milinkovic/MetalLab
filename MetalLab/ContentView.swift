@@ -19,7 +19,7 @@ struct ContentView: View {
                         Text("Select:")
                         Button("camera") { viewController.scene.selection = viewController.scene.camera }
                         Button("monkey") { viewController.scene.selection = viewController.scene.monkey }
-                        Button("cube")   { viewController.scene.selection = viewController.scene.normalMapCube }
+                        Button("cobble")   { viewController.scene.selection = viewController.scene.normalMapPlane }
                     }
                 }
                 .padding(.trailing, 8)
