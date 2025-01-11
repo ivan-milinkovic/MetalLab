@@ -82,6 +82,74 @@ vertex FragmentData vertex_main(
 }
 
 
+// interpolation referenced from here:
+// https://github.com/metal-by-example/thirty-days-of-metal/blob/master/27/MetalTessellatedDisplacement/MetalTessellatedDisplacement/Shaders.metal
+
+template<typename T>
+T bilerp(T c00, T c01, T c10, T c11, float2 uv) // upper-left, upper-right, lower-left, lower-right, uv - normalized position within the patch
+{
+    T f1 = mix(c00, c01, T(uv[0])); // upper edge (x axis)
+    T f2 = mix(c10, c11, T(uv[0])); // bottom edge (x axis)
+    T f = mix(f1, f2, T(uv[1]));    // upper vs bottom factor (y axis)
+    return f;
+}
+
+template <typename T>
+T barycentric_interpolate(T c0, T c1, T c2, float3 bary_coords) {
+    return c0 * bary_coords[0] + c1 * bary_coords[1] + c2 * bary_coords[2];
+}
+
+[[patch(triangle, 3)]]
+vertex FragmentData vertex_tesselation
+(
+ patch_control_point<VertexInput> controlPoints [[stage_in]],
+ float3 posInPatch [[position_in_patch]],
+ const device ObjectConstants* objectConstantsArray [[buffer(1)]],
+ uint instanceId [[instance_id]],
+ constant FrameConstants& frameConstants [[buffer(2)]],
+ texture2d<float, access::sample> displacementMap [[texture(0)]],
+ sampler sampler [[sampler(0)]]
+ )
+{
+    auto v0 = controlPoints[0];
+    auto v1 = controlPoints[1];
+    auto v2 = controlPoints[2];
+    
+    float3 pos  = barycentric_interpolate(v0.position, v1.position, v2.position, posInPatch);
+    float3 norm = barycentric_interpolate(v0.normal,   v1.normal,   v2.normal,   posInPatch);
+    float3 tan  = barycentric_interpolate(v0.tan,      v1.tan,      v2.tan,      posInPatch);
+    float3 btan = barycentric_interpolate(v0.btan,     v1.btan,     v2.btan,     posInPatch);
+    float4 col  = barycentric_interpolate(v0.color,    v1.color,    v2.color,    posInPatch);
+    float2 uv   = barycentric_interpolate(v0.uv,       v1.uv,       v2.uv,       posInPatch);
+    
+    auto d = displacementMap.sample(sampler, uv).r;
+    pos += norm * d * 0.6;
+    
+    // help make the rest of the code the same as the main vertex shader
+    VertexInput vertexData = { pos, norm, col, uv, tan, btan};
+    
+    auto objectConstants = objectConstantsArray[instanceId];
+    FragmentData out;
+    auto modelViewMatrix = frameConstants.viewMatrix * objectConstants.modelMatrix;
+    out.positionClip = frameConstants.projectionMatrix * modelViewMatrix * float4(vertexData.position, 1);
+    out.positionWorld = objectConstants.modelMatrix * float4(vertexData.position, 1);
+    out.normal = normalize((modelViewMatrix * float4(vertexData.normal, 0)).xyz); // todo: model-view inverse transform
+    out.tan    = normalize((modelViewMatrix * float4(vertexData.tan,    0)).xyz); // todo: model-view inverse transform
+    out.btan   = normalize((modelViewMatrix * float4(vertexData.btan,   0)).xyz); // todo: model-view inverse transform
+    out.color = vertexData.color;
+    out.uv = vertexData.uv;
+    out.textureAmount = objectConstants.textureAmount;
+    out.textureTiling = objectConstants.textureTiling;
+    out.normalMapTiling = objectConstants.normalMapTiling;
+    out.envMapReflectedAmount = objectConstants.envMapReflectedAmount;
+    out.envMapRefractedAmount = objectConstants.envMapRefractedAmount;
+    out.specularExponent = objectConstants.specularExponent;
+    
+//    out.color = float4(normalize(pos)*0.5 + 0.5, 1);
+    
+    return out;
+}
+
 fragment float4 fragment_main
 (
              FragmentData    fragmentData         [[stage_in]],
@@ -180,6 +248,32 @@ vertex float4 vertex_shadow(
 {
     ObjectConstants staticData = objectConstantsArray[instanceId];
     return frameConstants.lightProjectionMatrix * staticData.modelMatrix * float4(vertexInput.position, 1);
+}
+
+[[patch(triangle, 3)]]
+vertex float4 vertex_shadow_tess
+(
+    patch_control_point<VertexInput> controlPoints [[stage_in]],
+    float3 posInPatch [[position_in_patch]],
+    uint instanceId [[instance_id]],
+    const device ObjectConstants* objectConstantsArray [[buffer(1)]],
+    const device FrameConstants&  frameConstants [[buffer(2)]],
+    texture2d<float, access::sample> displacementMap [[texture(0)]],
+    sampler sampler [[sampler(0)]])
+{
+    auto v0 = controlPoints[0];
+    auto v1 = controlPoints[1];
+    auto v2 = controlPoints[2];
+    
+    float3 pos  = barycentric_interpolate(v0.position, v1.position, v2.position, posInPatch);
+    float3 norm = barycentric_interpolate(v0.normal,   v1.normal,   v2.normal,   posInPatch);
+    float2 uv   = barycentric_interpolate(v0.uv,       v1.uv,       v2.uv,       posInPatch);
+    
+    auto d = displacementMap.sample(sampler, uv).r;
+    pos += norm * d * 0.6;
+    
+    ObjectConstants staticData = objectConstantsArray[instanceId];
+    return frameConstants.lightProjectionMatrix * staticData.modelMatrix * float4(pos, 1);
 }
 
 

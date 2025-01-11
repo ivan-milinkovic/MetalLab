@@ -57,4 +57,12 @@ struct VertexData {
         
         return vertexDesc
     }()
+    
+    @MainActor
+    static let tessellationVertexDescriptor: MTLVertexDescriptor = {
+        let vd = vertexDescriptor.copy() as! MTLVertexDescriptor
+        vd.layouts[0].stepRate = 1
+        vd.layouts[0].stepFunction = .perPatchControlPoint
+        return vd
+    }()
 }

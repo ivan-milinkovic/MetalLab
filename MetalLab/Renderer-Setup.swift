@@ -39,7 +39,6 @@ extension Renderer {
         let mainPipelineDesc = MTLRenderPipelineDescriptor()
         mainPipelineDesc.vertexFunction = vertexFunction
         mainPipelineDesc.fragmentFunction = fragmentFunction
-        
         mainPipelineDesc.vertexDescriptor = VertexData.vertexDescriptor
         mainPipelineDesc.colorAttachments[0].pixelFormat = colorPixelFormat
         mainPipelineDesc.depthAttachmentPixelFormat = depthPixelFormat
@@ -52,6 +51,16 @@ extension Renderer {
         mainPipelineDesc.colorAttachments[0].destinationAlphaBlendFactor = .oneMinusSourceAlpha
         mainPipelineDesc.colorAttachments[0].alphaBlendOperation = .add
         mainPipelineState = try! device.makeRenderPipelineState(descriptor: mainPipelineDesc)
+        
+        let tessellationPipelineDesc = mainPipelineDesc.copy() as! MTLRenderPipelineDescriptor
+        tessellationPipelineDesc.vertexDescriptor = VertexData.tessellationVertexDescriptor
+        tessellationPipelineDesc.vertexFunction = library.makeFunction(name: "vertex_tesselation")!
+        tessellationPipelineDesc.tessellationFactorFormat = .half
+        tessellationPipelineDesc.tessellationPartitionMode = .integer
+        tessellationPipelineDesc.tessellationFactorStepFunction = .constant
+        tessellationPipelineDesc.tessellationOutputWindingOrder = winding
+        tessellationPipelineDesc.tessellationControlPointIndexType = .none // .none when rendering without index buffer
+        tesselationPipelineState = try! device.makeRenderPipelineState(descriptor: tessellationPipelineDesc)
         
         let samplerDesc = MTLSamplerDescriptor()
         samplerDesc.normalizedCoordinates = true
@@ -69,11 +78,23 @@ extension Renderer {
         depthStencilState = device.makeDepthStencilState(descriptor: depthDesc)
 
         // shadow pipeline
-        let shadowRPD = MTLRenderPipelineDescriptor()
-        shadowRPD.vertexDescriptor = VertexData.vertexDescriptor
-        shadowRPD.depthAttachmentPixelFormat = depthPixelFormat
-        shadowRPD.vertexFunction = library.makeFunction(name: "vertex_shadow")
-        shadowPipelineState = try! device.makeRenderPipelineState(descriptor: shadowRPD)
+        let shadowPipelineDesc = MTLRenderPipelineDescriptor()
+        shadowPipelineDesc.vertexDescriptor = VertexData.vertexDescriptor
+        shadowPipelineDesc.depthAttachmentPixelFormat = depthPixelFormat
+        shadowPipelineDesc.vertexFunction = library.makeFunction(name: "vertex_shadow")
+        shadowPipelineState = try! device.makeRenderPipelineState(descriptor: shadowPipelineDesc)
+        
+        let shadowTessPipelineDesc = shadowPipelineDesc.copy() as! MTLRenderPipelineDescriptor
+        shadowTessPipelineDesc.vertexDescriptor = VertexData.tessellationVertexDescriptor
+        shadowTessPipelineDesc.vertexFunction = library.makeFunction(name: "vertex_shadow_tess")!
+        shadowTessPipelineDesc.tessellationFactorFormat = .half
+        shadowTessPipelineDesc.tessellationPartitionMode = .integer
+        shadowTessPipelineDesc.tessellationFactorStepFunction = .constant
+        shadowTessPipelineDesc.tessellationOutputWindingOrder = winding
+        shadowTessPipelineDesc.tessellationControlPointIndexType = .none // .none when rendering without index buffer
+        shadowTessPipelineState = try! device.makeRenderPipelineState(descriptor: shadowTessPipelineDesc)
+        
+        
         
         frameConstantsBuff = device.makeBuffer(length: MemoryLayout<FrameConstants>.stride, options: .storageModeShared)
         

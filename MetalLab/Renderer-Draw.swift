@@ -55,6 +55,9 @@ extension Renderer {
         
         encodeGeometry(scene: scene, encoder: enc)
         
+        enc.setRenderPipelineState(shadowTessPipelineState)
+        encodeTesselatedGeometry(scene: scene, encoder: enc)
+        
         enc.endEncoding()
         cmdBuff.popDebugGroup()
     }
@@ -66,16 +69,20 @@ extension Renderer {
         let renderPassDesc = mainRenderPassDescriptor()
         guard let enc = cmdBuff.makeRenderCommandEncoder(descriptor: renderPassDesc) else { return }
         
+        enc.setTriangleFillMode(triangleFillMode)
+        
         enc.setFrontFacing(winding)
         enc.setCullMode(.back)
         enc.setDepthStencilState(depthStencilState)
         
         drawEnvironmentMap(enc: enc)
         
-        enc.setRenderPipelineState(mainPipelineState)
         enc.setFragmentSamplerState(textureSamplerState, index: 0)
-        
+        enc.setRenderPipelineState(mainPipelineState)
         encodeGeometry(scene: scene, encoder: enc)
+        
+        enc.setRenderPipelineState(tesselationPipelineState)
+        encodeTesselatedGeometry(scene: scene, encoder: enc)
         
         enc.endEncoding()
         cmdBuff.popDebugGroup()
@@ -99,6 +106,41 @@ extension Renderer {
             encoder.setFragmentTexture(meshObject.metalMesh.normalMap, index: 3)
             encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: meshObject.metalMesh.vertexCount, instanceCount: instanceCount)
         }
+    }
+    
+    // https://developer.apple.com/library/archive/documentation/Miscellaneous/Conceptual/MetalProgrammingGuide/Tessellation/Tessellation.html#//apple_ref/doc/uid/TP40014221-CH15
+    
+    @MainActor
+    func encodeTesselatedGeometry(scene: MyScene, encoder enc: MTLRenderCommandEncoder) {
+        guard let meshObject = scene.normalMapCube,
+        let tessellationFactorsBuff = meshObject.tessellationFactorsBuff
+        else { return }
+        
+        meshObject.updateConstantsBuffer()
+        
+        enc.setVertexBuffer(frameConstantsBuff, offset: 0, index: 2)
+        enc.setFragmentBuffer(frameConstantsBuff, offset: 0, index: 0)
+        
+        enc.setVertexBuffer(meshObject.metalMesh.vertexBuffer, offset: 0, index: 0)
+        enc.setVertexBuffer(meshObject.objectConstantsBuff, offset: 0, index: 1)
+        enc.setVertexTexture(meshObject.metalMesh.displacementMap, index: 0)
+        enc.setVertexSamplerState(textureSamplerState, index: 0)
+        
+        enc.setFragmentTexture(meshObject.metalMesh.texture, index: 0)
+        enc.setFragmentTexture(scene.spotLight.texture, index: 1)
+        enc.setFragmentTexture(cubeTex, index: 2)
+        enc.setFragmentTexture(meshObject.metalMesh.normalMap, index: 3)
+        
+        enc.setTessellationFactorBuffer(tessellationFactorsBuff, offset: 0, instanceStride: 0)
+        
+        let patchCount = meshObject.metalMesh.vertexCount / 3
+        enc.drawPatches(numberOfPatchControlPoints: 3,
+                        patchStart: 0,
+                        patchCount: patchCount,
+                        patchIndexBuffer: nil,
+                        patchIndexBufferOffset: 0,
+                        instanceCount: 1,
+                        baseInstance: 0)
     }
     
     

@@ -32,6 +32,7 @@ class MyScene {
         makeReflectiveCubes(device: device)
         makeTransparentPlanes(device: device) // transparent objects last
         makeCubeForNormalMapping(device)
+        //makeNormalMapPlane(device)
         
         loadCubeMap(device: device)
         makeLight(device)
@@ -140,6 +141,7 @@ class MyScene {
         let metalMesh = MetalMesh.loadObjFile(url, device: device)
         metalMesh.texture = MetalMesh.loadTexture("cobblestone_diffuse.png", device)
         metalMesh.normalMap = MetalMesh.loadTexture("cobblestone_normals.png", device)
+        metalMesh.displacementMap = MetalMesh.loadTexture("cobblestone_displacement.png", device)
         let cube = MeshObject(metalMesh: metalMesh, device: device)
         metalMesh.setColor([0.5, 0.5, 0.5, 1])
         let tiling: Float = 1
@@ -148,10 +150,29 @@ class MyScene {
         cube.transform.scale = 0.3
         //cube.transform.moveBy([0, 1, 0.5])
         cube.transform.moveBy([2, 1.5, 0.5])
-        cube.transform.orientation = simd_quatf(angle: -0.0 * .pi, axis: Float3(0, 1, 0))
+        cube.transform.orientation = simd_quatf(angle: -0.25 * .pi, axis: Float3(0, 1, 0))
         
-        sceneObjects.append(cube)
+        cube.setupTesselationBuffer(tessellationFactor: 16, device: device)
+        
+        //sceneObjects.append(cube)
         self.normalMapCube = cube
+    }
+    
+    // Doesn't look good and can't go above 16 tessellation factor
+    // Seems like it needs more triangles before tesselation
+    func makeNormalMapPlane(_ device: MTLDevice) {
+        let metalMesh = MetalMesh.rectangle(device: device)
+        metalMesh.texture = MetalMesh.loadTexture("cobblestone_diffuse.png", device)
+        metalMesh.normalMap = MetalMesh.loadTexture("cobblestone_normals.png", device)
+        metalMesh.displacementMap = MetalMesh.loadTexture("cobblestone_displacement.png", device)
+        
+        let plane = MeshObject(metalMesh: metalMesh, device: device)
+        plane.setupTesselationBuffer(tessellationFactor: 16, device: device)
+        
+        plane.transform.scale = 0.3
+        plane.transform.rotate2(dx: -0.5 * .pi)
+        plane.transform.moveBy([0, 0.2, 0.0])
+        normalMapCube = plane
     }
     
     func makeFloor(_ device: MTLDevice) {

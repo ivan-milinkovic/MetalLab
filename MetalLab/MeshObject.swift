@@ -7,6 +7,7 @@ class MeshObject {
     var transform: Transform = .init()
     let metalMesh: MetalMesh
     var objectConstantsBuff: MTLBuffer
+    var tessellationFactorsBuff: MTLBuffer?
     
     init(metalMesh: MetalMesh, device: MTLDevice) {
         self.metalMesh = metalMesh
@@ -48,6 +49,13 @@ class MeshObject {
     @inline(__always)
     func getObjectConstantsPointer() -> UnsafeMutablePointer<ObjectConstants> {
         objectConstantsBuff.contents().bindMemory(to: ObjectConstants.self, capacity: 1)
+    }
+    
+    func setupTesselationBuffer(tessellationFactor: Float, device: MTLDevice) {
+        let f = unsafeBitCast(Float16(tessellationFactor), to: UInt16.self) // metal wants the bit pattern of float
+        var tessellationFactors = MTLTriangleTessellationFactorsHalf(edgeTessellationFactor: (f, f, f), insideTessellationFactor: f)
+        tessellationFactorsBuff = device.makeBuffer(bytes: &tessellationFactors, length: MemoryLayout<MTLQuadTessellationFactorsHalf>.stride,
+                                                    options: .storageModeShared)
     }
 }
 

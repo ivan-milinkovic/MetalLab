@@ -13,12 +13,19 @@ struct ContentView: View {
                     let dy = f * Float(dragVal.velocity.width)
                     viewController.scene.rotateSelection(dx: dx, dy: dy)
                 }))
-            GroupBox {
-                HStack {
-                    Text("Select:")
-                    Button("camera") { viewController.scene.selection = viewController.scene.camera }
-                    Button("monkey") { viewController.scene.selection = viewController.scene.monkey }
-                    Button("cube")   { viewController.scene.selection = viewController.scene.normalMapCube }
+            HStack {
+                GroupBox {
+                    HStack {
+                        Text("Select:")
+                        Button("camera") { viewController.scene.selection = viewController.scene.camera }
+                        Button("monkey") { viewController.scene.selection = viewController.scene.monkey }
+                        Button("cube")   { viewController.scene.selection = viewController.scene.normalMapCube }
+                    }
+                }
+                .padding(.trailing, 8)
+                
+                Button("Toggle Wireframe") {
+                    viewController.renderer.triangleFillMode = (viewController.renderer.triangleFillMode == .fill) ? .lines : .fill
                 }
             }
         }

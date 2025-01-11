@@ -9,7 +9,9 @@ class Renderer {
     var device: MTLDevice!
     var library: MTLLibrary!
     var mainPipelineState: MTLRenderPipelineState!
+    var tesselationPipelineState: MTLRenderPipelineState!
     var shadowPipelineState: MTLRenderPipelineState!
+    var shadowTessPipelineState: MTLRenderPipelineState!
     var envMapPipelineState: MTLRenderPipelineState!
     var updateShearPipelineState: MTLComputePipelineState!
     
@@ -31,6 +33,7 @@ class Renderer {
     let fps = 60
     
     var cubeTex: MTLTexture!
+    var triangleFillMode: MTLTriangleFillMode = .fill
     
     var mtkView: MTKView!
     
