@@ -8,6 +8,7 @@ struct ObjectConstants {
     var envMapReflectedAmount: Float = 0
     var envMapRefractedAmount: Float = 0
     var specularExponent: Float = 150
+    var displacementFactor: Float = 0.15
 }
 
 struct FrameConstants {

@@ -41,6 +41,7 @@ struct ObjectConstants {
     float envMapReflectedAmount;
     float envMapRefractedAmount;
     float specularExponent;
+    float displacementFactor;
 };
 
 struct FrameConstants {
@@ -99,8 +100,6 @@ T barycentric_interpolate(T c0, T c1, T c2, float3 bary_coords) {
     return c0 * bary_coords[0] + c1 * bary_coords[1] + c2 * bary_coords[2];
 }
 
-#define displacementFactor 0.15
-
 [[patch(triangle, 3)]]
 vertex FragmentData vertex_tesselation
 (
@@ -124,13 +123,13 @@ vertex FragmentData vertex_tesselation
     float4 col  = barycentric_interpolate(v0.color,    v1.color,    v2.color,    posInPatch);
     float2 uv   = barycentric_interpolate(v0.uv,       v1.uv,       v2.uv,       posInPatch);
     
+    auto objectConstants = objectConstantsArray[instanceId];
     auto d = displacementMap.sample(sampler, uv).r;
-    pos += norm * d * displacementFactor;
+    pos += norm * d * objectConstants.displacementFactor;
     
     // help make the rest of the code the same as the main vertex shader
     VertexInput vertexData = { pos, norm, col, uv, tan, btan};
     
-    auto objectConstants = objectConstantsArray[instanceId];
     FragmentData out;
     auto modelViewMatrix = frameConstants.viewMatrix * objectConstants.modelMatrix;
     out.positionClip = frameConstants.projectionMatrix * modelViewMatrix * float4(vertexData.position, 1);
@@ -271,10 +270,10 @@ vertex float4 vertex_shadow_tess
     float3 norm = barycentric_interpolate(v0.normal,   v1.normal,   v2.normal,   posInPatch);
     float2 uv   = barycentric_interpolate(v0.uv,       v1.uv,       v2.uv,       posInPatch);
     
-    auto d = displacementMap.sample(sampler, uv).r;
-    pos += norm * d * displacementFactor;
-    
     ObjectConstants staticData = objectConstantsArray[instanceId];
+    auto d = displacementMap.sample(sampler, uv).r;
+    pos += norm * d * staticData.displacementFactor;
+    
     return frameConstants.lightProjectionMatrix * staticData.modelMatrix * float4(pos, 1);
 }
 

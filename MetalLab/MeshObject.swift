@@ -47,6 +47,10 @@ class MeshObject {
         getObjectConstantsPointer().pointee.normalMapTiling = f;
     }
     
+    func setDisplacementFactor(_ f: Float) {
+        getObjectConstantsPointer().pointee.displacementFactor = f
+    }
+    
     @inline(__always)
     func getObjectConstantsPointer() -> UnsafeMutablePointer<ObjectConstants> {
         objectConstantsBuff.contents().bindMemory(to: ObjectConstants.self, capacity: 1)

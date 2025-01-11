@@ -34,9 +34,8 @@ class MyScene {
         makeInstancedBoxes(device)
         makeGrass(device)
         makeReflectiveCubes(device: device)
-        makeTransparentPlanes(device: device) // transparent objects last
-        //makeCubeForNormalMapping(device)
         makeNormalMapPlane(device)
+        makeTransparentPlanes(device: device) // transparent objects last
         
         loadCubeMap(device: device)
         makeLight(device)
@@ -147,30 +146,8 @@ class MyScene {
         self.sceneObjects.append(monkey)
     }
     
-    func makeCubeForNormalMapping(_ device: MTLDevice) {
-        let url = Bundle.main.url(forResource: "box", withExtension: "obj")!
-        let metalMesh = MetalMesh.loadObjFile(url, device: device)
-        metalMesh.texture = MetalMesh.loadTexture("cobblestone_diffuse.png", device)
-        metalMesh.normalMap = MetalMesh.loadTexture("cobblestone_normals.png", device)
-        metalMesh.displacementMap = MetalMesh.loadTexture("cobblestone_displacement.png", device)
-        let cube = MeshObject(metalMesh: metalMesh, device: device)
-        metalMesh.setColor([0.5, 0.5, 0.5, 1])
-        let tiling: Float = 1
-        cube.setTextureTiling(tiling)
-        cube.setNormalMapTiling(tiling)
-        cube.transform.scale = 0.3
-        //cube.transform.moveBy([0, 1, 0.5])
-        cube.transform.moveBy([2, 1.5, 0.5])
-        cube.transform.orientation = simd_quatf(angle: -0.25 * .pi, axis: Float3(0, 1, 0))
-        
-        cube.setupTesselationBuffer(tessellationFactor: 16, device: device)
-        
-        sceneObjects.append(cube)
-    }
-    
     // Max tesselation factor is 16. Large objects with detailed textures need more triangles in the model itself
     func makeNormalMapPlane(_ device: MTLDevice) {
-        //let metalMesh = MetalMesh.rectangle(device: device)
         let url = Bundle.main.url(forResource: "plane", withExtension: "obj")!
         let metalMesh = MetalMesh.loadObjFile(url, device: device)
         metalMesh.texture = MetalMesh.loadTexture("cobblestone_diffuse.png", device)
@@ -179,9 +156,10 @@ class MyScene {
         
         let plane = MeshObject(metalMesh: metalMesh, device: device)
         plane.setupTesselationBuffer(tessellationFactor: 16, device: device)
+        plane.setDisplacementFactor(0.15)
         
         plane.transform.rotate2(dx: 0.5 * .pi)
-        plane.transform.moveBy([2.5, 1.5, -1.0])
+        plane.transform.moveBy([-2.5, 1.5, -1.1])
         //plane.transform.moveBy([0, 0.5, 0.0])
         
         sceneObjects.append(plane)
