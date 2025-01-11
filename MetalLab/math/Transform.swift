@@ -35,6 +35,16 @@ struct Transform {
         position += dv
     }
     
+    mutating func move(d_forward: Float, d_right: Float, d_up: Float) {
+        let mat = float4x4(orientation)
+        let rot = mat.upperLeftMat3x3()
+        let right =  rot.columns.0 // x
+        let up    =  rot.columns.1 // y
+        let fwd   = -rot.columns.2 // z, in right handed sytem forward is -z
+        position += fwd * d_forward + right * d_right + up * d_up
+    }
+    
+    // todo: needs fixing
     mutating func look(from: Float3, at: Float3) {
         position = from
         let toDir = normalize(at - from)

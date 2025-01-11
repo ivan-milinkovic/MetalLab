@@ -25,6 +25,7 @@ class MyScene {
     var normalMapPlane: MeshObject!
     
     var renderer: Renderer!
+    var input: Input!
     
     let updateShearOnGpu = true
     
@@ -45,7 +46,7 @@ class MyScene {
         
         splitObjects()
         
-        selection = monkey
+        selection = camera
         
         isReady = true
     }
@@ -59,7 +60,7 @@ class MyScene {
     func rotateSelection(dx: Float, dy: Float) {
         switch selection {
         case let camera as Camera:
-            camera.transform.rotate2(dx: dx, dy: dy)
+            camera.transform.rotate2(dx: dx * 0.5, dy: dy * 0.5)
         case let meshObject as MeshObject:
             meshObject.transform.rotate2(dx: dx, dy: dy)
         default: break
@@ -72,6 +73,24 @@ class MyScene {
         //return float4x4.orthographicProjection(left: -size, right: size, bottom: -size, top: size, near: 1, far: 100)
     }
     
+    func update(dt: Float, timeCounter: Double) {
+        updateControls()
+        updateShear(timeCounter: timeCounter, wind: wind)
+    }
+    
+    func updateControls() {
+        let fwd = input.forward - input.back
+        let right = input.right - input.left
+        let up = input.up - input.down
+        let ds: Float = 0.05
+        camera.transform.move(d_forward: fwd*ds, d_right: right*ds, d_up: up*ds)
+        
+        // prevent moving faster diagonally, needs fixing
+        //var v = normalize(Float3(fwd, right, up))
+        //v *= ds
+        //if isnan(v) == [1,1,1] { return }
+        //camera.transform.move(d_forward: v.x, d_right: v.y, d_up: v.z)
+    }
     
     func updateShear(timeCounter: Double, wind: Wind) {
         if updateShearOnGpu {

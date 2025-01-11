@@ -6,12 +6,15 @@ class ViewController: NSObject, ObservableObject {
     let scene: MyScene
     let renderer: Renderer
     var mtkView: MTKView!
+    let input: Input
     var timeCounter: Double = 0
     
     override init() {
         scene = MyScene()
         renderer = Renderer()
+        input = Input()
         scene.renderer = renderer
+        scene.input = input
         try! renderer.setupDevice()
     }
     
@@ -29,8 +32,21 @@ class ViewController: NSObject, ObservableObject {
     
     func frameCallback(_ dt: Float) {
         if !scene.isReady { return }
-        scene.updateShear(timeCounter: timeCounter, wind: scene.wind)
+        scene.update(dt: dt, timeCounter: timeCounter)
         renderer.draw(scene: scene)
+    }
+    
+    func keyEvent(char: Character, isActive: Bool) {
+        let f: Float = isActive ? 1.0 : 0.0
+        switch char {
+        case "w": input.forward = f
+        case "s": input.back = f
+        case "a": input.left = f
+        case "d": input.right = f
+        case "e": input.up = f
+        case "q": input.down = f
+        default: break
+        }
     }
 }
 

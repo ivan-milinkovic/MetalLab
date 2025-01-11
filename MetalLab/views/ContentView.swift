@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     
     @EnvironmentObject var viewController: ViewController
+    @FocusState var focused: Bool
     
     var body: some View {
         VStack {
@@ -13,7 +14,8 @@ struct ContentView: View {
                     let dy = f * Float(dragVal.velocity.width)
                     viewController.scene.rotateSelection(dx: dx, dy: dy)
                 }))
-            HStack {
+            
+            HStack(spacing: 8) {
                 GroupBox {
                     HStack {
                         Text("Select:")
@@ -22,15 +24,24 @@ struct ContentView: View {
                         Button("cobble")   { viewController.scene.selection = viewController.scene.normalMapPlane }
                     }
                 }
-                .padding(.trailing, 8)
                 
                 Button("Toggle Wireframe") {
                     viewController.renderer.triangleFillMode = (viewController.renderer.triangleFillMode == .fill) ? .lines : .fill
                 }
+                
+                Text("controls: w s a d q e, click-drag")
             }
         }
+        .focusable()
+        .focused($focused)
         .task {
+            focused = true
             viewController.load()
+        }
+        .onKeyPress(characters: CharacterSet.init(charactersIn: "wsadqe"), phases: [.down, .repeat, .up]) { keyPress in
+            let isActive = keyPress.phase == .down || keyPress.phase == .repeat
+            viewController.keyEvent(char: keyPress.key.character, isActive: isActive)
+            return .handled
         }
     }
 }

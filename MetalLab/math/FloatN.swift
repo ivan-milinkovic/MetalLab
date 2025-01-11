@@ -80,4 +80,8 @@ extension float4x4 {
                         Float4(0, 0, 1, 0),
                         Float4(0, 0, 0, 1))
     }
+    
+    func upperLeftMat3x3() -> float3x3 {
+        float3x3(columns.0.xyz, columns.1.xyz, columns.2.xyz)
+    }
 }
