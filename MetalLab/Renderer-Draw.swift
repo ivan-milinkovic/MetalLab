@@ -50,13 +50,14 @@ extension Renderer {
         let enc = cmdBuff.makeRenderCommandEncoder(descriptor: shadowRenderPassDesc)!
         enc.setFrontFacing(winding)
         enc.setCullMode(.back)
-        enc.setRenderPipelineState(shadowPipelineState)
         enc.setDepthStencilState(depthStencilState)
-        
-        encodeGeometry(scene: scene, encoder: enc)
         
         enc.setRenderPipelineState(shadowTessPipelineState)
         encodeTesselatedGeometry(scene: scene, encoder: enc)
+        
+        enc.setRenderPipelineState(shadowPipelineState)
+        encodeRegularGeometry(scene: scene, encoder: enc)
+        encodeTransparentGeometry(scene: scene, encoder: enc)
         
         enc.endEncoding()
         cmdBuff.popDebugGroup()
@@ -78,22 +79,44 @@ extension Renderer {
         drawEnvironmentMap(enc: enc)
         
         enc.setFragmentSamplerState(textureSamplerState, index: 0)
-        enc.setRenderPipelineState(mainPipelineState)
-        encodeGeometry(scene: scene, encoder: enc)
         
         enc.setRenderPipelineState(tesselationPipelineState)
         encodeTesselatedGeometry(scene: scene, encoder: enc)
+        
+        enc.setRenderPipelineState(mainPipelineState)
+        encodeRegularGeometry(scene: scene, encoder: enc)
+        encodeTransparentGeometry(scene: scene, encoder: enc)
         
         enc.endEncoding()
         cmdBuff.popDebugGroup()
     }
     
-    func encodeGeometry(scene: MyScene, encoder: MTLRenderCommandEncoder) {
+    func encodeRegularGeometry(scene: MyScene, encoder: MTLRenderCommandEncoder) {
         
         encoder.setVertexBuffer(frameConstantsBuff, offset: 0, index: 2)
         encoder.setFragmentBuffer(frameConstantsBuff, offset: 0, index: 0)
         
         for meshObject in scene.regularObjects {
+            
+            meshObject.updateConstantsBuffer()
+            let instanceCount = meshObject.instanceCount()
+            
+            encoder.setVertexBuffer(meshObject.metalMesh.vertexBuffer, offset: 0, index: 0)
+            encoder.setVertexBuffer(meshObject.objectConstantsBuff, offset: 0, index: 1)
+            encoder.setFragmentTexture(meshObject.metalMesh.texture, index: 0)
+            encoder.setFragmentTexture(scene.spotLight.texture, index: 1)
+            encoder.setFragmentTexture(cubeTex, index: 2)
+            encoder.setFragmentTexture(meshObject.metalMesh.normalMap, index: 3)
+            encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: meshObject.metalMesh.vertexCount, instanceCount: instanceCount)
+        }
+    }
+    
+    func encodeTransparentGeometry(scene: MyScene, encoder: MTLRenderCommandEncoder) {
+        
+        encoder.setVertexBuffer(frameConstantsBuff, offset: 0, index: 2)
+        encoder.setFragmentBuffer(frameConstantsBuff, offset: 0, index: 0)
+        
+        for meshObject in scene.transparentObjects {
             
             meshObject.updateConstantsBuffer()
             let instanceCount = meshObject.instanceCount()

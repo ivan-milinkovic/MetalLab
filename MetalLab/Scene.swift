@@ -10,6 +10,7 @@ class MyScene {
     var sceneObjects: [MeshObject] = []
     var regularObjects: [MeshObject] = []
     var tessObjects: [MeshObject] = []
+    var transparentObjects: [MeshObject] = []
     
     let directionalLightDir: Float3 = [1, -1, -1]
     var spotLight: SpotLight!
@@ -33,9 +34,9 @@ class MyScene {
         makeFloor(device)
         makeInstancedBoxes(device)
         makeGrass(device)
+        makeTransparentPlanes(device: device)
         makeReflectiveCubes(device: device)
         makeNormalMapPlane(device)
-        makeTransparentPlanes(device: device) // transparent objects last
         
         loadCubeMap(device: device)
         makeLight(device)
@@ -50,8 +51,9 @@ class MyScene {
     }
     
     func splitObjects() {
-        regularObjects = sceneObjects.filter { !$0.shouldTesselate }
+        regularObjects = sceneObjects.filter { !$0.shouldTesselate && !$0.hasTransparency }
         tessObjects = sceneObjects.filter { $0.shouldTesselate }
+        transparentObjects = sceneObjects.filter { $0.hasTransparency }
     }
     
     func rotateSelection(dx: Float, dy: Float) {
@@ -159,7 +161,7 @@ class MyScene {
         plane.setDisplacementFactor(0.15)
         
         plane.transform.rotate2(dx: 0.5 * .pi)
-        plane.transform.moveBy([-2.5, 1.5, -1.1])
+        plane.transform.moveBy([-2.5, 1.5, -1.2])
         //plane.transform.moveBy([0, 0.5, 0.0])
         
         sceneObjects.append(plane)
@@ -188,6 +190,7 @@ class MyScene {
         alphaRect.transform.moveBy([-1.5, 0.5, 0])
         alphaRect.transform.scale = 0.5
         alphaRect.transform.rotate(dx: .pi * 0.5)
+        alphaRect.hasTransparency = true
         
         let alphaRectMesh2 = MetalMesh.rectangle(p1: [-1, 0, -1], p2: [1, 0, 0.5], device: device)
         alphaRectMesh2.setColor([0.3, 0.5, 0.8, 0.6])
@@ -195,6 +198,7 @@ class MyScene {
         alphaRect2.transform.moveBy([-1.5, 0.5, -1])
         alphaRect2.transform.scale = 0.5
         alphaRect2.transform.rotate(dx: .pi * 0.5)
+        alphaRect2.hasTransparency = true
         
         // transparent objects need to be sorted from back to front
         // for alpha blending to work properly
