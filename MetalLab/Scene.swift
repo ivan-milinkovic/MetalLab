@@ -6,7 +6,11 @@ import simd
 class MyScene {
     
     let camera = Camera()
+    
     var sceneObjects: [MeshObject] = []
+    var regularObjects: [MeshObject] = []
+    var tessObjects: [MeshObject] = []
+    
     let directionalLightDir: Float3 = [1, -1, -1]
     var spotLight: SpotLight!
     let wind: Wind = .init()
@@ -39,9 +43,16 @@ class MyScene {
         
         self.camera.transform.look(from: [0, 1.4, 3.2], at: [0, 1, -2])
         
+        splitObjects()
+        
         selection = monkey
         
         isReady = true
+    }
+    
+    func splitObjects() {
+        regularObjects = sceneObjects.filter { !$0.shouldTesselate }
+        tessObjects = sceneObjects.filter { $0.shouldTesselate }
     }
     
     func rotateSelection(dx: Float, dy: Float) {
@@ -154,7 +165,7 @@ class MyScene {
         
         cube.setupTesselationBuffer(tessellationFactor: 16, device: device)
         
-        //sceneObjects.append(cube)
+        sceneObjects.append(cube)
         self.normalMapCube = cube
     }
     
@@ -172,6 +183,8 @@ class MyScene {
         plane.transform.scale = 0.3
         plane.transform.rotate2(dx: -0.5 * .pi)
         plane.transform.moveBy([0, 0.2, 0.0])
+        
+        sceneObjects.append(plane)
         normalMapCube = plane
     }
     

@@ -93,7 +93,7 @@ extension Renderer {
         encoder.setVertexBuffer(frameConstantsBuff, offset: 0, index: 2)
         encoder.setFragmentBuffer(frameConstantsBuff, offset: 0, index: 0)
         
-        for meshObject in scene.sceneObjects {
+        for meshObject in scene.regularObjects {
             
             meshObject.updateConstantsBuffer()
             let instanceCount = meshObject.instanceCount()
@@ -116,31 +116,34 @@ extension Renderer {
         let tessellationFactorsBuff = meshObject.tessellationFactorsBuff
         else { return }
         
-        meshObject.updateConstantsBuffer()
-        
-        enc.setVertexBuffer(frameConstantsBuff, offset: 0, index: 2)
-        enc.setFragmentBuffer(frameConstantsBuff, offset: 0, index: 0)
-        
-        enc.setVertexBuffer(meshObject.metalMesh.vertexBuffer, offset: 0, index: 0)
-        enc.setVertexBuffer(meshObject.objectConstantsBuff, offset: 0, index: 1)
-        enc.setVertexTexture(meshObject.metalMesh.displacementMap, index: 0)
-        enc.setVertexSamplerState(textureSamplerState, index: 0)
-        
-        enc.setFragmentTexture(meshObject.metalMesh.texture, index: 0)
-        enc.setFragmentTexture(scene.spotLight.texture, index: 1)
-        enc.setFragmentTexture(cubeTex, index: 2)
-        enc.setFragmentTexture(meshObject.metalMesh.normalMap, index: 3)
-        
-        enc.setTessellationFactorBuffer(tessellationFactorsBuff, offset: 0, instanceStride: 0)
-        
-        let patchCount = meshObject.metalMesh.vertexCount / 3
-        enc.drawPatches(numberOfPatchControlPoints: 3,
-                        patchStart: 0,
-                        patchCount: patchCount,
-                        patchIndexBuffer: nil,
-                        patchIndexBufferOffset: 0,
-                        instanceCount: 1,
-                        baseInstance: 0)
+        for meshObject in scene.tessObjects {
+            
+            meshObject.updateConstantsBuffer()
+            
+            enc.setVertexBuffer(frameConstantsBuff, offset: 0, index: 2)
+            enc.setFragmentBuffer(frameConstantsBuff, offset: 0, index: 0)
+            
+            enc.setVertexBuffer(meshObject.metalMesh.vertexBuffer, offset: 0, index: 0)
+            enc.setVertexBuffer(meshObject.objectConstantsBuff, offset: 0, index: 1)
+            enc.setVertexTexture(meshObject.metalMesh.displacementMap, index: 0)
+            enc.setVertexSamplerState(textureSamplerState, index: 0)
+            
+            enc.setFragmentTexture(meshObject.metalMesh.texture, index: 0)
+            enc.setFragmentTexture(scene.spotLight.texture, index: 1)
+            enc.setFragmentTexture(cubeTex, index: 2)
+            enc.setFragmentTexture(meshObject.metalMesh.normalMap, index: 3)
+            
+            enc.setTessellationFactorBuffer(tessellationFactorsBuff, offset: 0, instanceStride: 0)
+            
+            let patchCount = meshObject.metalMesh.vertexCount / 3
+            enc.drawPatches(numberOfPatchControlPoints: 3,
+                            patchStart: 0,
+                            patchCount: patchCount,
+                            patchIndexBuffer: nil,
+                            patchIndexBufferOffset: 0,
+                            instanceCount: 1,
+                            baseInstance: 0)
+        }
     }
     
     

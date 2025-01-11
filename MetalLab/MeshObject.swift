@@ -8,6 +8,7 @@ class MeshObject {
     let metalMesh: MetalMesh
     var objectConstantsBuff: MTLBuffer
     var tessellationFactorsBuff: MTLBuffer?
+    var shouldTesselate: Bool { tessellationFactorsBuff != nil }
     
     init(metalMesh: MetalMesh, device: MTLDevice) {
         self.metalMesh = metalMesh
