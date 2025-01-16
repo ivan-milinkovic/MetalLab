@@ -282,6 +282,25 @@ class MyScene {
     }
     
     func makeGrass(_ device: MTLDevice) {
+        
+        let url = Bundle.main.url(forResource: "perlin", withExtension: "png")!
+        let dp = CGDataProvider(url: url as CFURL)!
+        let img = CGImage(pngDataProviderSource: dp, decode: nil, shouldInterpolate: false, intent: .defaultIntent)!
+        let bytesPerPixel = img.bitsPerPixel / img.bitsPerComponent
+        let bytesPerRow = img.bytesPerRow
+        let perlinSize = img.width // expects rectangular image
+        
+        // Have to copy the bytes, otherwise there are issues getting wrong values when using CFDataGetBytePtr(img.dataProvider!.data!)!
+        var perlinBytes = [UInt8].init(repeating: 0, count: bytesPerRow*perlinSize)
+        let ctx: CGContext = CGContext(data: &perlinBytes,
+                                       width: perlinSize,
+                                       height: perlinSize,
+                                       bitsPerComponent: img.bitsPerComponent,
+                                       bytesPerRow: bytesPerRow,
+                                       space: CGColorSpaceCreateDeviceGray(),
+                                       bitmapInfo: img.bitmapInfo.rawValue)!
+        ctx.draw(img, in: CGRect(x: 0, y: 0, width: perlinSize, height: perlinSize))
+        
         var instancePositions: [Transform] = []
         
         let rectSize: Float = 4
@@ -289,11 +308,29 @@ class MyScene {
         var strandWidth: Float = 0.1
         strandWidth = strandWidth * objectScale * 2 // 0.04
         let offsetLimits = strandWidth * 0.5
-        for i in stride(from: 0, through: rectSize, by: strandWidth) {
-            for j in stride(from: 0, through: rectSize, by: strandWidth) {
-                let offset = Float.random(in: -offsetLimits...offsetLimits)
-                let scale = objectScale * Float.random(in: 0.8...1.2)
-                instancePositions.append(Transform(position: [i + offset, 0.0, -j + offset], scale: scale))
+        let perlinUvScale: Float = 2
+        
+        for iy in stride(from: 0, through: rectSize, by: strandWidth) {
+            for ix in stride(from: 0, through: rectSize, by: strandWidth) {
+                // position jitter
+                let posOffset = Float.random(in: -offsetLimits...offsetLimits)
+                
+                let orientation = simd_quatf(angle: Float.random(in: 0.0...0.2) * .pi, axis: [0, 1, 0])
+                
+                // scale from noise and jitter
+                // proportional mapping: how far are we through the grass area rectangle - same proportion index into perlin
+                let perlinX_ = (ix / rectSize) * Float(perlinSize)
+                let perlinY_ = (iy / rectSize) * Float(perlinSize)
+                // scale and wrap around perlin texture coordinates
+                let perlinX = Int(perlinX_ * perlinUvScale) % perlinSize
+                let perlinY = Int(perlinY_ * perlinUvScale) % perlinSize
+                let ind = perlinY * bytesPerRow + perlinX * bytesPerPixel
+                let perlinScale = Float(perlinBytes[ind]) / 255.0
+                let scale = (objectScale * Float.random(in: 0.8...1.2)) + (perlinScale * 0.16)
+                //let scale = perlinScale * 0.3 // visualize perlin
+                
+                // make
+                instancePositions.append(Transform(position: [ix + posOffset, 0.0, -iy + posOffset], orientation: orientation, scale: scale))
             }
         }
         let count = instancePositions.count
@@ -383,3 +420,21 @@ class MyScene {
          */
     }
 }
+
+/// Make color space by: `CGColorSpace(name: CGColorSpace.linearGray)!`
+func cgImage(_ px: UnsafeRawPointer, w: Int, h: Int, bytesPerPixel: Int, colorSpace: CGColorSpace, alphaInfo: CGImageAlphaInfo) -> CGImage {
+    let cgDataProvider = CGDataProvider(data: NSData(bytes: px, length: w * h * bytesPerPixel))!
+    let cgImage = CGImage(width: w,
+                          height: h,
+                          bitsPerComponent: 8,
+                          bitsPerPixel: 8,
+                          bytesPerRow: w*bytesPerPixel,
+                          space: colorSpace,
+                          bitmapInfo: CGBitmapInfo(rawValue: alphaInfo.rawValue),
+                          provider: cgDataProvider,
+                          decode: nil,
+                          shouldInterpolate: false,
+                          intent: CGColorRenderingIntent.defaultIntent)!
+    return cgImage
+}
+
