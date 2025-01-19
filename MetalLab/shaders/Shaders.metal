@@ -9,6 +9,8 @@ struct VertexInput {
     float2 uv       [[attribute(3)]];
     float3 tan      [[attribute(4)]];
     float3 btan     [[attribute(5)]];
+    ushort4 jointIndices [[attribute(6)]];
+    float4 jointWeights  [[attribute(7)]];
 };
 
 struct FragmentData {

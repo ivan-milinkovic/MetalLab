@@ -16,7 +16,7 @@ extension Renderer {
         drawShadowMap(scene: scene, cmdBuff: commandBuffer)
         drawMain(scene: scene, cmdBuff: commandBuffer)
 
-        //drawDepthTexture(scene: scene, cmdBuff: commandBuffer)
+        //drawShadowMapDepthTexture(scene: scene, cmdBuff: commandBuffer)
         
         commandBuffer.present(drawable)
         commandBuffer.commit()
@@ -168,7 +168,7 @@ extension Renderer {
     
     
     @MainActor
-    func drawDepthTexture(scene: MyScene, cmdBuff: MTLCommandBuffer) {
+    func drawShadowMapDepthTexture(scene: MyScene, cmdBuff: MTLCommandBuffer) {
         let pipeline = MTLRenderPipelineDescriptor()
         pipeline.vertexDescriptor = VertexData.vertexDescriptor
         pipeline.vertexFunction = library.makeFunction(name: "vertex_depth_show")
