@@ -3,44 +3,53 @@ import Metal
 import ModelIO
 import MetalKit
 
-func makeAnimatedObject(_ device: MTLDevice) {
-    let allocator = MTKMeshBufferAllocator(device: device)
-    let url = Bundle.main.url(forResource: "butterfly", withExtension: "usda")!
-    let asset = MDLAsset(url: url, vertexDescriptor: VertexData.makeModelioVertexDescriptor(), bufferAllocator: allocator)
-    let bonesObj = asset.childObjects(of: MDLObject.self).first(where: { $0.name == "bones_object" })!
-    let animationBinding = bonesObj.components.first { $0 is MDLAnimationBindComponent } as! MDLAnimationBindComponent
-    let meshes = asset.childObjects(of: MDLMesh.self) as! [MDLMesh]
+class AnimatedMesh {
+    let mtkVertexBuffer: MTKMeshBuffer
+    let mtkIndexBuffer: MTKMeshBuffer
     
-    let mesh = meshes.first!
-    let submesh = (mesh.submeshes!.firstObject! as! MDLSubmesh)
-    let indexBuff = submesh.indexBuffer
-    let indexCount = submesh.indexCount
-    let indexType = submesh.indexType
-    let skeleton = asset.childObjects(of: MDLSkeleton.self)
-    let jointAnimation = animationBinding.jointAnimation
+    let skeleton: MDLSkeleton
+    let animation: MDLPackedJointAnimation
     
-    let buff = mesh.vertexBuffers.first! as! MTKMeshBuffer
+    var objectConstantsBuff: MTLBuffer
+    let geometryType: MTLPrimitiveType
+    let indexType: MTLIndexType
+    let indexCount: Int
     
-    mesh.addTangentBasis(forTextureCoordinateAttributeNamed: MDLVertexAttributeTextureCoordinate,
-                         normalAttributeNamed: MDLVertexAttributeNormal,
-                         tangentAttributeNamed: MDLVertexAttributeTangent)
-    mesh.addTangentBasis(forTextureCoordinateAttributeNamed: MDLVertexAttributeTextureCoordinate,
-                         tangentAttributeNamed: MDLVertexAttributeTangent,
-                         bitangentAttributeNamed: MDLVertexAttributeBitangent)
-    let ptr = buff.buffer.contents().advanced(by: buff.offset).bindMemory(to: VertexData.self, capacity: 4)
-    
-    print("count: ", mesh.vertexCount)
-    print("calc count: ", buff.length / MemoryLayout<VertexData>.stride)
-    
-    (ptr + 0).pointee.color = [0.1, 0.2, 0.3, 1.0]
-    (ptr + 1).pointee.color = [0.4, 0.5, 0.6, 1.0]
-    (ptr + 2).pointee.color = [0.7, 0.8, 0.9, 1.0]
-    
-    print((ptr + 0).pointee)
-    print((ptr + 1).pointee)
-    print((ptr + 2).pointee)
-    
-    print()
+    @MainActor
+    init(_ device: MTLDevice) {
+        let allocator = MTKMeshBufferAllocator(device: device)
+        let url = Bundle.main.url(forResource: "butterfly", withExtension: "usda")!
+        let asset = MDLAsset(url: url, vertexDescriptor: VertexData.makeModelioVertexDescriptor(), bufferAllocator: allocator)
+        let bonesObj = asset.childObjects(of: MDLObject.self).first(where: { $0.name == "bones_object" })!
+        let animationBinding = bonesObj.components.first { $0 is MDLAnimationBindComponent } as! MDLAnimationBindComponent
+        let meshes = asset.childObjects(of: MDLMesh.self) as! [MDLMesh]
+        
+        let mesh = meshes.first!
+        mesh.addTangentBasis(forTextureCoordinateAttributeNamed: MDLVertexAttributeTextureCoordinate,
+                             normalAttributeNamed: MDLVertexAttributeNormal,
+                             tangentAttributeNamed: MDLVertexAttributeTangent)
+        mesh.addTangentBasis(forTextureCoordinateAttributeNamed: MDLVertexAttributeTextureCoordinate,
+                             tangentAttributeNamed: MDLVertexAttributeTangent,
+                             bitangentAttributeNamed: MDLVertexAttributeBitangent)
+        
+        let submesh = (mesh.submeshes!.firstObject! as! MDLSubmesh)
+        skeleton = asset.childObjects(of: MDLSkeleton.self).first! as! MDLSkeleton
+        animation = animationBinding.jointAnimation as! MDLPackedJointAnimation
+        mtkVertexBuffer = mesh.vertexBuffers.first! as! MTKMeshBuffer
+        mtkIndexBuffer = submesh.indexBuffer as! MTKMeshBuffer
+        geometryType = mtlPrimitiveType(fromMdl: submesh.geometryType)!
+        indexType = mtlIndexType(fromMdl: submesh.indexType)!
+        indexCount = submesh.indexCount
+        
+        var prototype = ObjectConstants()
+        objectConstantsBuff = device.makeBuffer(bytes: &prototype, length: MemoryLayout<ObjectConstants>.stride, options: .storageModeShared)!
+        
+        // set color, otherwise it's transparent, as there is no color information loaded from the file
+        let ptr = mtkVertexBuffer.buffer.contents().bindMemory(to: VertexData.self, capacity: mesh.vertexCount)
+        for i in 0..<mesh.vertexCount {
+            ptr[i].color = [0.7, 0.3, 0.0, 1.0];
+        }
+    }
 }
 
 /*

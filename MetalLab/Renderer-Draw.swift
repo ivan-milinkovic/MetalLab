@@ -85,6 +85,7 @@ extension Renderer {
         
         enc.setRenderPipelineState(mainPipelineState)
         encodeRegularGeometry(scene: scene, encoder: enc)
+        encodeAnimatedGeometry(scene: scene, encoder: enc)
         encodeTransparentGeometry(scene: scene, encoder: enc)
         
         enc.endEncoding()
@@ -109,6 +110,22 @@ extension Renderer {
             encoder.setFragmentTexture(meshObject.metalMesh.normalMap, index: 3)
             encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: meshObject.metalMesh.vertexCount, instanceCount: instanceCount)
         }
+    }
+    
+    func encodeAnimatedGeometry(scene: MyScene, encoder: MTLRenderCommandEncoder) {
+        guard let obj = scene.animMesh else { return }
+        encoder.setVertexBuffer(obj.mtkVertexBuffer.buffer, offset: obj.mtkVertexBuffer.offset, index: 0)
+        encoder.setVertexBuffer(obj.objectConstantsBuff, offset: 0, index: 1)
+        encoder.setFragmentTexture(scene.spotLight.texture, index: 1)
+        //encoder.setFragmentTexture(obj.texture, index: 0)
+        //encoder.setFragmentTexture(cubeTex, index: 2)
+        //encoder.setFragmentTexture(obj.normalMap, index: 3)
+        
+        encoder.drawIndexedPrimitives(type: obj.geometryType,
+                                      indexCount: obj.indexCount,
+                                      indexType: obj.indexType,
+                                      indexBuffer: obj.mtkIndexBuffer.buffer,
+                                      indexBufferOffset: obj.mtkIndexBuffer.offset)
     }
     
     func encodeTransparentGeometry(scene: MyScene, encoder: MTLRenderCommandEncoder) {

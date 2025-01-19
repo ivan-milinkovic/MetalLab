@@ -59,58 +59,17 @@ struct VertexData {
         return vd
     }()
     
+    @MainActor
     static func makeModelioVertexDescriptor() -> MDLVertexDescriptor {
-        //return MTKModelIOVertexDescriptorFromMetal(vertexDescriptor) // causes a crash later in MDLMesh.addTangentBasis
-        
-        let vertexDescriptor = MDLVertexDescriptor()
-        var index: Int = 0
-        
-        vertexDescriptor.vertexAttributes[index].name = MDLVertexAttributePosition
-        vertexDescriptor.vertexAttributes[index].format = .float4
-        vertexDescriptor.vertexAttributes[index].offset = MemoryLayout.offset(of: \VertexData.position)!
-        index += 1
-        
-        vertexDescriptor.vertexAttributes[index].name = MDLVertexAttributeNormal
-        vertexDescriptor.vertexAttributes[index].format = .float4
-        vertexDescriptor.vertexAttributes[index].offset = MemoryLayout.offset(of: \VertexData.normal)!
-        index += 1
-        
-        vertexDescriptor.vertexAttributes[index].name = MDLVertexAttributeColor
-        vertexDescriptor.vertexAttributes[index].format = .float4
-        vertexDescriptor.vertexAttributes[index].offset = MemoryLayout.offset(of: \VertexData.color)!
-        index += 1
-        
-        vertexDescriptor.vertexAttributes[index].name = MDLVertexAttributeTextureCoordinate
-        vertexDescriptor.vertexAttributes[index].format = .float2
-        vertexDescriptor.vertexAttributes[index].offset = MemoryLayout.offset(of: \VertexData.uv)!
-        index += 1
-        
-        vertexDescriptor.vertexAttributes[index].name = MDLVertexAttributeTangent
-        vertexDescriptor.vertexAttributes[index].format = .float3
-        vertexDescriptor.vertexAttributes[index].offset = MemoryLayout.offset(of: \VertexData.tan)!
-        index += 1
-        
-        vertexDescriptor.vertexAttributes[index].name = MDLVertexAttributeBitangent
-        vertexDescriptor.vertexAttributes[index].format = .float3
-        vertexDescriptor.vertexAttributes[index].offset = MemoryLayout.offset(of: \VertexData.btan)!
-        index += 1
-        
-        vertexDescriptor.vertexAttributes[index].name = MDLVertexAttributeJointIndices
-        vertexDescriptor.vertexAttributes[index].format = .uShort4
-        vertexDescriptor.vertexAttributes[index].offset = MemoryLayout.offset(of: \VertexData.ji)!
-        index += 1
-        
-        vertexDescriptor.vertexAttributes[index].name = MDLVertexAttributeJointWeights
-        vertexDescriptor.vertexAttributes[index].format = .float4
-        vertexDescriptor.vertexAttributes[index].offset = MemoryLayout.offset(of: \VertexData.jw)!
-        index += 1
-        
-        for i in 0..<index { vertexDescriptor.vertexAttributes[i].bufferIndex = 0 }
-        
-        vertexDescriptor.bufferLayouts[0].stride = MemoryLayout<VertexData>.stride
-        
-        //print("buffer stride: ", MemoryLayout<VertexData>.stride)
-        return vertexDescriptor
+        let md = MTKModelIOVertexDescriptorFromMetal(vertexDescriptor)
+        md.mdlVertexAttributes[0].name = MDLVertexAttributePosition // Names are required
+        md.mdlVertexAttributes[1].name = MDLVertexAttributeNormal
+        md.mdlVertexAttributes[2].name = MDLVertexAttributeColor
+        md.mdlVertexAttributes[3].name = MDLVertexAttributeTextureCoordinate
+        md.mdlVertexAttributes[4].name = MDLVertexAttributeTangent
+        md.mdlVertexAttributes[5].name = MDLVertexAttributeBitangent
+        md.mdlVertexAttributes[6].name = MDLVertexAttributeJointIndices
+        md.mdlVertexAttributes[7].name = MDLVertexAttributeJointWeights
+        return md;
     }
-
 }

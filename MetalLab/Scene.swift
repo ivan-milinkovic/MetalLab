@@ -23,12 +23,14 @@ class MyScene {
     var grass: AnimatedInstancedObject!
     var monkey: MeshObject!
     var normalMapPlane: MeshObject!
+    var animMesh: AnimatedMesh!
     
     var renderer: Renderer!
     var input: Input!
     
     let updateShearOnGpu = true
     
+    @MainActor
     func load(device: MTLDevice) {
         
         makeMonkey(device)
@@ -38,6 +40,7 @@ class MyScene {
         makeTransparentPlanes(device: device)
         makeReflectiveCubes(device: device)
         makeNormalMapPlane(device)
+        //animMesh = AnimatedMesh(device)
         
         loadCubeMap(device: device)
         makeLight(device)
