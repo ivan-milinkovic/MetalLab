@@ -31,14 +31,11 @@ extension Renderer {
     func setupPipeline() {
         
         commandQueue = device.makeCommandQueue()!
-        
         library = device.makeDefaultLibrary()!
-        let vertexFunction = library.makeFunction(name: "vertex_main")!
-        let fragmentFunction = library.makeFunction(name: "fragment_main")!
         
         let mainPipelineDesc = MTLRenderPipelineDescriptor()
-        mainPipelineDesc.vertexFunction = vertexFunction
-        mainPipelineDesc.fragmentFunction = fragmentFunction
+        mainPipelineDesc.vertexFunction = library.makeFunction(name: "vertex_main")!
+        mainPipelineDesc.fragmentFunction = library.makeFunction(name: "fragment_main")!
         mainPipelineDesc.vertexDescriptor = VertexData.vertexDescriptor
         mainPipelineDesc.colorAttachments[0].pixelFormat = colorPixelFormat
         mainPipelineDesc.depthAttachmentPixelFormat = depthPixelFormat
@@ -61,6 +58,10 @@ extension Renderer {
         tessellationPipelineDesc.tessellationOutputWindingOrder = winding
         tessellationPipelineDesc.tessellationControlPointIndexType = .none // .none when rendering without index buffer
         tesselationPipelineState = try! device.makeRenderPipelineState(descriptor: tessellationPipelineDesc)
+        
+        let animPipeDesc = mainPipelineDesc.copy() as! MTLRenderPipelineDescriptor
+        animPipeDesc.vertexFunction = library.makeFunction(name: "vertex_main_anim")!
+        animPipelineState = try! device.makeRenderPipelineState(descriptor: animPipeDesc)
         
         let samplerDesc = MTLSamplerDescriptor()
         samplerDesc.normalizedCoordinates = true

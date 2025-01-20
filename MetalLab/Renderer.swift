@@ -10,6 +10,7 @@ class Renderer {
     var library: MTLLibrary!
     var mainPipelineState: MTLRenderPipelineState!
     var tesselationPipelineState: MTLRenderPipelineState!
+    var animPipelineState: MTLRenderPipelineState!
     var shadowPipelineState: MTLRenderPipelineState!
     var shadowTessPipelineState: MTLRenderPipelineState!
     var envMapPipelineState: MTLRenderPipelineState!

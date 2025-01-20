@@ -44,6 +44,23 @@ extension float4x4 {
         self.init(columns: M.columns)
     }
     
+    static func make(t: Float3, r: simd_quatf, s: Float3) -> float4x4 {
+        let sm = float4x4(diagonal: Float4(s, 1))
+        let rm = float4x4(r)
+        let tm = float4x4([1,0,0,0], [0,1,0,0], [0,0,1,0], [t.x, t.y, t.z, 1])
+        return tm * rm * sm
+    }
+    
+    // ref: https://github.com/metal-by-example/thirty-days-of-metal/blob/master/28/MetalVertexSkinning/MetalVertexSkinning/Math.swift
+    // Shouldn't scale be on the diagonal only?
+    init(t: Float3, r: simd_quatf, s: Float3) {
+        let rm = float3x3(r)
+        self.init(Float4( s.x * rm.columns.0, 0),
+                  Float4( s.y * rm.columns.1, 0),
+                  Float4( s.z * rm.columns.2, 0),
+                  Float4( t, 1))
+    }
+    
     static func perspectiveProjection(vFovRads: Float, aspectRatio: Float, near: Float, far: Float) -> float4x4 {
         // right-handed
         let Sy = 1 / tan(vFovRads * 0.5)

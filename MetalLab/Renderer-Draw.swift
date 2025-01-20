@@ -83,9 +83,11 @@ extension Renderer {
         enc.setRenderPipelineState(tesselationPipelineState)
         encodeTesselatedGeometry(scene: scene, encoder: enc)
         
+        enc.setRenderPipelineState(animPipelineState)
+        encodeAnimatedGeometry(scene: scene, encoder: enc)
+        
         enc.setRenderPipelineState(mainPipelineState)
         encodeRegularGeometry(scene: scene, encoder: enc)
-        encodeAnimatedGeometry(scene: scene, encoder: enc)
         encodeTransparentGeometry(scene: scene, encoder: enc)
         
         enc.endEncoding()
@@ -114,8 +116,20 @@ extension Renderer {
     
     func encodeAnimatedGeometry(scene: MyScene, encoder: MTLRenderCommandEncoder) {
         guard let obj = scene.animMesh else { return }
+        
+        // todo: extract
+        encoder.setVertexBuffer(frameConstantsBuff, offset: 0, index: 2)
+        encoder.setFragmentBuffer(frameConstantsBuff, offset: 0, index: 0)
+        encoder.setFragmentTexture(nil, index: 0)
+        encoder.setFragmentTexture(scene.spotLight.texture, index: 1)
+        encoder.setFragmentTexture(cubeTex, index: 2)
+        encoder.setFragmentTexture(nil, index: 3)
+        
+        obj.updateConstantsBuffer()
+        
         encoder.setVertexBuffer(obj.mtkVertexBuffer.buffer, offset: obj.mtkVertexBuffer.offset, index: 0)
         encoder.setVertexBuffer(obj.objectConstantsBuff, offset: 0, index: 1)
+        encoder.setVertexBytes(obj.jointAnimMats, length: obj.jointAnimMats.count * MemoryLayout<float4x4>.stride, index: 3)
         encoder.setFragmentTexture(scene.spotLight.texture, index: 1)
         //encoder.setFragmentTexture(obj.texture, index: 0)
         //encoder.setFragmentTexture(cubeTex, index: 2)

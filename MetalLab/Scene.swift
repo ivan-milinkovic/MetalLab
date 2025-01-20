@@ -40,16 +40,15 @@ class MyScene {
         makeTransparentPlanes(device: device)
         makeReflectiveCubes(device: device)
         makeNormalMapPlane(device)
-        //animMesh = AnimatedMesh(device)
+        makeAnimatedMesh(device)
         
         loadCubeMap(device: device)
         makeLight(device)
         
         self.camera.transform.look(from: [0, 1.4, 3.2], at: [0, 1, -2])
-        
         splitObjects()
-        
         selection = camera
+        animMesh.startAnimation()
         
         isReady = true
     }
@@ -66,6 +65,8 @@ class MyScene {
             camera.transform.rotate2(dx: dx * 0.5, dy: dy * 0.5)
         case let meshObject as MeshObject:
             meshObject.transform.rotate2(dx: dx, dy: dy)
+        case let anim as AnimatedMesh:
+            anim.transform.rotate2(dx: dx, dy: dy)
         default: break
         }
     }
@@ -79,6 +80,7 @@ class MyScene {
     func update(dt: Float, timeCounter: Double) {
         updateControls()
         updateShear(timeCounter: timeCounter, wind: wind)
+        animMesh.updateAnim()
     }
     
     func updateControls() {
@@ -421,6 +423,13 @@ class MyScene {
         let url = Bundle.main.url(forResource: "env_map_strip", withExtension: "png")!
         cubeMapTexture = try? textureLoader.newTexture(URL: url, options: texOpts)
          */
+    }
+    
+    @MainActor
+    func makeAnimatedMesh(_ device: MTLDevice) {
+        animMesh = AnimatedMesh(device)
+        animMesh.transform.scale = 0.3
+        animMesh.transform.moveBy([2, 1, 0])
     }
 }
 

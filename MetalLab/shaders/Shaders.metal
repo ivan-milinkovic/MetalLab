@@ -58,14 +58,12 @@ struct FrameConstants {
 };
 
 
-
-vertex FragmentData vertex_main(
-    VertexInput vertexData [[stage_in]],
-    const device ObjectConstants* objectConstantsArray [[buffer(1)]],
-    uint instanceId [[instance_id]],
-    constant FrameConstants& frameConstants [[buffer(2)]]
-) {
-    auto objectConstants = objectConstantsArray[instanceId];
+FragmentData basic_vertex_transform(
+  thread VertexInput& vertexData,
+  thread const ObjectConstants& objectConstants,
+  uint instanceId [[instance_id]],
+  constant FrameConstants& frameConstants)
+{
     FragmentData out;
     auto modelViewMatrix = frameConstants.viewMatrix * objectConstants.modelMatrix;
     out.positionClip = frameConstants.projectionMatrix * modelViewMatrix * float4(vertexData.position, 1);
@@ -82,6 +80,36 @@ vertex FragmentData vertex_main(
     out.envMapRefractedAmount = objectConstants.envMapRefractedAmount;
     out.specularExponent = objectConstants.specularExponent;
     return out;
+}
+
+
+vertex FragmentData vertex_main(
+    VertexInput vertexData [[stage_in]],
+    const device ObjectConstants* objectConstantsArray [[buffer(1)]],
+    uint instanceId [[instance_id]],
+    constant FrameConstants& frameConstants [[buffer(2)]]
+) {
+    auto objectConstants = objectConstantsArray[instanceId];
+    return basic_vertex_transform(vertexData, objectConstants, instanceId, frameConstants);
+}
+
+vertex FragmentData vertex_main_anim(
+    VertexInput vin [[stage_in]],
+    const device ObjectConstants* objectConstantsArray [[buffer(1)]],
+    uint instanceId [[instance_id]],
+    constant FrameConstants& frameConstants [[buffer(2)]],
+    device const float4x4* jointLocalMats [[buffer(3)]]
+) {
+    auto objectConstants = objectConstantsArray[instanceId];
+    auto animMat = vin.jointWeights[0] * jointLocalMats[vin.jointIndices[0]]
+                 + vin.jointWeights[1] * jointLocalMats[vin.jointIndices[1]]
+                 + vin.jointWeights[2] * jointLocalMats[vin.jointIndices[2]]
+                 + vin.jointWeights[3] * jointLocalMats[vin.jointIndices[3]];
+    auto pos = float4(vin.position, 1);
+    auto normal = float4(vin.normal, 0);
+    vin.position = (animMat * pos).xyz;
+    vin.normal = (animMat * normal).xyz;
+    return basic_vertex_transform(vin, objectConstants, instanceId, frameConstants);
 }
 
 
@@ -102,6 +130,31 @@ T barycentric_interpolate(T c0, T c1, T c2, float3 bary_coords) {
     return c0 * bary_coords[0] + c1 * bary_coords[1] + c2 * bary_coords[2];
 }
 
+VertexInput tess_interpolate_triangle
+(
+ thread VertexInput& v0,
+ thread VertexInput& v1,
+ thread VertexInput& v2,
+ float3 posInPatch,
+ thread const ObjectConstants& objectConstants,
+ thread const texture2d<float, access::sample>& displacementMap,
+ thread const sampler& sampler
+ )
+{
+    float3 pos  = barycentric_interpolate(v0.position, v1.position, v2.position, posInPatch);
+    float3 norm = barycentric_interpolate(v0.normal,   v1.normal,   v2.normal,   posInPatch);
+    float3 tan  = barycentric_interpolate(v0.tan,      v1.tan,      v2.tan,      posInPatch);
+    float3 btan = barycentric_interpolate(v0.btan,     v1.btan,     v2.btan,     posInPatch);
+    float4 col  = barycentric_interpolate(v0.color,    v1.color,    v2.color,    posInPatch);
+    float2 uv   = barycentric_interpolate(v0.uv,       v1.uv,       v2.uv,       posInPatch);
+    
+    auto d = displacementMap.sample(sampler, uv).r;
+    pos += norm * d * objectConstants.displacementFactor;
+    
+    VertexInput vertexData = { pos, norm, col, uv, tan, btan};
+    return vertexData;
+}
+
 [[patch(triangle, 3)]]
 vertex FragmentData vertex_tesselation
 (
@@ -117,40 +170,10 @@ vertex FragmentData vertex_tesselation
     auto v0 = controlPoints[0];
     auto v1 = controlPoints[1];
     auto v2 = controlPoints[2];
-    
-    float3 pos  = barycentric_interpolate(v0.position, v1.position, v2.position, posInPatch);
-    float3 norm = barycentric_interpolate(v0.normal,   v1.normal,   v2.normal,   posInPatch);
-    float3 tan  = barycentric_interpolate(v0.tan,      v1.tan,      v2.tan,      posInPatch);
-    float3 btan = barycentric_interpolate(v0.btan,     v1.btan,     v2.btan,     posInPatch);
-    float4 col  = barycentric_interpolate(v0.color,    v1.color,    v2.color,    posInPatch);
-    float2 uv   = barycentric_interpolate(v0.uv,       v1.uv,       v2.uv,       posInPatch);
-    
     auto objectConstants = objectConstantsArray[instanceId];
-    auto d = displacementMap.sample(sampler, uv).r;
-    pos += norm * d * objectConstants.displacementFactor;
     
-    // help make the rest of the code the same as the main vertex shader
-    VertexInput vertexData = { pos, norm, col, uv, tan, btan};
-    
-    FragmentData out;
-    auto modelViewMatrix = frameConstants.viewMatrix * objectConstants.modelMatrix;
-    out.positionClip = frameConstants.projectionMatrix * modelViewMatrix * float4(vertexData.position, 1);
-    out.positionWorld = objectConstants.modelMatrix * float4(vertexData.position, 1);
-    out.normal = normalize((modelViewMatrix * float4(vertexData.normal, 0)).xyz); // todo: model-view inverse transform
-    out.tan    = normalize((modelViewMatrix * float4(vertexData.tan,    0)).xyz); // todo: model-view inverse transform
-    out.btan   = normalize((modelViewMatrix * float4(vertexData.btan,   0)).xyz); // todo: model-view inverse transform
-    out.color = vertexData.color;
-    out.uv = vertexData.uv;
-    out.textureAmount = objectConstants.textureAmount;
-    out.textureTiling = objectConstants.textureTiling;
-    out.normalMapTiling = objectConstants.normalMapTiling;
-    out.envMapReflectedAmount = objectConstants.envMapReflectedAmount;
-    out.envMapRefractedAmount = objectConstants.envMapRefractedAmount;
-    out.specularExponent = objectConstants.specularExponent;
-    
-//    out.color = float4(normalize(pos)*0.5 + 0.5, 1);
-    
-    return out;
+    VertexInput vertexData = tess_interpolate_triangle(v0, v1, v2, posInPatch, objectConstants, displacementMap, sampler);
+    return basic_vertex_transform(vertexData, objectConstants, instanceId, frameConstants);
 }
 
 fragment float4 fragment_main
@@ -267,16 +290,9 @@ vertex float4 vertex_shadow_tess
     auto v0 = controlPoints[0];
     auto v1 = controlPoints[1];
     auto v2 = controlPoints[2];
-    
-    float3 pos  = barycentric_interpolate(v0.position, v1.position, v2.position, posInPatch);
-    float3 norm = barycentric_interpolate(v0.normal,   v1.normal,   v2.normal,   posInPatch);
-    float2 uv   = barycentric_interpolate(v0.uv,       v1.uv,       v2.uv,       posInPatch);
-    
-    ObjectConstants staticData = objectConstantsArray[instanceId];
-    auto d = displacementMap.sample(sampler, uv).r;
-    pos += norm * d * staticData.displacementFactor;
-    
-    return frameConstants.lightProjectionMatrix * staticData.modelMatrix * float4(pos, 1);
+    ObjectConstants objectConstants = objectConstantsArray[instanceId];
+    VertexInput vertexData = tess_interpolate_triangle(v0, v1, v2, posInPatch, objectConstants, displacementMap, sampler);
+    return frameConstants.lightProjectionMatrix * objectConstants.modelMatrix * float4(vertexData.position, 1);
 }
 
 
