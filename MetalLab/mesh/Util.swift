@@ -1,4 +1,5 @@
 import Metal
+import MetalKit
 import ModelIO
 
 extension MTLPackedFloat3: @retroactive CustomStringConvertible {
@@ -14,6 +15,12 @@ extension MDLVertexDescriptor {
 
     var mdlBufferLayouts: [MDLVertexBufferLayout] {
         return layouts as! [MDLVertexBufferLayout]
+    }
+}
+
+extension MDLSubmesh {
+    var mtkIndexBuffer: MTKMeshBuffer {
+        indexBuffer as! MTKMeshBuffer
     }
 }
 

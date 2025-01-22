@@ -27,6 +27,9 @@ extension Float3 {
 }
 
 extension float4x4 {
+    
+    static var identity: float4x4 { matrix_identity_float4x4 }
+    
     init(rotationRads rads: Float, axis: Float3) {
         let x = axis.x
         let y = axis.y

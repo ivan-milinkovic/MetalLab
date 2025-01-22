@@ -46,7 +46,7 @@ extension ViewController: MTKViewDelegate {
     }
     
     func draw(in view: MTKView) {
-        let t = CACurrentMediaTime()
+        let t = Time.shared.current
         let dt = t - timeCounter
         timeCounter = t
         

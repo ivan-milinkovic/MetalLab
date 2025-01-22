@@ -112,6 +112,28 @@ extension Renderer {
             encoder.setFragmentTexture(meshObject.metalMesh.normalMap, index: 3)
             encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: meshObject.metalMesh.vertexCount, instanceCount: instanceCount)
         }
+        
+        encodeNodeGeometry(scene: scene, encoder: encoder)
+    }
+    
+    func encodeNodeGeometry(scene: MyScene, encoder: MTLRenderCommandEncoder) {
+        for node in scene.fileScene.meshNodes {
+            let nodeMesh = node.nodeMesh!
+            encoder.setVertexBuffer(nodeMesh.mtkMeshBuffer.buffer, offset: nodeMesh.mtkMeshBuffer.offset, index: 0)
+            encoder.setVertexBuffer(nodeMesh.objectConstantsBuff, offset: 0, index: 1)
+            encoder.setFragmentTexture(nil, index: 0)
+            encoder.setFragmentTexture(scene.spotLight.texture, index: 1)
+            encoder.setFragmentTexture(cubeTex, index: 2)
+            encoder.setFragmentTexture(nil, index: 3)
+            
+            for sm in nodeMesh.submeshes {
+                encoder.drawIndexedPrimitives(type: mtlPrimitiveType(fromMdl: sm.geometryType)!,
+                                              indexCount: sm.indexCount,
+                                              indexType: mtlIndexType(fromMdl: sm.indexType)!,
+                                              indexBuffer: sm.mtkIndexBuffer.buffer,
+                                              indexBufferOffset: sm.mtkIndexBuffer.offset)
+            }
+        }
     }
     
     func encodeAnimatedGeometry(scene: MyScene, encoder: MTLRenderCommandEncoder) {

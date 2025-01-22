@@ -24,6 +24,7 @@ class MyScene {
     var monkey: MeshObject!
     var normalMapPlane: MeshObject!
     var animMesh: AnimatedMesh!
+    var fileScene: FileScene!
     
     var renderer: Renderer!
     var input: Input!
@@ -41,6 +42,7 @@ class MyScene {
         makeReflectiveCubes(device: device)
         makeNormalMapPlane(device)
         makeAnimatedMesh(device)
+        makeFileScene(device)
         
         loadCubeMap(device: device)
         makeLight(device)
@@ -81,6 +83,7 @@ class MyScene {
         updateControls()
         updateShear(timeCounter: timeCounter, wind: wind)
         animMesh.updateAnim()
+        fileScene.update()
     }
     
     func updateControls() {
@@ -425,11 +428,17 @@ class MyScene {
          */
     }
     
-    @MainActor
-    func makeAnimatedMesh(_ device: MTLDevice) {
+    @MainActor func makeAnimatedMesh(_ device: MTLDevice) {
         animMesh = AnimatedMesh(device)
         animMesh.transform.scale = 0.3
         animMesh.transform.moveBy([2, 1, 0])
+    }
+    
+    @MainActor func makeFileScene(_ device: MTLDevice) {
+        fileScene = FileScene()
+        fileScene.loadTestScene(device)
+        fileScene.transform.scale = 0.5
+        fileScene.transform.moveBy([1.25, 1, 0])
     }
 }
 

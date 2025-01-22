@@ -36,11 +36,6 @@ class AnimatedMesh {
         let root = asset.childObjects(of: MDLObject.self).first(where: { $0.name == "root" })!
         rootMat = root.transform?.matrix ?? matrix_identity_float4x4 // orientation correction in the file
         
-        let animObj = asset.childObjects(of: MDLObject.self)
-            .first(where: {
-                $0.components.contains(where: { $0 is MDLAnimationBindComponent}) }
-            )!
-        let animationBinding = animObj.components.first { $0 is MDLAnimationBindComponent } as! MDLAnimationBindComponent
         let meshes = asset.childObjects(of: MDLMesh.self) as! [MDLMesh]
         
         let mesh = meshes.first!
@@ -50,9 +45,16 @@ class AnimatedMesh {
         mesh.addTangentBasis(forTextureCoordinateAttributeNamed: MDLVertexAttributeTextureCoordinate,
                              tangentAttributeNamed: MDLVertexAttributeTangent,
                              bitangentAttributeNamed: MDLVertexAttributeBitangent)
-        
         let submesh = (mesh.submeshes!.firstObject! as! MDLSubmesh)
+        
+        //let animObj = asset.childObjects(of: MDLObject.self)
+        //    .first(where: {
+        //        $0.components.contains(where: { $0 is MDLAnimationBindComponent}) }
+        //    )!
+        //let animationBinding = animObj.components.first { $0 is MDLAnimationBindComponent } as! MDLAnimationBindComponent
+        
         skeleton = asset.childObjects(of: MDLSkeleton.self).first! as! MDLSkeleton
+        let animationBinding = skeleton.components.first { $0 is MDLAnimationBindComponent } as! MDLAnimationBindComponent
         animation = animationBinding.jointAnimation as! MDLPackedJointAnimation
         mtkVertexBuffer = mesh.vertexBuffers.first! as! MTKMeshBuffer
         mtkIndexBuffer = submesh.indexBuffer as! MTKMeshBuffer
