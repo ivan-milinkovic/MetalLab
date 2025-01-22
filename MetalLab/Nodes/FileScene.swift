@@ -11,7 +11,7 @@ class FileScene {
     
     @MainActor
     func loadTestScene(_ device: MTLDevice) {
-        let url = Bundle.main.url(forResource: "coord", withExtension: "usda")!
+        let url = Bundle.main.url(forResource: "coord2", withExtension: "usda")!
         loadScene(url, device)
     }
     
@@ -51,8 +51,13 @@ class FileScene {
             node.setMesh(mesh: mesh, device: device)
         }
         
-        node.skeleton = obj as? MDLSkeleton
-        node.animations = (obj.components.filter { $0 is MDLAnimationBindComponent } as? [MDLAnimationBindComponent]) ?? []
+        if let skeleton = obj as? MDLSkeleton {
+            node.nodeSkeleton = NodeSkeleton(skeleton: skeleton)
+        }
+        
+        if let animComponents = (obj.components.filter { $0 is MDLAnimationBindComponent } as? [MDLAnimationBindComponent]) {
+            node.nodeAnimations = animComponents.compactMap { NodeAnimation(mdlAnimComponent: $0) }
+        }
         
         node.children = obj.children.objects.map { cobj in
             let cnode = loadMdlObject(cobj, device)

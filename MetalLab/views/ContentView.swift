@@ -23,6 +23,7 @@ struct ContentView: View {
                         Button("monkey") { viewController.scene.selection = viewController.scene.monkey }
                         Button("cobble")   { viewController.scene.selection = viewController.scene.normalMapPlane }
                         Button("anim") { viewController.scene.selection = viewController.scene.animMesh }
+                        Button("node") { viewController.scene.selection = viewController.scene.fileScene }
                     }
                 }
                 

@@ -69,6 +69,8 @@ class MyScene {
             meshObject.transform.rotate2(dx: dx, dy: dy)
         case let anim as AnimatedMesh:
             anim.transform.rotate2(dx: dx, dy: dy)
+        case let fs as FileScene:
+            fs.transform.rotate2(dx: dx, dy: dy)
         default: break
         }
     }

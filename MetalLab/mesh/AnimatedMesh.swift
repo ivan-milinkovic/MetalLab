@@ -30,7 +30,7 @@ class AnimatedMesh {
     @MainActor
     init(_ device: MTLDevice) {
         let allocator = MTKMeshBufferAllocator(device: device)
-        let url = Bundle.main.url(forResource: "coord", withExtension: "usda")!
+        let url = Bundle.main.url(forResource: "coord1", withExtension: "usda")!
         let asset = MDLAsset(url: url, vertexDescriptor: VertexData.makeModelioVertexDescriptor(), bufferAllocator: allocator)
         
         let root = asset.childObjects(of: MDLObject.self).first(where: { $0.name == "root" })!

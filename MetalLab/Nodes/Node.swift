@@ -8,6 +8,28 @@ struct NodeMesh {
     let submeshes: [MDLSubmesh]
     let objectConstantsBuff: MTLBuffer
     let mtkMeshBuffer: MTKMeshBuffer
+    let jointLocalMat: [float4x4] = .init(repeating: .identity, count: 4)
+}
+
+struct NodeSkeleton {
+    let skeleton: MDLSkeleton
+    let jointModelToLocalMat: [float4x4]
+    let jointLocalRestMat: [float4x4]
+    init(skeleton: MDLSkeleton) {
+        self.skeleton = skeleton
+        self.jointModelToLocalMat = skeleton.jointBindTransforms.float4x4Array.map { $0.inverse }
+        self.jointLocalRestMat = skeleton.jointRestTransforms.float4x4Array
+    }
+}
+
+struct NodeAnimation {
+    let mdlAnimComponent: MDLAnimationBindComponent
+    let jointAnim: MDLPackedJointAnimation
+    init?(mdlAnimComponent: MDLAnimationBindComponent) {
+        self.mdlAnimComponent = mdlAnimComponent
+        guard let jointAnim = mdlAnimComponent.jointAnimation as? MDLPackedJointAnimation else { return nil }
+        self.jointAnim = jointAnim
+    }
 }
 
 class Node {
@@ -17,9 +39,8 @@ class Node {
     var children: [Node] = []
     
     var nodeMesh: NodeMesh?
-    
-    var skeleton: MDLSkeleton?
-    var animations: [MDLAnimationBindComponent] = []
+    var nodeSkeleton: NodeSkeleton?
+    var nodeAnimations: [NodeAnimation] = []
     
     var transformInScene: float4x4 = .identity {
         didSet {
@@ -36,10 +57,16 @@ class Node {
         let objectConstantsBuff = device.makeBuffer(bytes: &objConstantsPrototype, length: MemoryLayout<ObjectConstants>.stride, options: .storageModeShared)!
         let mtkMeshBuffer = mesh.vertexBuffers.first as! MTKMeshBuffer // VertexData.makeModelioVertexDescriptor() defines a single buffer
         
-        // Fix colors, as loaded colors are all zeros (transparent)
+        // Apply material albedo
         let ptr = mtkMeshBuffer.buffer.contents().advanced(by: mtkMeshBuffer.offset).assumingMemoryBound(to: VertexData.self)
-        for i in 0..<mesh.vertexCount {
-            ptr[i].color = [1, 0, 0, 1]
+        for sm in submeshes {
+            let matProp = sm.material?.property(with: .baseColor)
+            let baseColor: Float4 = matProp?.float3Value.float4_w1 ?? [0.5, 0.5, 0.5, 1]
+            let ip = sm.mtkIndexBuffer.buffer.contents().assumingMemoryBound(to: UInt32.self) //bindMemory(to: UInt16.self, capacity: sm.indexCount)
+            for i in 0..<sm.indexCount {
+                let vertexIndex = ip[i]
+                ptr[Int(vertexIndex)].color = baseColor
+            }
         }
         
         self.nodeMesh = NodeMesh(mesh: mesh, submeshes: submeshes, objectConstantsBuff: objectConstantsBuff, mtkMeshBuffer: mtkMeshBuffer)
@@ -66,9 +93,9 @@ class Node {
     
     func printTree(depth: Int = 0) {
         let indentation = String(repeating: "  ", count: depth)
-        let animCnt = animations.count
+        let animCnt = nodeAnimations.count
         let anims = animCnt > 0 ? "anims: \(animCnt)" : ""
-        let skel = (skeleton != nil) ? "skel: \(skeleton!.name)" : ""
+        let skel = (nodeSkeleton != nil) ? "skel: \(nodeSkeleton!.skeleton.name)" : ""
         print("\(indentation)\(name) \(anims) \(skel)")
         children.forEach { $0.printTree(depth: depth + 1) }
     }

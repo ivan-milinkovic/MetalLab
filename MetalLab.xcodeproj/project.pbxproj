@@ -14,8 +14,12 @@
 		2C256A2F2D3083FA00EAD2C6 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				coord.blend,
-				coord.blend1,
+				bird.blend,
+				coord0.blend,
+				coord1.blend,
+				coord1.blend1,
+				coord2.blend,
+				coord2.blend1,
 				readme.txt,
 			);
 			target = 2CF9031B29BE6510000D2729 /* MetalLab */;
