@@ -112,56 +112,58 @@ extension Renderer {
             encoder.setFragmentTexture(meshObject.metalMesh.normalMap, index: 3)
             encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: meshObject.metalMesh.vertexCount, instanceCount: instanceCount)
         }
-        
-        encodeNodeGeometry(scene: scene, encoder: encoder)
     }
     
-    func encodeNodeGeometry(scene: MyScene, encoder: MTLRenderCommandEncoder) {
-        for node in scene.fileScene.meshNodes {
-            let nodeMesh = node.nodeMesh!
-            encoder.setVertexBuffer(nodeMesh.mtkMeshBuffer.buffer, offset: nodeMesh.mtkMeshBuffer.offset, index: 0)
-            encoder.setVertexBuffer(nodeMesh.objectConstantsBuff, offset: 0, index: 1)
+    func encodeAnimatedGeometry(scene: MyScene, encoder: MTLRenderCommandEncoder) {
+        do {
+            guard let obj = scene.animMesh else { return }
+            // todo: extract
+            encoder.setVertexBuffer(frameConstantsBuff, offset: 0, index: 2)
+            encoder.setFragmentBuffer(frameConstantsBuff, offset: 0, index: 0)
             encoder.setFragmentTexture(nil, index: 0)
             encoder.setFragmentTexture(scene.spotLight.texture, index: 1)
             encoder.setFragmentTexture(cubeTex, index: 2)
             encoder.setFragmentTexture(nil, index: 3)
             
-            for sm in nodeMesh.submeshes {
-                encoder.drawIndexedPrimitives(type: mtlPrimitiveType(fromMdl: sm.geometryType)!,
-                                              indexCount: sm.indexCount,
-                                              indexType: mtlIndexType(fromMdl: sm.indexType)!,
-                                              indexBuffer: sm.mtkIndexBuffer.buffer,
-                                              indexBufferOffset: sm.mtkIndexBuffer.offset)
+            obj.updateConstantsBuffer()
+            
+            encoder.setVertexBuffer(obj.mtkVertexBuffer.buffer, offset: obj.mtkVertexBuffer.offset, index: 0)
+            encoder.setVertexBuffer(obj.objectConstantsBuff, offset: 0, index: 1)
+            encoder.setVertexBytes(obj.jointAnimMats, length: obj.jointAnimMats.count * MemoryLayout<float4x4>.stride, index: 3)
+            encoder.setFragmentTexture(scene.spotLight.texture, index: 1)
+            //encoder.setFragmentTexture(obj.texture, index: 0)
+            //encoder.setFragmentTexture(cubeTex, index: 2)
+            //encoder.setFragmentTexture(obj.normalMap, index: 3)
+            
+            encoder.drawIndexedPrimitives(type: obj.geometryType,
+                                          indexCount: obj.indexCount,
+                                          indexType: obj.indexType,
+                                          indexBuffer: obj.mtkIndexBuffer.buffer,
+                                          indexBufferOffset: obj.mtkIndexBuffer.offset)
+        }
+        
+        do {
+            let skel = scene.fileScene.skeleton!
+            for node in scene.fileScene.meshNodes {
+                let nodeMesh = node.nodeMesh!
+                encoder.setVertexBuffer(nodeMesh.mtkMeshBuffer.buffer, offset: nodeMesh.mtkMeshBuffer.offset, index: 0)
+                encoder.setVertexBuffer(nodeMesh.objectConstantsBuff, offset: 0, index: 1)
+                encoder.setVertexBytes(skel.jointModelMats, length: skel.jointCount * MemoryLayout<float4x4>.stride, index: 3)
+                
+                encoder.setFragmentTexture(nil, index: 0)
+                encoder.setFragmentTexture(scene.spotLight.texture, index: 1)
+                encoder.setFragmentTexture(cubeTex, index: 2)
+                encoder.setFragmentTexture(nil, index: 3)
+                
+                for sm in nodeMesh.submeshes {
+                    encoder.drawIndexedPrimitives(type: mtlPrimitiveType(fromMdl: sm.geometryType)!,
+                                                  indexCount: sm.indexCount,
+                                                  indexType: mtlIndexType(fromMdl: sm.indexType)!,
+                                                  indexBuffer: sm.mtkIndexBuffer.buffer,
+                                                  indexBufferOffset: sm.mtkIndexBuffer.offset)
+                }
             }
         }
-    }
-    
-    func encodeAnimatedGeometry(scene: MyScene, encoder: MTLRenderCommandEncoder) {
-        guard let obj = scene.animMesh else { return }
-        
-        // todo: extract
-        encoder.setVertexBuffer(frameConstantsBuff, offset: 0, index: 2)
-        encoder.setFragmentBuffer(frameConstantsBuff, offset: 0, index: 0)
-        encoder.setFragmentTexture(nil, index: 0)
-        encoder.setFragmentTexture(scene.spotLight.texture, index: 1)
-        encoder.setFragmentTexture(cubeTex, index: 2)
-        encoder.setFragmentTexture(nil, index: 3)
-        
-        obj.updateConstantsBuffer()
-        
-        encoder.setVertexBuffer(obj.mtkVertexBuffer.buffer, offset: obj.mtkVertexBuffer.offset, index: 0)
-        encoder.setVertexBuffer(obj.objectConstantsBuff, offset: 0, index: 1)
-        encoder.setVertexBytes(obj.jointAnimMats, length: obj.jointAnimMats.count * MemoryLayout<float4x4>.stride, index: 3)
-        encoder.setFragmentTexture(scene.spotLight.texture, index: 1)
-        //encoder.setFragmentTexture(obj.texture, index: 0)
-        //encoder.setFragmentTexture(cubeTex, index: 2)
-        //encoder.setFragmentTexture(obj.normalMap, index: 3)
-        
-        encoder.drawIndexedPrimitives(type: obj.geometryType,
-                                      indexCount: obj.indexCount,
-                                      indexType: obj.indexType,
-                                      indexBuffer: obj.mtkIndexBuffer.buffer,
-                                      indexBufferOffset: obj.mtkIndexBuffer.offset)
     }
     
     func encodeTransparentGeometry(scene: MyScene, encoder: MTLRenderCommandEncoder) {

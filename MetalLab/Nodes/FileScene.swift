@@ -8,6 +8,8 @@ class FileScene {
     var sceneNode: Node!
     var meshNodes: [Node] = []
     var transform: Transform = .init()
+    var skeletonNode: Node?
+    var skeleton: Skeleton?
     
     @MainActor
     func loadTestScene(_ device: MTLDevice) {
@@ -37,7 +39,19 @@ class FileScene {
             }
         }
         
+        // Find one skeleton
+        sceneNode.enumerateBFS { node, stop in
+            if let skel = node.nodeSkeleton {
+                self.skeletonNode = node
+                self.skeleton = skel
+                self.skeleton?.nodeMatrix = node.matrix
+                stop = true
+            }
+        }
+        
         //sceneNode.printTree()
+        
+        skeleton?.setRestPose()
     }
     
     fileprivate func loadMdlObject(_ obj: MDLObject, _ device: MTLDevice) -> Node {
@@ -77,13 +91,20 @@ class FileScene {
     
     /// BFS is efficient by avoiding repeated calculations compared to a recursive approach. It updates nodes from parents to children, top to bottom, layer by layer, and applies only the parent matrix
     func updateMatrices() {
-        sceneNode.enumerateBFS { node in
+        sceneNode.enumerateBFS { node, _ in
             if let parent = node.parent {
                 node.transformInScene = parent.transformInScene * node.matrix
             }
             else {
                 node.transformInScene = node.matrix
             }
+        }
+        
+        if let skelNodeMat = skeletonNode?.matrix {
+            self.skeleton?.nodeMatrix = skelNodeMat
+        }
+        if let anim = skeletonNode?.nodeAnimations.first {
+            skeleton?.animate(animation: anim)
         }
     }
 }

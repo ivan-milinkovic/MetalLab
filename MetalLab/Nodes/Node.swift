@@ -50,15 +50,18 @@ class Node {
     }
     
     /// Breadth first search
-    func enumerateBFS(action: (Node) -> Void) {
+    func enumerateBFS(action: (Node, inout Bool) -> Void) {
+        var stop = false
         var queue = [self]
         while true {
             if queue.count <= 0 {
                 break
             }
             let node = queue.removeFirst()
-            action(node)
-//            queue.insert(contentsOf: node.children, at: 0)
+            action(node, &stop)
+            if stop == true {
+                break
+            }
             queue.append(contentsOf: node.children)
         }
     }
