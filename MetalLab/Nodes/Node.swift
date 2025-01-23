@@ -3,35 +3,6 @@ import Metal
 import MetalKit
 import ModelIO
 
-struct NodeMesh {
-    let mesh: MDLMesh
-    let submeshes: [MDLSubmesh]
-    let objectConstantsBuff: MTLBuffer
-    let mtkMeshBuffer: MTKMeshBuffer
-    let jointLocalMat: [float4x4] = .init(repeating: .identity, count: 4)
-}
-
-struct NodeSkeleton {
-    let skeleton: MDLSkeleton
-    let jointModelToLocalMat: [float4x4]
-    let jointLocalRestMat: [float4x4]
-    init(skeleton: MDLSkeleton) {
-        self.skeleton = skeleton
-        self.jointModelToLocalMat = skeleton.jointBindTransforms.float4x4Array.map { $0.inverse }
-        self.jointLocalRestMat = skeleton.jointRestTransforms.float4x4Array
-    }
-}
-
-struct NodeAnimation {
-    let mdlAnimComponent: MDLAnimationBindComponent
-    let jointAnim: MDLPackedJointAnimation
-    init?(mdlAnimComponent: MDLAnimationBindComponent) {
-        self.mdlAnimComponent = mdlAnimComponent
-        guard let jointAnim = mdlAnimComponent.jointAnimation as? MDLPackedJointAnimation else { return nil }
-        self.jointAnim = jointAnim
-    }
-}
-
 class Node {
     var name: String = ""
     var matrix: float4x4 = .identity
@@ -39,7 +10,7 @@ class Node {
     var children: [Node] = []
     
     var nodeMesh: NodeMesh?
-    var nodeSkeleton: NodeSkeleton?
+    var nodeSkeleton: Skeleton?
     var nodeAnimations: [NodeAnimation] = []
     
     var transformInScene: float4x4 = .identity {
@@ -87,7 +58,8 @@ class Node {
             }
             let node = queue.removeFirst()
             action(node)
-            queue.insert(contentsOf: node.children, at: 0)
+//            queue.insert(contentsOf: node.children, at: 0)
+            queue.append(contentsOf: node.children)
         }
     }
     

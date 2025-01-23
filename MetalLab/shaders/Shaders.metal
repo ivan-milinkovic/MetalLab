@@ -98,13 +98,13 @@ vertex FragmentData vertex_main_anim(
     const device ObjectConstants* objectConstantsArray [[buffer(1)]],
     uint instanceId [[instance_id]],
     constant FrameConstants& frameConstants [[buffer(2)]],
-    device const float4x4* jointLocalMats [[buffer(3)]]
+    device const float4x4* jointModelMats [[buffer(3)]]
 ) {
     auto objectConstants = objectConstantsArray[instanceId];
-    auto animMat = vin.jointWeights[0] * jointLocalMats[vin.jointIndices[0]]
-                 + vin.jointWeights[1] * jointLocalMats[vin.jointIndices[1]]
-                 + vin.jointWeights[2] * jointLocalMats[vin.jointIndices[2]]
-                 + vin.jointWeights[3] * jointLocalMats[vin.jointIndices[3]];
+    auto animMat = vin.jointWeights[0] * jointModelMats[vin.jointIndices[0]]
+                 + vin.jointWeights[1] * jointModelMats[vin.jointIndices[1]]
+                 + vin.jointWeights[2] * jointModelMats[vin.jointIndices[2]]
+                 + vin.jointWeights[3] * jointModelMats[vin.jointIndices[3]];
     auto pos = float4(vin.position, 1);
     auto normal = float4(vin.normal, 0);
     vin.position = (animMat * pos).xyz;

@@ -12,6 +12,7 @@ class FileScene {
     @MainActor
     func loadTestScene(_ device: MTLDevice) {
         let url = Bundle.main.url(forResource: "coord2", withExtension: "usda")!
+        //let url = Bundle.main.url(forResource: "Character", withExtension: "usda")!
         loadScene(url, device)
     }
     
@@ -29,13 +30,14 @@ class FileScene {
             node.parent = sceneNode
         }
         
+        // Collect mesh nodes for easier access in the renderer
         sceneNode.enumerateDFS {
             if $0.nodeMesh != nil {
                 meshNodes.append($0)
             }
         }
-        sceneNode.printTree()
-        print()
+        
+        //sceneNode.printTree()
     }
     
     fileprivate func loadMdlObject(_ obj: MDLObject, _ device: MTLDevice) -> Node {
@@ -52,7 +54,7 @@ class FileScene {
         }
         
         if let skeleton = obj as? MDLSkeleton {
-            node.nodeSkeleton = NodeSkeleton(skeleton: skeleton)
+            node.nodeSkeleton = Skeleton(skeleton: skeleton)
         }
         
         if let animComponents = (obj.components.filter { $0 is MDLAnimationBindComponent } as? [MDLAnimationBindComponent]) {
