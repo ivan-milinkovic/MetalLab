@@ -55,6 +55,9 @@ extension Renderer {
         enc.setRenderPipelineState(shadowTessPipelineState)
         encodeTesselatedGeometry(scene: scene, encoder: enc)
         
+        enc.setRenderPipelineState(shadowAnimPipelineState)
+        encodeAnimatedGeometry(scene: scene, encoder: enc)
+        
         enc.setRenderPipelineState(shadowPipelineState)
         encodeRegularGeometry(scene: scene, encoder: enc)
         encodeTransparentGeometry(scene: scene, encoder: enc)
@@ -115,16 +118,16 @@ extension Renderer {
     }
     
     func encodeAnimatedGeometry(scene: MyScene, encoder: MTLRenderCommandEncoder) {
-        do {
-            guard let obj = scene.animMesh else { return }
-            // todo: extract
-            encoder.setVertexBuffer(frameConstantsBuff, offset: 0, index: 2)
-            encoder.setFragmentBuffer(frameConstantsBuff, offset: 0, index: 0)
-            encoder.setFragmentTexture(nil, index: 0)
-            encoder.setFragmentTexture(scene.spotLight.texture, index: 1)
-            encoder.setFragmentTexture(cubeTex, index: 2)
-            encoder.setFragmentTexture(nil, index: 3)
-            
+        
+        // todo: extract
+        encoder.setVertexBuffer(frameConstantsBuff, offset: 0, index: 2)
+        encoder.setFragmentBuffer(frameConstantsBuff, offset: 0, index: 0)
+        encoder.setFragmentTexture(nil, index: 0)
+        encoder.setFragmentTexture(scene.spotLight.texture, index: 1)
+        encoder.setFragmentTexture(cubeTex, index: 2)
+        encoder.setFragmentTexture(nil, index: 3)
+        
+        if let obj = scene.animMesh {
             obj.updateConstantsBuffer()
             
             encoder.setVertexBuffer(obj.mtkVertexBuffer.buffer, offset: obj.mtkVertexBuffer.offset, index: 0)
@@ -148,7 +151,7 @@ extension Renderer {
                 let nodeMesh = node.nodeMesh!
                 encoder.setVertexBuffer(nodeMesh.mtkMeshBuffer.buffer, offset: nodeMesh.mtkMeshBuffer.offset, index: 0)
                 encoder.setVertexBuffer(nodeMesh.objectConstantsBuff, offset: 0, index: 1)
-                encoder.setVertexBytes(skel.jointModelMats, length: skel.jointCount * MemoryLayout<float4x4>.stride, index: 3)
+                encoder.setVertexBytes(skel.jointMats, length: skel.jointCount * MemoryLayout<float4x4>.stride, index: 3)
                 
                 encoder.setFragmentTexture(nil, index: 0)
                 encoder.setFragmentTexture(scene.spotLight.texture, index: 1)

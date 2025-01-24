@@ -4,15 +4,13 @@ import simd
 class Joint {
     let path: String
     let index: Int
-    let matrix: float4x4
     var children: [Joint]
     var parent: Joint?
     let name: String.SubSequence
     
-    init(path: String, index: Int, matrix: float4x4 = .identity, children: [Joint] = [], parent: Joint? = nil) {
+    init(path: String, index: Int, children: [Joint] = [], parent: Joint? = nil) {
         self.path = path
         self.index = index
-        self.matrix = matrix
         self.children = children
         self.parent = parent
         

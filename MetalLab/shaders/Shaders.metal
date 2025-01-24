@@ -93,14 +93,12 @@ vertex FragmentData vertex_main(
     return basic_vertex_transform(vertexData, objectConstants, instanceId, frameConstants);
 }
 
-vertex FragmentData vertex_main_anim(
-    VertexInput vin [[stage_in]],
-    const device ObjectConstants* objectConstantsArray [[buffer(1)]],
-    uint instanceId [[instance_id]],
-    constant FrameConstants& frameConstants [[buffer(2)]],
-    device const float4x4* jointModelMats [[buffer(3)]]
-) {
-    auto objectConstants = objectConstantsArray[instanceId];
+void applyAnimation
+(
+ thread VertexInput& vin,
+ device const float4x4* jointModelMats
+ )
+{
     auto animMat = vin.jointWeights[0] * jointModelMats[vin.jointIndices[0]]
                  + vin.jointWeights[1] * jointModelMats[vin.jointIndices[1]]
                  + vin.jointWeights[2] * jointModelMats[vin.jointIndices[2]]
@@ -109,7 +107,30 @@ vertex FragmentData vertex_main_anim(
     auto normal = float4(vin.normal, 0);
     vin.position = (animMat * pos).xyz;
     vin.normal = (animMat * normal).xyz;
+}
+
+vertex FragmentData vertex_main_anim(
+    VertexInput vin [[stage_in]],
+    const device ObjectConstants* objectConstantsArray [[buffer(1)]],
+    uint instanceId [[instance_id]],
+    constant FrameConstants& frameConstants [[buffer(2)]],
+    device const float4x4* jointModelMats [[buffer(3)]]
+) {
+    applyAnimation(vin, jointModelMats);
+    auto objectConstants = objectConstantsArray[instanceId];
     return basic_vertex_transform(vin, objectConstants, instanceId, frameConstants);
+}
+
+vertex float4 vertex_shadow_anim(
+    VertexInput vin [[stage_in]],
+    const device ObjectConstants* objectConstantsArray [[buffer(1)]],
+    const device FrameConstants&  frameConstants [[buffer(2)]],
+    uint instanceId [[instance_id]],
+    device const float4x4* jointModelMats [[buffer(3)]])
+{
+    applyAnimation(vin, jointModelMats);
+    ObjectConstants objectConstants = objectConstantsArray[instanceId];
+    return frameConstants.lightProjectionMatrix * objectConstants.modelMatrix * float4(vin.position, 1);
 }
 
 

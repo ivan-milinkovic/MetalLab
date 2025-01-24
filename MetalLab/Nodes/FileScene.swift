@@ -13,8 +13,8 @@ class FileScene {
     
     @MainActor
     func loadTestScene(_ device: MTLDevice) {
-        let url = Bundle.main.url(forResource: "coord2", withExtension: "usda")!
-        //let url = Bundle.main.url(forResource: "Character", withExtension: "usda")!
+        //let url = Bundle.main.url(forResource: "coord2", withExtension: "usda")!
+        let url = Bundle.main.url(forResource: "Character", withExtension: "usda")!
         loadScene(url, device)
     }
     

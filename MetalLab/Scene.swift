@@ -23,7 +23,7 @@ class MyScene {
     var grass: AnimatedInstancedObject!
     var monkey: MeshObject!
     var normalMapPlane: MeshObject!
-    var animMesh: AnimatedMesh!
+    var animMesh: AnimatedMesh?
     var fileScene: FileScene!
     
     var renderer: Renderer!
@@ -47,10 +47,10 @@ class MyScene {
         loadCubeMap(device: device)
         makeLight(device)
         
-        self.camera.transform.look(from: [0, 1.4, 3.2], at: [0, 1, -2])
+        self.camera.transform.look(from: [0, 1.8, 3.2], at: [0, 1, -2])
         splitObjects()
         selection = camera
-        animMesh.startAnimation()
+        animMesh?.startAnimation()
         
         isReady = true
     }
@@ -84,7 +84,7 @@ class MyScene {
     func update(dt: Float, timeCounter: Double) {
         updateControls()
         updateShear(timeCounter: timeCounter, wind: wind)
-        animMesh.updateAnim()
+        animMesh?.updateAnim()
         fileScene.update()
     }
     
@@ -168,6 +168,7 @@ class MyScene {
         metalMesh.setColor([0.8, 0.4, 0.2, 1])
         
         let monkey = MeshObject(metalMesh: metalMesh, device: device)
+        monkey.transform.scale = 0.75
         monkey.transform.moveBy([0, 1.4, -0.5])
         // selection.transform.lookAt([0,0, 4]) // todo: fix look at
         monkey.setEnvMapReflectedAmount(0.5)
@@ -432,8 +433,8 @@ class MyScene {
     
     @MainActor func makeAnimatedMesh(_ device: MTLDevice) {
         animMesh = AnimatedMesh(device)
-        animMesh.transform.scale = 0.3
-        animMesh.transform.moveBy([2, 1, 0])
+        animMesh?.transform.scale = 0.3
+        animMesh?.transform.moveBy([2, 1, 0])
     }
     
     @MainActor func makeFileScene(_ device: MTLDevice) {

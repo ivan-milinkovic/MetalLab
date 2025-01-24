@@ -95,7 +95,11 @@ extension Renderer {
         shadowTessPipelineDesc.tessellationControlPointIndexType = .none // .none when rendering without index buffer
         shadowTessPipelineState = try! device.makeRenderPipelineState(descriptor: shadowTessPipelineDesc)
         
-        
+        let shadowAnimPipelineDesc = MTLRenderPipelineDescriptor()
+        shadowAnimPipelineDesc.vertexDescriptor = VertexData.vertexDescriptor
+        shadowAnimPipelineDesc.depthAttachmentPixelFormat = depthPixelFormat
+        shadowAnimPipelineDesc.vertexFunction = library.makeFunction(name: "vertex_shadow_anim")
+        shadowAnimPipelineState = try! device.makeRenderPipelineState(descriptor: shadowAnimPipelineDesc)
         
         frameConstantsBuff = device.makeBuffer(length: MemoryLayout<FrameConstants>.stride, options: .storageModeShared)
         

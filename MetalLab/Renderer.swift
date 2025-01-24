@@ -12,6 +12,7 @@ class Renderer {
     var tesselationPipelineState: MTLRenderPipelineState!
     var animPipelineState: MTLRenderPipelineState!
     var shadowPipelineState: MTLRenderPipelineState!
+    var shadowAnimPipelineState: MTLRenderPipelineState!
     var shadowTessPipelineState: MTLRenderPipelineState!
     var envMapPipelineState: MTLRenderPipelineState!
     var updateShearPipelineState: MTLComputePipelineState!

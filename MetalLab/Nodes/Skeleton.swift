@@ -3,9 +3,10 @@ import ModelIO
 
 class Skeleton {
     let skeleton: MDLSkeleton
-    let jointModelToLocalMats: [float4x4]
-    let jointLocalRestMats: [float4x4]
-    var jointModelMats: [float4x4]
+    let jointInvBindMats: [float4x4] // model space to joint local space
+    let jointRestMats: [float4x4] // poses of joints in local space of each joint
+    var jointModelMats: [float4x4] // each joint in model space by applying parent joints transforms up to root
+    var jointMats: [float4x4] // composite transforms model space to use in shaders
     let rootJoint: Joint
     let jointCount: Int
     //let parentIndices: [Int]
@@ -13,13 +14,16 @@ class Skeleton {
     
     init(skeleton: MDLSkeleton) {
         self.skeleton = skeleton
-        self.jointModelToLocalMats = skeleton.jointBindTransforms.float4x4Array.map { $0.inverse }
-        self.jointLocalRestMats = skeleton.jointRestTransforms.float4x4Array
+        self.jointInvBindMats = skeleton.jointBindTransforms.float4x4Array.map { $0.inverse }
+        self.jointRestMats = skeleton.jointRestTransforms.float4x4Array
         self.rootJoint = Self.makeJoints(jointPaths: skeleton.jointPaths)
         self.jointCount = skeleton.jointPaths.count
         jointModelMats = .init(repeating: .identity, count: self.jointCount)
+        jointMats = .init(repeating: .identity, count: self.jointCount)
         //self.parentIndices = Self.makeParentIndices(jointPaths: skeleton.jointPaths)
         //rootJoint.printTree()
+        
+        setRestPose()
     }
     
     static func makeJoints(jointPaths: [String]) -> Joint {
@@ -44,27 +48,29 @@ class Skeleton {
     }
     
     func setRestPose() {
-        setPose(jointLocalPoses: jointLocalRestMats)
+        setPose(jointLocalPoses: jointRestMats)
     }
     
     func setPose(jointLocalPoses: [float4x4]) {
         rootJoint.enumerateBFS { joint in
             if let parent = joint.parent {
-                jointModelMats[joint.index] = jointModelMats[parent.index]
-                                            * jointLocalPoses[joint.index]
-                                            * jointModelToLocalMats[joint.index]
+                jointModelMats[joint.index] = jointModelMats[parent.index] * jointLocalPoses[joint.index]
             }
             else { // root
-                jointModelMats[joint.index] = nodeMatrix * jointLocalPoses[joint.index]
-                                                         * jointModelToLocalMats[joint.index]
+                jointModelMats[joint.index] = jointLocalPoses[joint.index]
             }
+        }
+        
+        rootJoint.enumerateBFS { joint in
+            jointMats[joint.index] = jointModelMats[joint.index] * jointInvBindMats[joint.index]
         }
     }
     
     func animate(animation: NodeAnimation) {
+        
         let animTotalTime = Time.shared.current - animation.playStartTime
         let loopedTime = fmod(animTotalTime, animation.duration)
-        let queryTime = loopedTime // + animation.mdlBeginTime
+        let queryTime = loopedTime + animation.mdlBeginTime
         
         let ts = animation.jointAnim.translations.float3Array(atTime: queryTime)
         let rs = animation.jointAnim.rotations.floatQuaternionArray(atTime: queryTime)
@@ -75,7 +81,16 @@ class Skeleton {
             return float4x4.make(t: t, r: r, s: s)
         }
         
-        setPose(jointLocalPoses: animMats)
+        // Animation can have a subset of skeleton paths (when it applies to only a few joints)
+        var poses: [float4x4] = jointRestMats
+        for (i, path) in skeleton.jointPaths.enumerated() {
+            // is this joint in the animation
+            if let animJointIndex = animation.jointAnim.jointPaths.firstIndex(of: path) {
+                poses[i] = animMats[animJointIndex]
+            }
+        }
+        
+        setPose(jointLocalPoses: poses)
     }
     
     /// Calculate an array where each entry is an index of the parent
