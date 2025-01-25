@@ -30,6 +30,10 @@ class Node {
         
         // Apply material albedo
         let ptr = mtkMeshBuffer.buffer.contents().advanced(by: mtkMeshBuffer.offset).assumingMemoryBound(to: VertexData.self)
+        //for i in 0..<mesh.vertexCount {
+        //    ptr[i].color = [1, 0, 0, 1]
+        //}
+        
         for sm in submeshes {
             let matProp = sm.material?.property(with: .baseColor)
             let baseColor: Float4 = matProp?.float3Value.float4_w1 ?? [0.5, 0.5, 0.5, 1]

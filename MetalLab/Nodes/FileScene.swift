@@ -11,6 +11,20 @@ class FileScene {
     var skeletonNode: Node?
     var skeleton: Skeleton?
     
+    var animate = false {
+        didSet {
+            if let anim = skeletonNode?.nodeAnimations.first {
+                if animate {
+                    anim.ensureMarkStart()
+                }
+                else {
+                    anim.markStop()
+                    skeleton?.setRestPose()
+                }
+            }
+        }
+    }
+    
     @MainActor
     func loadTestScene(_ device: MTLDevice) {
         //let url = Bundle.main.url(forResource: "coord2", withExtension: "usda")!
@@ -51,7 +65,7 @@ class FileScene {
         
         //sceneNode.printTree()
         
-        skeleton?.setRestPose()
+        skeletonNode?.nodeAnimations.first?.markStart()
     }
     
     fileprivate func loadMdlObject(_ obj: MDLObject, _ device: MTLDevice) -> Node {
@@ -100,11 +114,21 @@ class FileScene {
             }
         }
         
-        if let skelNodeMat = skeletonNode?.matrix {
-            self.skeleton?.nodeMatrix = skelNodeMat
-        }
-        if let anim = skeletonNode?.nodeAnimations.first {
+        if animate, let anim = skeletonNode?.nodeAnimations.first {
             skeleton?.animate(animation: anim)
         }
     }
+    
+    func moveAsCharacter(dfwd: Float, dside: Float) {
+        let ds = Float3(dside, 0, dfwd)
+        if length_squared(ds) < 0.0001 {
+            return
+        }
+        let fwd = normalize(ds)
+        let up = Float3(0, 1, 0)
+        let right = normalize(cross(up, fwd))
+        transform.orientation = simd_quatf(float3x3(right, up, fwd))
+        transform.moveBy(ds)
+    }
+    
 }

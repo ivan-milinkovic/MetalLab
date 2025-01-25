@@ -32,6 +32,12 @@ class NodeAnimation {
         playStartTime = Time.shared.current
     }
     
+    func ensureMarkStart() {
+        if playStartTime == 0.0 {
+            playStartTime = Time.shared.current
+        }
+    }
+    
     func markStop() {
         playStartTime = 0.0
     }

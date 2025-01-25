@@ -26,6 +26,16 @@ extension Float3 {
     }
 }
 
+extension Float {
+    func isAlmostEqual(_ f2: Float) -> Bool {
+        abs(self - f2) < 0.001
+    }
+    
+    var isAlmostZero: Bool {
+        abs(self) < 0.001
+    }
+}
+
 extension float4x4 {
     
     static var identity: float4x4 { matrix_identity_float4x4 }

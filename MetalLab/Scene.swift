@@ -93,7 +93,29 @@ class MyScene {
         let right = input.right - input.left
         let up = input.up - input.down
         let ds: Float = 0.05
-        camera.transform.move(d_forward: fwd*ds, d_right: right*ds, d_up: up*ds)
+        
+        if fwd.isAlmostZero && right.isAlmostZero && up.isAlmostZero {
+            fileScene.animate = false
+            return
+        }
+        
+        switch selection {
+        case let camera as Camera:
+            camera.transform.move(d_forward: fwd*ds, d_right: right*ds, d_up: up*ds)
+            
+        case let meshObject as MeshObject:
+            meshObject.transform.moveBy([right*ds, up*ds, -fwd*ds])
+            
+        case let anim as AnimatedMesh:
+            anim.transform.moveBy([right*ds, up*ds, -fwd*ds])
+            
+        case let fs as FileScene:
+            fs.moveAsCharacter(dfwd: -fwd*ds, dside: right*ds)
+            fs.transform.moveBy([0, up*ds, 0])
+            fs.animate = true
+            
+        default: break
+        }
         
         // prevent moving faster diagonally, needs fixing
         //var v = normalize(Float3(fwd, right, up))
@@ -104,9 +126,14 @@ class MyScene {
     
     func updateShear(timeCounter: Double, wind: Wind) {
         if updateShearOnGpu {
-            updateShearGpu(timeCounter: timeCounter)
-            return
+            updateShearGpu(timeCounter: timeCounter, wind: wind)
+        } else {
+            updateShearOnCpu(timeCounter: timeCounter, wind: wind)
         }
+        moveGrassAwayFromCharacter()
+    }
+    
+    func updateShearOnCpu(timeCounter: Double, wind: Wind) {
         
         let modelMat = grass.transform.matrix
         let instanceDataPtr = grass.instanceDataBuff.contents().assumingMemoryBound(to: UpdateShearStrandData.self)
@@ -128,7 +155,7 @@ class MyScene {
         }
     }
     
-    func updateShearGpu(timeCounter: Double) {
+    func updateShearGpu(timeCounter: Double, wind: Wind) {
         guard let renderer, grass != nil else { return }
         
         let cmdBuff = renderer.commandQueue.makeCommandBuffer()!
@@ -160,6 +187,27 @@ class MyScene {
         
         cmdBuff.commit()
         cmdBuff.waitUntilCompleted()
+    }
+    
+    func moveGrassAwayFromCharacter() {
+        let charPos = fileScene.transform.position
+        let modelMat = grass.transform.matrix
+        let instanceDataPtr = grass.instanceDataBuff.contents().assumingMemoryBound(to: UpdateShearStrandData.self)
+        var i=0; while i<grass.count { defer { i += 1 }
+            let data = instanceDataPtr[i]
+            let gpos = (modelMat * data.position.float4_w1).xyz
+            let dv = gpos - charPos
+            let d = length(dv)
+            let dmax: Float = 0.4
+            if d < dmax {
+                var f = d / dmax
+                f *= 0.5
+                var newShear = mix(data.shear, dv*1.5, t: f)
+                newShear.y = 0
+                let transform = Transform(position: data.position, orientation: simd_quatf(vector: data.orientQuat), scale: data.scale, shear: newShear)
+                instanceDataPtr[i].matrix = modelMat * transform.matrix
+            }
+        }
     }
     
     func makeMonkey(_ device: MTLDevice) {
@@ -440,8 +488,8 @@ class MyScene {
     @MainActor func makeFileScene(_ device: MTLDevice) {
         fileScene = FileScene()
         fileScene.loadTestScene(device)
-        fileScene.transform.scale = 0.5
-        fileScene.transform.moveBy([1.25, 1, 0])
+        fileScene.transform.scale = 0.3
+        fileScene.transform.moveBy([1.25, 0.1, 0])
     }
 }
 
