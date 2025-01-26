@@ -213,7 +213,7 @@ class MyScene {
     func makeMonkey(_ device: MTLDevice) {
         let url = Bundle.main.url(forResource: "monkey", withExtension: "obj")!
         let metalMesh = MetalMesh.loadObjFile(url, device: device)
-        metalMesh.setColor([0.8, 0.4, 0.2, 1])
+        metalMesh.setColor([0.7, 0.3, 0.14, 1])
         
         let monkey = MeshObject(metalMesh: metalMesh, device: device)
         monkey.transform.scale = 0.75
@@ -230,7 +230,7 @@ class MyScene {
     func makeNormalMapPlane(_ device: MTLDevice) {
         let url = Bundle.main.url(forResource: "plane", withExtension: "obj")!
         let metalMesh = MetalMesh.loadObjFile(url, device: device)
-        metalMesh.texture = MetalMesh.loadTexture("cobblestone_diffuse.png", device)
+        metalMesh.texture = MetalMesh.loadTexture("cobblestone_diffuse.png", srgb: true, device)
         metalMesh.normalMap = MetalMesh.loadTexture("cobblestone_normals.png", device)
         metalMesh.displacementMap = MetalMesh.loadTexture("cobblestone_displacement.png", device)
         
@@ -238,9 +238,7 @@ class MyScene {
         plane.setupTesselationBuffer(tessellationFactor: 16, device: device)
         plane.setDisplacementFactor(0.15)
         
-        plane.transform.rotate2(dx: 0.5 * .pi)
-        plane.transform.moveBy([-2.5, 1.5, -1.2])
-        //plane.transform.moveBy([0, 0.5, 0.0])
+        plane.transform.moveBy([-2.5, 0.2, 1.2])
         
         sceneObjects.append(plane)
         normalMapPlane = plane
@@ -250,8 +248,15 @@ class MyScene {
         let planeSize: Float = 4
         let planeMesh = MetalMesh.rectangle(p1: [-planeSize, 0, -planeSize], p2: [planeSize, 0, planeSize], device: device)
         let plane = MeshObject(metalMesh: planeMesh, device: device)
-        //plane.metalMesh.texture = MetalMesh.loadPlaceholderTexture(device)
-        plane.metalMesh.setColor([0.1, 0.1, 0.05, 1])
+        plane.metalMesh.setColor([0.025, 0.025, 0.0125, 1])
+        
+        //planeMesh.texture = MetalMesh.loadTexture("cobblestone_diffuse.png", srgb: true, device)
+        //planeMesh.normalMap = MetalMesh.loadTexture("cobblestone_normals.png", device)
+        //planeMesh.displacementMap = MetalMesh.loadTexture("cobblestone_displacement.png", device)
+        //plane.setTextureTiling(2.0)
+        //plane.setNormalMapTiling(2.0)
+        //plane.setupTesselationBuffer(tessellationFactor: 16, device: device)
+        
         self.sceneObjects.append(plane)
     }
     
@@ -262,8 +267,9 @@ class MyScene {
     }
     
     func makeTransparentPlanes(device: MTLDevice) {
+        let color: Float4 = [0.168, 0.28, 0.45, 0.6]
         let alphaRectMesh = MetalMesh.rectangle(p1: [-1, 0, -1], p2: [1, 0, 0.5], device: device)
-        alphaRectMesh.setColor([0.3, 0.5, 0.8, 0.6])
+        alphaRectMesh.setColor(color)
         let alphaRect = MeshObject(metalMesh: alphaRectMesh, device: device)
         alphaRect.transform.moveBy([-1.5, 0.5, 0])
         alphaRect.transform.scale = 0.5
@@ -271,7 +277,7 @@ class MyScene {
         alphaRect.hasTransparency = true
         
         let alphaRectMesh2 = MetalMesh.rectangle(p1: [-1, 0, -1], p2: [1, 0, 0.5], device: device)
-        alphaRectMesh2.setColor([0.3, 0.5, 0.8, 0.6])
+        alphaRectMesh2.setColor(color)
         let alphaRect2 = MeshObject(metalMesh: alphaRectMesh2, device: device)
         alphaRect2.transform.moveBy([-1.5, 0.5, -1])
         alphaRect2.transform.scale = 0.5
@@ -286,7 +292,7 @@ class MyScene {
     
     func makeReflectiveCubes(device: MTLDevice) {
         let scale: Float = 0.2
-        let pos = Float3(-2.5, 0.5, 0.5)
+        let pos = Float3(-2.5, 0.6, 0.5)
         do {
             let metalMesh = pool.loadMesh("box", device: device)
             metalMesh.setColor([0.1, 0.3, 0.8, 1])
@@ -335,7 +341,7 @@ class MyScene {
         metalMesh.setColor([0.1, 0.3, 0.8, 1])
         let boxesCluster = InstancedObject(metalMesh: metalMesh, positions: instancePositions, device: device)
         boxesCluster.transform.moveBy([-rectSize, 0, 1])
-        metalMesh.texture = MetalMesh.loadPlaceholderTexture(device)
+        metalMesh.texture = MetalMesh.loadTexture("placeholder2.png", srgb: true, device)
         
         sceneObjects.append(boxesCluster)
     }
@@ -424,12 +430,12 @@ class MyScene {
         let meshObject = MeshObject(metalMesh: metalMesh, device: device)
         return meshObject
     }
-        
+    
     func loadCubeMap(device: MTLDevice) {
         let size = 2048
         let td = MTLTextureDescriptor()
         td.textureType = .typeCube
-        td.pixelFormat = .bgra8Unorm
+        td.pixelFormat = .bgra8Unorm_srgb
         td.width = size
         td.height = size
         td.mipmapLevelCount = 1

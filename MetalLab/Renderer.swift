@@ -17,8 +17,8 @@ class Renderer {
     var envMapPipelineState: MTLRenderPipelineState!
     var updateShearPipelineState: MTLComputePipelineState!
     
-    let colorPixelFormat: MTLPixelFormat = .rgba8Unorm;
-    //let colorPixelFormat: MTLPixelFormat = .rgba8Unorm_srgb; // automatic gamma-correction
+    //let colorPixelFormat: MTLPixelFormat = .rgba8Unorm; // linear color, darker, requires manual gamma correction, see the fragment shader
+    let colorPixelFormat: MTLPixelFormat = .rgba8Unorm_srgb; // automatic gamma-correction (don't use manual gamma correction)
     var depthStencilState: MTLDepthStencilState!
     var textureSamplerState: MTLSamplerState!
     var commandQueue: MTLCommandQueue!

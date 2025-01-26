@@ -49,7 +49,7 @@ extension Renderer {
         
         let enc = cmdBuff.makeRenderCommandEncoder(descriptor: shadowRenderPassDesc)!
         enc.setFrontFacing(winding)
-        enc.setCullMode(.back)
+        enc.setCullMode(.none) // cast shadow from both sides
         enc.setDepthStencilState(depthStencilState)
         
         enc.setRenderPipelineState(shadowTessPipelineState)

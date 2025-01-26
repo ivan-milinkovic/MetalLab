@@ -68,15 +68,6 @@ class MetalMesh {
         return vertexData
     }
     
-    static func loadPlaceholderTexture(_ device: MTLDevice) -> MTLTexture {
-        let tl = MTKTextureLoader(device: device)
-        let url = Bundle.main.url(forResource: "placeholder2", withExtension: "png")!
-        let tex = try! tl.newTexture(URL: url,options: [.textureUsage: MTLTextureUsage.shaderRead.rawValue,
-                                                        .textureStorageMode: MTLStorageMode.private.rawValue,
-                                                        .generateMipmaps: true])
-        return tex
-    }
-    
     static func loadTexture(_ name: String, srgb: Bool = false, _ device: MTLDevice) -> MTLTexture {
         let tl = MTKTextureLoader(device: device)
         let url = Bundle.main.url(forResource: name, withExtension: nil)!
@@ -118,8 +109,7 @@ class MetalMesh {
             VertexData(position: [ 1, -1, 0], normal: n, color: .one, uv: [ 1.0,  1.0], tan: tan, btan: btan), // bot right
             VertexData(position: [ 1,  1, 0], normal: n, color: .one, uv: [ 1.0,  0.0], tan: tan, btan: btan), // top right, counter-clockwise
         ]
-        let tex = loadPlaceholderTexture(device)
-        return MetalMesh(vertices: triangle, texture: tex, device: device)
+        return MetalMesh(vertices: triangle, texture: nil, device: device)
     }
     
     static func rectangle(p1: Float3, p2: Float3, device: MTLDevice) -> MetalMesh {
@@ -151,8 +141,8 @@ class MetalMesh {
     
     static func grassStrand(_ device: MTLDevice) -> MetalMesh {
         let n = Float3(0,0,1)
-        let colBot = Float4(  0, 0.25,  0, 1)
-        let colTop = Float4(0.6, 0.8, 0.4, 1)
+        let colBot = Float4(  0, 0.1,  0, 1)
+        let colTop = Float4(0.2, 0.4, 0.15, 1)
         let w: Float = 0.1
         let fs: Float = 0.35 // shrink factor
         let vertices: [VertexData] = [
