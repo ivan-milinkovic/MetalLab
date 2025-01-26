@@ -15,19 +15,18 @@ class MyScene {
     let directionalLightDir: Float3 = [1, -1, -1]
     var spotLight: SpotLight!
     let wind: Wind = .init()
-    
-    let pool = Pool()
-    var isReady = false
-    
-    var selection: AnyObject?
     var grass: GrassController!
     var monkey: MeshObject!
     var normalMapPlane: MeshObject!
     var animMesh: AnimatedMesh?
     var fileScene: FileScene!
     
+    var selection: AnyObject?
+    
     var renderer: Renderer!
     var input: Input!
+    
+    var isReady = false
     
     @MainActor
     func load(device: MTLDevice) {
@@ -210,7 +209,8 @@ class MyScene {
         let scale: Float = 0.2
         let pos = Float3(-2.5, 0.6, 0.5)
         do {
-            let metalMesh = pool.loadMesh("box", device: device)
+            let url = Bundle.main.url(forResource: "box", withExtension: "obj")!
+            let metalMesh = MetalMesh.loadObjFile(url, device: device)
             metalMesh.setColor([0.1, 0.3, 0.8, 1])
             let cube = MeshObject(metalMesh: metalMesh, device: device)
             cube.setEnvMapReflectedAmount(1.0)
@@ -221,7 +221,8 @@ class MyScene {
         }
         
         do {
-            let metalMesh = pool.loadMesh("box", device: device)
+            let url = Bundle.main.url(forResource: "box", withExtension: "obj")!
+            let metalMesh = MetalMesh.loadObjFile(url, device: device)
             metalMesh.setColor([0.1, 0.3, 0.8, 1])
             let cube = MeshObject(metalMesh: metalMesh, device: device)
             cube.setEnvMapRefractedAmount(1.0)
@@ -277,12 +278,6 @@ class MyScene {
         let mm = MetalMesh(vertices: triangle, texture: nil, device: device)
         let tri = MeshObject(metalMesh: mm, device: device)
         sceneObjects.append(tri)
-    }
-    
-    func loadBox(device: MTLDevice) -> MeshObject {
-        let metalMesh = pool.loadMesh("box", device: device)
-        let meshObject = MeshObject(metalMesh: metalMesh, device: device)
-        return meshObject
     }
     
     func loadCubeMap(device: MTLDevice) {
