@@ -78,7 +78,7 @@ class FileScene {
         }
         
         if let mesh = obj as? MDLMesh {
-            node.setMesh(mesh: mesh, device: device)
+            node.nodeMesh = NodeMesh(mesh: mesh, device: device)
         }
         
         if let skeleton = obj as? MDLSkeleton {
