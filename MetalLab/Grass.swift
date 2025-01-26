@@ -2,16 +2,20 @@ import simd
 import Metal
 import CoreImage
 
-class Grass {
+class GrassController {
     
     let grass: AnimatedInstancedObject!
     let updateShearOnGpu = true
+    let pipelineState: MTLComputePipelineState
+    let commandQueue: MTLCommandQueue
     
-    init(grass: AnimatedInstancedObject) {
+    init(grass: AnimatedInstancedObject, pipelineState: MTLComputePipelineState, commandQueue: MTLCommandQueue) {
         self.grass = grass
+        self.pipelineState = pipelineState
+        self.commandQueue = commandQueue
     }
     
-    static func makeGrass(_ device: MTLDevice) -> Grass {
+    static func makeGrass(_ device: MTLDevice, commandQueue: MTLCommandQueue) -> GrassController {
         
         let url = Bundle.main.url(forResource: "perlin", withExtension: "png")!
         let dp = CGDataProvider(url: url as CFURL)!
@@ -75,12 +79,15 @@ class Grass {
         
         grass.transform.moveBy([0, 0, 1])
         
-        return Grass(grass: grass)
+        let lib = device.makeDefaultLibrary()!
+        let pipelineState = try! device.makeComputePipelineState(function: lib.makeFunction(name: "update_shear")!)
+        
+        return GrassController(grass: grass, pipelineState: pipelineState, commandQueue: commandQueue)
     }
     
-    func updateShear(timeCounter: Double, wind: Wind, characterPos: Float3?, renderer: Renderer) {
+    func updateShear(timeCounter: Double, wind: Wind, characterPos: Float3?) {
         if updateShearOnGpu {
-            updateShearGpu(timeCounter: timeCounter, wind: wind, renderer: renderer)
+            updateShearGpu(timeCounter: timeCounter, wind: wind)
         } else {
             updateShearOnCpu(timeCounter: timeCounter, wind: wind)
         }
@@ -111,14 +118,14 @@ class Grass {
         }
     }
     
-    func updateShearGpu(timeCounter: Double, wind: Wind, renderer: Renderer) {
+    func updateShearGpu(timeCounter: Double, wind: Wind) {
         guard grass != nil else { return }
         
-        let cmdBuff = renderer.commandQueue.makeCommandBuffer()!
+        let cmdBuff = commandQueue.makeCommandBuffer()!
         cmdBuff.pushDebugGroup("Update Shear")
         let enc = cmdBuff.makeComputeCommandEncoder()!
         
-        enc.setComputePipelineState(renderer.updateShearPipelineState)
+        enc.setComputePipelineState(pipelineState)
         
         let modelMat = grass.transform.matrix
         
@@ -165,4 +172,3 @@ class Grass {
         }
     }
 }
-

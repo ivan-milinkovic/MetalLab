@@ -15,7 +15,6 @@ class Renderer {
     var shadowAnimPipelineState: MTLRenderPipelineState!
     var shadowTessPipelineState: MTLRenderPipelineState!
     var envMapPipelineState: MTLRenderPipelineState!
-    var updateShearPipelineState: MTLComputePipelineState!
     
     //let colorPixelFormat: MTLPixelFormat = .rgba8Unorm; // linear color, darker, requires manual gamma correction, see the fragment shader
     let colorPixelFormat: MTLPixelFormat = .rgba8Unorm_srgb; // automatic gamma-correction (don't use manual gamma correction)

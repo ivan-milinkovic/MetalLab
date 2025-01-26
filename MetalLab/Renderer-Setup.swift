@@ -103,8 +103,6 @@ extension Renderer {
         
         frameConstantsBuff = device.makeBuffer(length: MemoryLayout<FrameConstants>.stride, options: .storageModeShared)
         
-        updateShearPipelineState = try! device.makeComputePipelineState(function: library.makeFunction(name: "update_shear")!)
-        
         let envPD = MTLRenderPipelineDescriptor()
         envPD.colorAttachments[0].pixelFormat = colorPixelFormat
         envPD.depthAttachmentPixelFormat = depthPixelFormat

@@ -20,7 +20,7 @@ class MyScene {
     var isReady = false
     
     var selection: AnyObject?
-    var grass: Grass!
+    var grass: GrassController!
     var monkey: MeshObject!
     var normalMapPlane: MeshObject!
     var animMesh: AnimatedMesh?
@@ -83,7 +83,7 @@ class MyScene {
         updateControls()
         animMesh?.updateAnim()
         fileScene.update()
-        grass.updateShear(timeCounter: timeCounter, wind: wind, characterPos: fileScene?.transform.position, renderer: renderer)
+        grass.updateShear(timeCounter: timeCounter, wind: wind, characterPos: fileScene?.transform.position)
     }
     
     func updateControls() {
@@ -263,7 +263,7 @@ class MyScene {
     }
     
     func makeGrass(_ device: MTLDevice) {
-        self.grass = Grass.makeGrass(device)
+        self.grass = GrassController.makeGrass(device, commandQueue: renderer.commandQueue)
         self.grass.grass.transform.moveBy([0, 0, 1])
         sceneObjects.append(grass.grass)
     }
