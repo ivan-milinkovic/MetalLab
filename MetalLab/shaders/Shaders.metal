@@ -169,7 +169,8 @@ VertexInput tess_interpolate_triangle
     float4 col  = barycentric_interpolate(v0.color,    v1.color,    v2.color,    posInPatch);
     float2 uv   = barycentric_interpolate(v0.uv,       v1.uv,       v2.uv,       posInPatch);
     
-    auto d = displacementMap.sample(sampler, uv).r;
+    auto tiling = objectConstants.textureTiling;
+    auto d = displacementMap.sample(sampler, uv*tiling).r;
     pos += norm * d * objectConstants.displacementFactor;
     
     VertexInput vertexData = { pos, norm, col, uv, tan, btan};
@@ -207,18 +208,19 @@ fragment float4 fragment_main
     texture2d   <float, access::sample> normalMap [[texture(3)]],
     sampler                             sampler   [[sampler(0)]])
 {
-    float2 uv = fragmentData.uv * fragmentData.textureTiling;
+    float2 uv_diffuse = fragmentData.uv * fragmentData.textureTiling;
+    float2 uv_normal = fragmentData.uv * fragmentData.normalMapTiling;
     
     float4 color = fragmentData.color;
     if (fragmentData.textureAmount > 0.0) {
-        auto tcolor = texture.sample(sampler, uv);
+        auto tcolor = texture.sample(sampler, uv_diffuse);
         color = fragmentData.textureAmount * tcolor + (1 - fragmentData.textureAmount) * color;
     }
     
     float3 N = fragmentData.normal;
     if (!is_null_texture(normalMap))
     {
-        float3 mappedNormal = normalMap.sample(sampler, uv * fragmentData.normalMapTiling).xyz; // tangent space
+        float3 mappedNormal = normalMap.sample(sampler, uv_normal).xyz; // tangent space
         mappedNormal = mappedNormal * 2 - 1;
         float3x3 TBN = { fragmentData.tan, fragmentData.btan, fragmentData.normal }; // columns, multiply with vectors on the right side, view space
         N = normalize( TBN * mappedNormal );
