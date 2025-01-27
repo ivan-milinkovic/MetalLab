@@ -4,6 +4,7 @@ using namespace metal;
 #include "model/ObjectConstants.h"
 #include "model/FrameConstants.h"
 #include "model/FragmentData.h"
+#include "model/Material.h"
 #include "matrix-util.h"
 
 FragmentData basic_vertex_transform(
@@ -22,12 +23,6 @@ FragmentData basic_vertex_transform(
     out.tan    = normalize(normalViewMatrix * vertexData.tan);
     out.btan   = normalize(normalViewMatrix * vertexData.btan);
     out.uv = vertexData.uv;
-    out.textureAmount = objectConstants.textureAmount;
-    out.textureTiling = objectConstants.textureTiling;
-    out.normalMapTiling = objectConstants.normalMapTiling;
-    out.envMapReflectedAmount = objectConstants.envMapReflectedAmount;
-    out.envMapRefractedAmount = objectConstants.envMapRefractedAmount;
-    out.specularExponent = objectConstants.specularExponent;
     return out;
 }
 
@@ -71,7 +66,8 @@ VertexData tess_interpolate_triangle
  thread VertexData& v1,
  thread VertexData& v2,
  float3 posInPatch,
- thread const ObjectConstants& objectConstants,
+ float textureTiling,
+ float displacementFactor,
  thread const texture2d<float, access::sample>& displacementMap,
  thread const sampler& sampler
  )
@@ -83,9 +79,9 @@ VertexData tess_interpolate_triangle
     float4 col  = barycentric_interpolate(v0.color,    v1.color,    v2.color,    posInPatch);
     float2 uv   = barycentric_interpolate(v0.uv,       v1.uv,       v2.uv,       posInPatch);
     
-    auto tiling = objectConstants.textureTiling;
+    auto tiling = textureTiling;
     auto d = displacementMap.sample(sampler, uv*tiling).r;
-    pos += norm * d * objectConstants.displacementFactor;
+    pos += norm * d * displacementFactor;
     
     VertexData vertexData = { pos, norm, col, uv, tan, btan};
     return vertexData;
@@ -137,6 +133,7 @@ vertex FragmentData vertex_tesselation
  const device ObjectConstants* objectConstantsArray [[buffer(1)]],
  uint instanceId [[instance_id]],
  constant FrameConstants& frameConstants [[buffer(2)]],
+ const device Material& material [[buffer(3)]],
  texture2d<float, access::sample> displacementMap [[texture(0)]],
  sampler sampler [[sampler(0)]]
  )
@@ -146,7 +143,7 @@ vertex FragmentData vertex_tesselation
     auto v2 = controlPoints[2];
     auto objectConstants = objectConstantsArray[instanceId];
     
-    VertexData vertexData = tess_interpolate_triangle(v0, v1, v2, posInPatch, objectConstants, displacementMap, sampler);
+    VertexData vertexData = tess_interpolate_triangle(v0, v1, v2, posInPatch, material.textureTiling, material.displacementFactor, displacementMap, sampler);
     return basic_vertex_transform(vertexData, objectConstants, instanceId, frameConstants);
 }
 
@@ -170,6 +167,7 @@ vertex float4 vertex_shadow_tess
     uint instanceId [[instance_id]],
     const device ObjectConstants* objectConstantsArray [[buffer(1)]],
     const device FrameConstants&  frameConstants [[buffer(2)]],
+    const device Material& material [[buffer(3)]],
     texture2d<float, access::sample> displacementMap [[texture(0)]],
     sampler sampler [[sampler(0)]])
 {
@@ -177,6 +175,6 @@ vertex float4 vertex_shadow_tess
     auto v1 = controlPoints[1];
     auto v2 = controlPoints[2];
     ObjectConstants objectConstants = objectConstantsArray[instanceId];
-    VertexData vertexData = tess_interpolate_triangle(v0, v1, v2, posInPatch, objectConstants, displacementMap, sampler);
+    VertexData vertexData = tess_interpolate_triangle(v0, v1, v2, posInPatch, material.textureTiling, material.displacementFactor, displacementMap, sampler);
     return frameConstants.lightProjectionMatrix * objectConstants.modelMatrix * float4(vertexData.position, 1);
 }

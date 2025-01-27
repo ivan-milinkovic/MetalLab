@@ -104,12 +104,16 @@ extension Renderer {
         
         for meshObject in scene.regularObjects {
             let instanceCount = meshObject.instanceCount()
+            var materialConstants = meshObject.material.makeMaterialConstants()
+            
             encoder.setVertexBuffer(meshObject.metalMesh.vertexBuffer, offset: 0, index: 0)
             encoder.setVertexBuffer(meshObject.objectConstantsBuff, offset: 0, index: 1)
-            encoder.setFragmentTexture(meshObject.metalMesh.texture, index: 0)
+            
+            encoder.setFragmentBytes(&materialConstants, length: MemoryLayout<MaterialConstants>.stride, index: 1)
+            encoder.setFragmentTexture(meshObject.material.colorTexture, index: 0)
             encoder.setFragmentTexture(scene.spotLight.texture, index: 1)
             encoder.setFragmentTexture(cubeTex, index: 2)
-            encoder.setFragmentTexture(meshObject.metalMesh.normalMap, index: 3)
+            encoder.setFragmentTexture(meshObject.material.normalTexture, index: 3)
             encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: meshObject.metalMesh.vertexCount, instanceCount: instanceCount)
         }
     }
@@ -125,9 +129,13 @@ extension Renderer {
         encoder.setFragmentTexture(nil, index: 3)
         
         if let obj = scene.animMesh {
+            var materialConstants = obj.material.makeMaterialConstants()
+            
             encoder.setVertexBuffer(obj.mtkVertexBuffer.buffer, offset: obj.mtkVertexBuffer.offset, index: 0)
             encoder.setVertexBuffer(obj.objectConstantsBuff, offset: 0, index: 1)
             encoder.setVertexBytes(obj.jointAnimMats, length: obj.jointAnimMats.count * MemoryLayout<float4x4>.stride, index: 3)
+            
+            encoder.setFragmentBytes(&materialConstants, length: MemoryLayout<MaterialConstants>.stride, index: 1)
             encoder.setFragmentTexture(scene.spotLight.texture, index: 1)
             //encoder.setFragmentTexture(obj.texture, index: 0)
             //encoder.setFragmentTexture(cubeTex, index: 2)
@@ -144,6 +152,7 @@ extension Renderer {
             let skel = scene.fileScene.skeleton!
             for node in scene.fileScene.meshNodes {
                 let nodeMesh = node.nodeMesh!
+                
                 encoder.setVertexBuffer(nodeMesh.mtkMeshBuffer.buffer, offset: nodeMesh.mtkMeshBuffer.offset, index: 0)
                 encoder.setVertexBuffer(nodeMesh.objectConstantsBuff, offset: 0, index: 1)
                 encoder.setVertexBytes(skel.jointMats, length: skel.jointCount * MemoryLayout<float4x4>.stride, index: 3)
@@ -154,11 +163,14 @@ extension Renderer {
                 encoder.setFragmentTexture(nil, index: 3)
                 
                 for sm in nodeMesh.submeshes {
-                    encoder.drawIndexedPrimitives(type: mtlPrimitiveType(fromMdl: sm.geometryType)!,
-                                                  indexCount: sm.indexCount,
-                                                  indexType: mtlIndexType(fromMdl: sm.indexType)!,
-                                                  indexBuffer: sm.mtkIndexBuffer.buffer,
-                                                  indexBufferOffset: sm.mtkIndexBuffer.offset)
+                    var materialConstants = sm.material.makeMaterialConstants()
+                    encoder.setFragmentBytes(&materialConstants, length: MemoryLayout<MaterialConstants>.stride, index: 1)
+                    
+                    encoder.drawIndexedPrimitives(type: mtlPrimitiveType(fromMdl: sm.mdlSubmesh.geometryType)!,
+                                                  indexCount: sm.mdlSubmesh.indexCount,
+                                                  indexType: mtlIndexType(fromMdl: sm.mdlSubmesh.indexType)!,
+                                                  indexBuffer: sm.mdlSubmesh.mtkIndexBuffer.buffer,
+                                                  indexBufferOffset: sm.mdlSubmesh.mtkIndexBuffer.offset)
                 }
             }
         }
@@ -171,12 +183,16 @@ extension Renderer {
         
         for meshObject in scene.transparentObjects {
             let instanceCount = meshObject.instanceCount()
+            var materialConstants = meshObject.material.makeMaterialConstants()
+            
             encoder.setVertexBuffer(meshObject.metalMesh.vertexBuffer, offset: 0, index: 0)
             encoder.setVertexBuffer(meshObject.objectConstantsBuff, offset: 0, index: 1)
-            encoder.setFragmentTexture(meshObject.metalMesh.texture, index: 0)
+            
+            encoder.setFragmentBytes(&materialConstants, length: MemoryLayout<MaterialConstants>.stride, index: 1)
+            encoder.setFragmentTexture(meshObject.material.colorTexture, index: 0)
             encoder.setFragmentTexture(scene.spotLight.texture, index: 1)
             encoder.setFragmentTexture(cubeTex, index: 2)
-            encoder.setFragmentTexture(meshObject.metalMesh.normalMap, index: 3)
+            encoder.setFragmentTexture(meshObject.material.normalTexture, index: 3)
             encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: meshObject.metalMesh.vertexCount, instanceCount: instanceCount)
         }
     }
@@ -188,18 +204,22 @@ extension Renderer {
         for meshObject in scene.tessObjects {
             guard let tessellationFactorsBuff = meshObject.tessellationFactorsBuff else { continue }
             
+            var materialConstants = meshObject.material.makeMaterialConstants()
+            
             enc.setVertexBuffer(frameConstantsBuff, offset: 0, index: 2)
+            enc.setVertexBytes(&materialConstants, length: MemoryLayout<MaterialConstants>.stride, index: 3)
             enc.setFragmentBuffer(frameConstantsBuff, offset: 0, index: 0)
             
             enc.setVertexBuffer(meshObject.metalMesh.vertexBuffer, offset: 0, index: 0)
             enc.setVertexBuffer(meshObject.objectConstantsBuff, offset: 0, index: 1)
-            enc.setVertexTexture(meshObject.metalMesh.displacementMap, index: 0)
+            enc.setVertexTexture(meshObject.material.displacementTexture, index: 0)
             enc.setVertexSamplerState(textureSamplerState, index: 0)
             
-            enc.setFragmentTexture(meshObject.metalMesh.texture, index: 0)
+            enc.setFragmentBytes(&materialConstants, length: MemoryLayout<MaterialConstants>.stride, index: 1)
+            enc.setFragmentTexture(meshObject.material.colorTexture, index: 0)
             enc.setFragmentTexture(scene.spotLight.texture, index: 1)
             enc.setFragmentTexture(cubeTex, index: 2)
-            enc.setFragmentTexture(meshObject.metalMesh.normalMap, index: 3)
+            enc.setFragmentTexture(meshObject.material.normalTexture, index: 3)
             
             enc.setTessellationFactorBuffer(tessellationFactorsBuff, offset: 0, instanceStride: 0)
             

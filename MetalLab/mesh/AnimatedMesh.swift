@@ -5,6 +5,7 @@ import MetalKit
 
 class AnimatedMesh {
     var transform: Transform = .init()
+    let material: Material
     
     let mtkVertexBuffer: MTKMeshBuffer
     let geometryType: MTLPrimitiveType
@@ -74,11 +75,7 @@ class AnimatedMesh {
         var prototype = ObjectConstants()
         objectConstantsBuff = device.makeBuffer(bytes: &prototype, length: MemoryLayout<ObjectConstants>.stride, options: .storageModeShared)!
         
-        // set color, otherwise it's transparent, as there is no color information loaded from the file
-        let ptr = mtkVertexBuffer.buffer.contents().bindMemory(to: VertexData.self, capacity: mesh.vertexCount)
-        for i in 0..<mesh.vertexCount {
-            ptr[i].color = [0.7, 0.3, 0.0, 1.0];
-        }
+        material = Material(color: [0.7, 0.3, 0.0])
         
         updateJointAnimMats(localAnimMats: jointRestMats)
     }

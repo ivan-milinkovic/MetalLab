@@ -1,22 +1,31 @@
 import simd
 
 struct ObjectConstants {
-    var modelMatrix: float4x4 = matrix_identity_float4x4
-    var textureAmount: Float = 0 // how much of texture color to take and blend with vertex color
-    var textureTiling: Float = 1
-    var normalMapTiling: Float = 1
-    var envMapReflectedAmount: Float = 0
-    var envMapRefractedAmount: Float = 0
-    var specularExponent: Float = 150
-    var displacementFactor: Float = 0.15
+    var modelMatrix: float4x4 = .identity
+}
+
+struct MaterialConstants {
+    let color: Float3
+    let metalness: Float
+    let roughness: Float
+    let ambientOcclusion: Float
+    let opacity: Float
+    
+    let textureAmount: Float
+    let textureTiling: Float
+    let normalMapTiling: Float
+    let envMapReflectedAmount: Float
+    let envMapRefractedAmount: Float
+    let specularExponent: Float
+    let displacementFactor: Float
 }
 
 struct FrameConstants {
-    var viewMatrix: float4x4 = matrix_identity_float4x4
-    var projectionMatrix: float4x4 = matrix_identity_float4x4
-    var viewProjectionMatrix: float4x4 = matrix_identity_float4x4 // used for the environment map
+    var viewMatrix: float4x4 = .identity
+    var projectionMatrix: float4x4 = .identity
+    var viewProjectionMatrix: float4x4 = .identity // used for the environment map
     var directionalLightDir: Float3 = .zero
-    var lightProjectionMatrix: float4x4 = matrix_identity_float4x4
+    var lightProjectionMatrix: float4x4 = .identity
     var spotLight: SpotLightConstants
 }
 

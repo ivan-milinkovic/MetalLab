@@ -10,51 +10,34 @@ class MeshObject {
     var tessellationFactorsBuff: MTLBuffer?
     var shouldTesselate: Bool { tessellationFactorsBuff != nil }
     var hasTransparency = false
+    var material: Material
     
-    init(metalMesh: MetalMesh, device: MTLDevice) {
+    init(metalMesh: MetalMesh, material: Material, device: MTLDevice) {
         self.metalMesh = metalMesh
         var prototype = ObjectConstants() // in order to have default values set in the buffer
         objectConstantsBuff = device.makeBuffer(bytes: &prototype, length: MemoryLayout<ObjectConstants>.stride, options: .storageModeShared)!
+        self.material = material
     }
     
-    fileprivate init(metalMesh: MetalMesh, objectConstantsBuff: MTLBuffer) {
+    fileprivate init(metalMesh: MetalMesh, objectConstantsBuff: MTLBuffer, material: Material) {
         self.metalMesh = metalMesh
         self.objectConstantsBuff = objectConstantsBuff
+        self.material = material
+        self.material.textureAmount = (material.colorTexture != nil) ? 1 : 0
     }
     
     func updateConstantsBuffer() {
-        let objectConstants = objectConstantsBuff.contents().bindMemory(to: ObjectConstants.self, capacity: 1)
+        let objectConstants = getObjectConstantsPointer()
         objectConstants.pointee.modelMatrix = transform.matrix
-        objectConstants.pointee.textureAmount = (metalMesh.texture != nil) ? 1 : 0
-    }
-    
-    func instanceCount() -> Int {
-        1
-    }
-    
-    func setEnvMapReflectedAmount(_ f: Float) {
-        getObjectConstantsPointer().pointee.envMapReflectedAmount = f
-    }
-    
-    func setEnvMapRefractedAmount(_ f: Float) {
-        getObjectConstantsPointer().pointee.envMapRefractedAmount = f
-    }
-    
-    func setTextureTiling(_ f: Float) {
-        getObjectConstantsPointer().pointee.textureTiling = f;
-    }
-    
-    func setNormalMapTiling(_ f: Float) {
-        getObjectConstantsPointer().pointee.normalMapTiling = f;
-    }
-    
-    func setDisplacementFactor(_ f: Float) {
-        getObjectConstantsPointer().pointee.displacementFactor = f
     }
     
     @inline(__always)
     func getObjectConstantsPointer() -> UnsafeMutablePointer<ObjectConstants> {
         objectConstantsBuff.contents().bindMemory(to: ObjectConstants.self, capacity: 1)
+    }
+    
+    func instanceCount() -> Int {
+        1
     }
     
     func setupTesselationBuffer(tessellationFactor: Float, device: MTLDevice) {
@@ -71,22 +54,20 @@ class InstancedObject: MeshObject {
     var positions: [Transform]
     let count: Int
     
-    init(metalMesh: MetalMesh, positions: [Transform], device: MTLDevice) {
+    init(metalMesh: MetalMesh, positions: [Transform], material: Material, device: MTLDevice) {
         self.positions = positions
         self.count = positions.count
         var prototypes = [ObjectConstants].init(repeating: ObjectConstants(), count: count) // in order to have default values set in the buffer
         let constantsBuff = device.makeBuffer(bytes: &prototypes, length: count * MemoryLayout<ObjectConstants>.stride, options: .storageModeShared)!
-        super.init(metalMesh: metalMesh, objectConstantsBuff: constantsBuff)
+        super.init(metalMesh: metalMesh, objectConstantsBuff: constantsBuff, material: material)
     }
     
     override func updateConstantsBuffer() {
         let modelMat = transform.matrix
-        let isTextured = metalMesh.texture != nil
         let objectConstantsPtr = objectConstantsBuff.contents().assumingMemoryBound(to: ObjectConstants.self)
         var i = 0; while(i < count) { defer { i += 1}
             let objectConstants = objectConstantsPtr.advanced(by: i)
             objectConstants.pointee.modelMatrix = modelMat * positions[i].matrix
-            objectConstants.pointee.textureAmount = isTextured ? 1.0 : 0.0
         }
     }
     
@@ -103,22 +84,16 @@ class AnimatedInstancedObject: MeshObject {
     let instanceDataBuff: MTLBuffer
     
     /// The metalMesh must be fully initialized (e.g. textures)
-    init(metalMesh: MetalMesh, positions: [Transform], flexibility: [Float], device: MTLDevice) {
+    init(metalMesh: MetalMesh, positions: [Transform], flexibility: [Float], material: Material, device: MTLDevice) {
         self.count = positions.count
         var prototypes = [ObjectConstants].init(repeating: ObjectConstants(), count: count) // in order to have default values set in the buffer
         let constantsBuff = device.makeBuffer(bytes: &prototypes, length: count * MemoryLayout<ObjectConstants>.stride, options: .storageModeShared)!
         instanceConstantsBuff = device.makeBuffer(length: MemoryLayout<UpdateShearConstants>.stride)!
         instanceDataBuff      = device.makeBuffer(length: count * MemoryLayout<UpdateShearStrandData>.stride)!
         
-        super.init(metalMesh: metalMesh, objectConstantsBuff: constantsBuff)
+        super.init(metalMesh: metalMesh, objectConstantsBuff: constantsBuff, material: material)
         
         updateInstanceDataBuff(positions: positions, flexibility: flexibility)
-        
-        let isTextured = metalMesh.texture != nil
-        let objectConstantsPtr = objectConstantsBuff.contents().assumingMemoryBound(to: ObjectConstants.self)
-        for i in 0..<count {
-            objectConstantsPtr.advanced(by: i).pointee.textureAmount = isTextured ? 1.0 : 0.0
-        }
     }
     
     func updateInstanceDataBuff(positions: [Transform], flexibility: [Float]) {

@@ -9,12 +9,8 @@ class MetalMesh {
     
     let indexBuffer: MTLBuffer?
     let indexCount: Int
-    
-    var texture: MTLTexture?
-    var normalMap: MTLTexture?
-    var displacementMap: MTLTexture?
-    
-    init(vertices: [VertexData], indices: [VertexIndexType]? = nil, texture: MTLTexture?, device: MTLDevice) {
+      
+    init(vertices: [VertexData], indices: [VertexIndexType]? = nil, device: MTLDevice) {
         var vs = vertices
         let byteLength = MemoryLayout<VertexData>.stride * vertices.count
         vertexBuffer = device.makeBuffer(bytes: &vs, length: byteLength, options: .storageModeShared)!
@@ -28,13 +24,12 @@ class MetalMesh {
             self.indexBuffer = nil
             self.indexCount = 0
         }
-        self.texture = texture
     }
     
     static func loadObjFile(_ url: URL, device: MTLDevice) -> MetalMesh {
         let objMesh = loadObj(url)
         let vertexData = nonIndexedVertexDataFromObjMesh(objMesh)
-        return MetalMesh(vertices: vertexData, indices: nil, texture: nil, device: device)
+        return MetalMesh(vertices: vertexData, indices: nil, device: device)
     }
     
     static func nonIndexedVertexDataFromObjMesh(_ objMesh: ObjMesh) -> [VertexData] {
@@ -93,7 +88,7 @@ class MetalMesh {
             VertexData(position: [-1, -1, 0], normal: n, color: [0, 1, 0, 1], uv: [ 0.0,  1.0], tan: VertexData.xTan, btan: VertexData.yTan), // bot left
             VertexData(position: [ 1, -1, 0], normal: n, color: [1, 0, 0, 1], uv: [ 1.0,  1.0], tan: VertexData.xTan, btan: VertexData.yTan), // bot right, counter-clockwise
         ]
-        return MetalMesh(vertices: triangle, texture: nil, device: device)
+        return MetalMesh(vertices: triangle, device: device)
     }
     
     static func rectangle(device: MTLDevice) -> MetalMesh {
@@ -109,7 +104,7 @@ class MetalMesh {
             VertexData(position: [ 1, -1, 0], normal: n, color: .one, uv: [ 1.0,  1.0], tan: tan, btan: btan), // bot right
             VertexData(position: [ 1,  1, 0], normal: n, color: .one, uv: [ 1.0,  0.0], tan: tan, btan: btan), // top right, counter-clockwise
         ]
-        return MetalMesh(vertices: triangle, texture: nil, device: device)
+        return MetalMesh(vertices: triangle, device: device)
     }
     
     static func rectangle(p1: Float3, p2: Float3, device: MTLDevice) -> MetalMesh {
@@ -135,7 +130,7 @@ class MetalMesh {
             VertexData(position: [x_max, y_min, z_max], normal: n, color: color, uv: [ 1.0,  1.0], tan: tan, btan: btan), // bot right back
             VertexData(position: [x_max, y_max, z_min], normal: n, color: color, uv: [ 1.0,  0.0], tan: tan, btan: btan), // top right back, counter-clockwise
         ]
-        return MetalMesh(vertices: triangle, texture: nil, device: device)
+        return MetalMesh(vertices: triangle, device: device)
         //return MetalMesh(vertices: triangle, texture: loadPlaceholderTexture(device), device: device)
     }
     
@@ -154,7 +149,7 @@ class MetalMesh {
             VertexData(position: [       w, 0, 0], normal: n, color: colBot, uv: [ 1.0,  1.0], tan: VertexData.xTan, btan: VertexData.yTan), // bot right
             VertexData(position: [(1-fs)*w, 1, 0], normal: n, color: colTop, uv: [ 1.0,  0.0], tan: VertexData.xTan, btan: VertexData.yTan), // top right, counter-clockwise
         ]
-        let metalMesh = MetalMesh(vertices: vertices, texture: nil, device: device)
+        let metalMesh = MetalMesh(vertices: vertices, device: device)
         return metalMesh
     }
 }
