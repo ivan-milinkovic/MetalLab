@@ -8,6 +8,7 @@ class ViewController: NSObject, ObservableObject {
     var mtkView: MTKView!
     let input: Input
     var timeCounter: Double = 0
+    var lastFrameTime: Float = 0
     
     override init() {
         scene = MyScene()
@@ -27,12 +28,12 @@ class ViewController: NSObject, ObservableObject {
     func setMtkView(_ mtkView: MTKView) {
         self.mtkView = mtkView
         renderer.setMtkView(mtkView)
-        timeCounter = CACurrentMediaTime()
+        timeCounter = Time.shared.start
     }
     
-    func frameCallback(_ dt: Float) {
+    func frameCallback() {
         if !scene.isReady { return }
-        scene.update(dt: dt, timeCounter: timeCounter)
+        scene.update(dt: lastFrameTime, timeCounter: timeCounter)
         renderer.draw(scene: scene)
     }
 }
@@ -46,13 +47,13 @@ extension ViewController: MTKViewDelegate {
     }
     
     func draw(in view: MTKView) {
-        let t = Time.shared.current
-        let dt = t - timeCounter
-        timeCounter = t
+        let now = Time.shared.current
+        lastFrameTime = Float(now - timeCounter)
+        timeCounter = now
         
-        frameCallback(Float(dt))
+        frameCallback()
         
-        //let updateTime = CACurrentMediaTime() - t
-        //print(String(format: "frame time: %.2fms, ~fps: %d", updateTime * 1000, Int(1 / updateTime)))
+        //let updateTime = Float(Time.shared.current - timeCounter)
+        //print(String(format: "update time: %.2fms, would be fps: %d", updateTime * 1000, Int(1 / updateTime)))
     }
 }

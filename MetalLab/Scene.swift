@@ -79,7 +79,7 @@ class MyScene {
     }
     
     func update(dt: Float, timeCounter: Double) {
-        updateControls()
+        updateControls(dt)
         updateMeshObjects()
         animMesh?.updateAnim()
         animMesh?.updateConstantsBuffer()
@@ -94,16 +94,17 @@ class MyScene {
         }
     }
     
-    func updateControls() {
+    func updateControls(_ dt: Float) {
         let fwd = input.forward - input.back
         let right = input.right - input.left
         let up = input.up - input.down
-        let ds: Float = 0.05
-        
-        if fwd.isAlmostZero && right.isAlmostZero && up.isAlmostZero {
+        if abs(fwd) + abs(right) + abs(up) < 0.001 {
             fileScene.animate = false
             return
         }
+        
+        let speed: Float = 2
+        let ds: Float = speed * dt
         
         switch selection {
         case let camera as Camera:
