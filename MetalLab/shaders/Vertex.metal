@@ -4,7 +4,7 @@ using namespace metal;
 #include "model/ObjectConstants.h"
 #include "model/FrameConstants.h"
 #include "model/FragmentData.h"
-
+#include "matrix-util.h"
 
 FragmentData basic_vertex_transform(
   thread VertexData& vertexData,
@@ -14,12 +14,13 @@ FragmentData basic_vertex_transform(
 {
     FragmentData out;
     auto modelViewMatrix = frameConstants.viewMatrix * objectConstants.modelMatrix;
+    float3x3 upperLeft = float3x3(modelViewMatrix.columns[0].xyz, modelViewMatrix.columns[1].xyz, modelViewMatrix.columns[2].xyz);
+    auto normalViewMatrix = transpose(mat_inverse(upperLeft));
     out.positionClip = frameConstants.projectionMatrix * modelViewMatrix * float4(vertexData.position, 1);
     out.positionWorld = objectConstants.modelMatrix * float4(vertexData.position, 1);
-    out.normal = normalize((modelViewMatrix * float4(vertexData.normal, 0)).xyz); // todo: model-view inverse transform
-    out.tan    = normalize((modelViewMatrix * float4(vertexData.tan,    0)).xyz); // todo: model-view inverse transform
-    out.btan   = normalize((modelViewMatrix * float4(vertexData.btan,   0)).xyz); // todo: model-view inverse transform
-    out.color = vertexData.color;
+    out.normal = normalize(normalViewMatrix * vertexData.normal);
+    out.tan    = normalize(normalViewMatrix * vertexData.tan);
+    out.btan   = normalize(normalViewMatrix * vertexData.btan);
     out.uv = vertexData.uv;
     out.textureAmount = objectConstants.textureAmount;
     out.textureTiling = objectConstants.textureTiling;

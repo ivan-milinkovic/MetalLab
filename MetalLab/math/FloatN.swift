@@ -115,3 +115,47 @@ extension float4x4 {
         float3x3(columns.0.xyz, columns.1.xyz, columns.2.xyz)
     }
 }
+
+extension float3x3 {
+    
+    static var identity: float3x3 { matrix_identity_float3x3 }
+    
+    // Orthonormal square matrices can be simply transposed, other transforms (skew) need a general purpose inverse
+    // Test prototype before transfering to metal C++
+    func inverse() -> float3x3 {
+        let m = self
+        
+        let m11 = m.columns.0.x;
+        let m21 = m.columns.0.y;
+        let m31 = m.columns.0.z;
+        
+        let m12 = m.columns.1.x;
+        let m22 = m.columns.1.y;
+        let m32 = m.columns.1.z;
+        
+        let m13 = m.columns.2.x;
+        let m23 = m.columns.2.y;
+        let m33 = m.columns.2.z;
+        
+        let det = m11 * m22 * m33  +  m12 * m23 * m31  +  m13 * m21 * m32
+        - m11 * m23 * m32  -  m12 * m21 * m33  -  m13 * m22 * m31
+        
+        // cofactors
+        let c11 = m22*m33 - m23*m32
+        let c12 = m13*m32 - m12*m33
+        let c13 = m12*m23 - m13*m22
+        
+        let c21 = m23*m31 - m21*m33
+        let c22 = m11*m33 - m13*m31
+        let c23 = m13*m21 - m11*m23
+        
+        let c31 = m21*m32 - m22*m31
+        let c32 = m12*m31 - m11*m32
+        let c33 = m11*m22 - m12*m21
+        
+        let C = float3x3.init([c11, c21, c31], [c12, c22, c32], [c13, c23, c33])
+        
+        let inv = (1/det) * C
+        return inv
+    }
+}
