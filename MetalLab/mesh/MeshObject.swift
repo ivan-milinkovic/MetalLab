@@ -82,9 +82,9 @@ class InstancedObject: MeshObject {
     override func updateConstantsBuffer() {
         let modelMat = transform.matrix
         let isTextured = metalMesh.texture != nil
-        for i in 0..<count {
-            let objectConstants = objectConstantsBuff.contents().advanced(by: i * MemoryLayout<ObjectConstants>.stride)
-                                    .bindMemory(to: ObjectConstants.self, capacity: 1)
+        let objectConstantsPtr = objectConstantsBuff.contents().assumingMemoryBound(to: ObjectConstants.self)
+        var i = 0; while(i < count) { defer { i += 1}
+            let objectConstants = objectConstantsPtr.advanced(by: i)
             objectConstants.pointee.modelMatrix = modelMat * positions[i].matrix
             objectConstants.pointee.textureAmount = isTextured ? 1.0 : 0.0
         }
@@ -102,6 +102,7 @@ class AnimatedInstancedObject: MeshObject {
     let instanceConstantsBuff: MTLBuffer
     let instanceDataBuff: MTLBuffer
     
+    /// The metalMesh must be fully initialized (e.g. textures)
     init(metalMesh: MetalMesh, positions: [Transform], flexibility: [Float], device: MTLDevice) {
         self.count = positions.count
         var prototypes = [ObjectConstants].init(repeating: ObjectConstants(), count: count) // in order to have default values set in the buffer
@@ -112,6 +113,12 @@ class AnimatedInstancedObject: MeshObject {
         super.init(metalMesh: metalMesh, objectConstantsBuff: constantsBuff)
         
         updateInstanceDataBuff(positions: positions, flexibility: flexibility)
+        
+        let isTextured = metalMesh.texture != nil
+        let objectConstantsPtr = objectConstantsBuff.contents().assumingMemoryBound(to: ObjectConstants.self)
+        for i in 0..<count {
+            objectConstantsPtr.advanced(by: i).pointee.textureAmount = isTextured ? 1.0 : 0.0
+        }
     }
     
     func updateInstanceDataBuff(positions: [Transform], flexibility: [Float]) {
@@ -129,13 +136,11 @@ class AnimatedInstancedObject: MeshObject {
     }
     
     override func updateConstantsBuffer() {
-        let isTextured = metalMesh.texture != nil
         let instanceDataPtr = instanceDataBuff.contents().assumingMemoryBound(to: UpdateShearStrandData.self)
-        for i in 0..<count {
-            let objectConstants = objectConstantsBuff.contents().advanced(by: i * MemoryLayout<ObjectConstants>.stride)
-                                    .bindMemory(to: ObjectConstants.self, capacity: 1)
+        let objectConstantsPtr = objectConstantsBuff.contents().assumingMemoryBound(to: ObjectConstants.self)
+        var i = 0; while(i < count) { defer { i += 1 }
+            let objectConstants = objectConstantsPtr.advanced(by: i)
             objectConstants.pointee.modelMatrix = instanceDataPtr.advanced(by: i).pointee.matrix
-            objectConstants.pointee.textureAmount = isTextured ? 1.0 : 0.0
         }
     }
     

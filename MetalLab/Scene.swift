@@ -80,9 +80,18 @@ class MyScene {
     
     func update(dt: Float, timeCounter: Double) {
         updateControls()
+        updateMeshObjects()
         animMesh?.updateAnim()
-        fileScene.update()
+        animMesh?.updateConstantsBuffer()
+        fileScene.update() // Mesh ransforms are updated in Node
         grass.updateShear(timeCounter: timeCounter, wind: wind, characterPos: fileScene?.transform.position)
+    }
+    
+    func updateMeshObjects() {
+        let count = sceneObjects.count
+        var i = 0; while(i < count) { defer { i += 1}
+            sceneObjects[i].updateConstantsBuffer()
+        }
     }
     
     func updateControls() {

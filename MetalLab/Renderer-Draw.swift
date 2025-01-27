@@ -103,10 +103,7 @@ extension Renderer {
         encoder.setFragmentBuffer(frameConstantsBuff, offset: 0, index: 0)
         
         for meshObject in scene.regularObjects {
-            
-            meshObject.updateConstantsBuffer()
             let instanceCount = meshObject.instanceCount()
-            
             encoder.setVertexBuffer(meshObject.metalMesh.vertexBuffer, offset: 0, index: 0)
             encoder.setVertexBuffer(meshObject.objectConstantsBuff, offset: 0, index: 1)
             encoder.setFragmentTexture(meshObject.metalMesh.texture, index: 0)
@@ -128,8 +125,6 @@ extension Renderer {
         encoder.setFragmentTexture(nil, index: 3)
         
         if let obj = scene.animMesh {
-            obj.updateConstantsBuffer()
-            
             encoder.setVertexBuffer(obj.mtkVertexBuffer.buffer, offset: obj.mtkVertexBuffer.offset, index: 0)
             encoder.setVertexBuffer(obj.objectConstantsBuff, offset: 0, index: 1)
             encoder.setVertexBytes(obj.jointAnimMats, length: obj.jointAnimMats.count * MemoryLayout<float4x4>.stride, index: 3)
@@ -175,10 +170,7 @@ extension Renderer {
         encoder.setFragmentBuffer(frameConstantsBuff, offset: 0, index: 0)
         
         for meshObject in scene.transparentObjects {
-            
-            meshObject.updateConstantsBuffer()
             let instanceCount = meshObject.instanceCount()
-            
             encoder.setVertexBuffer(meshObject.metalMesh.vertexBuffer, offset: 0, index: 0)
             encoder.setVertexBuffer(meshObject.objectConstantsBuff, offset: 0, index: 1)
             encoder.setFragmentTexture(meshObject.metalMesh.texture, index: 0)
@@ -195,8 +187,6 @@ extension Renderer {
     func encodeTesselatedGeometry(scene: MyScene, encoder enc: MTLRenderCommandEncoder) {
         for meshObject in scene.tessObjects {
             guard let tessellationFactorsBuff = meshObject.tessellationFactorsBuff else { continue }
-            
-            meshObject.updateConstantsBuffer()
             
             enc.setVertexBuffer(frameConstantsBuff, offset: 0, index: 2)
             enc.setFragmentBuffer(frameConstantsBuff, offset: 0, index: 0)
