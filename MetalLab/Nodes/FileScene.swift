@@ -11,31 +11,12 @@ class FileScene {
     var skeletonNode: Node?
     var skeleton: Skeleton?
     
-    var animate = false {
-        didSet {
-            if let anim = skeletonNode?.nodeAnimations.first {
-                if animate {
-                    anim.ensureMarkStart()
-                }
-                else {
-                    anim.markStop()
-                    skeleton?.setRestPose()
-                }
-            }
-        }
-    }
-    
     @MainActor
-    func loadTestScene(_ device: MTLDevice) {
-        //let url = Bundle.main.url(forResource: "coord2", withExtension: "usda")!
-        let url = Bundle.main.url(forResource: "Character", withExtension: "usda")!
-        loadScene(url, device)
-    }
-    
-    @MainActor
-    func loadScene(_ url: URL, _ device: MTLDevice) {
+    func loadScene(url: URL, device: MTLDevice) {
         let allocator = MTKMeshBufferAllocator(device: device)
         let asset = MDLAsset(url: url, vertexDescriptor: VertexData.makeModelioVertexDescriptor(), bufferAllocator: allocator)
+        asset.loadTextures()
+        
         sceneNode = Node()
         sceneNode.name = "Scene node - \(url.lastPathComponent)"
         
@@ -98,6 +79,24 @@ class FileScene {
         return node
     }
     
+    var isAnimated: Bool {
+        skeleton != nil
+    }
+    
+    var animate = false {
+        didSet {
+            if let anim = skeletonNode?.nodeAnimations.first {
+                if animate {
+                    anim.ensureMarkStart()
+                }
+                else {
+                    anim.markStop()
+                    skeleton?.setRestPose()
+                }
+            }
+        }
+    }
+    
     func update() {
         sceneNode.matrix = transform.matrix
         updateMatrices()
@@ -130,5 +129,4 @@ class FileScene {
         transform.orientation = simd_quatf(float3x3(right, up, fwd))
         transform.moveBy(ds)
     }
-    
 }

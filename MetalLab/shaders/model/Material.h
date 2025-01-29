@@ -2,7 +2,8 @@
 #define Material_h
 
 struct Material {
-    float3 color;
+    float4 color;
+    float3 emissiveColor;
     float metalness;
     float roughness;
     float ambOcclusion;

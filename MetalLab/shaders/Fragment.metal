@@ -10,17 +10,16 @@ fragment float4 fragment_main
                  FragmentData    fragmentData   [[stage_in]],
     constant     FrameConstants& frameConstants [[buffer(0)]],
     const device Material&       material       [[buffer(1)]],
- 
-    texture2d   <float, access::sample> texture   [[texture(0)]],
+    sampler                             sampler   [[sampler(0)]],
+    texturecube <float, access::sample> cubeMap   [[texture(0)]],
     depth2d     <float, access::sample> shadowMap [[texture(1)]],
-    texturecube <float, access::sample> cubeMap   [[texture(2)]],
-    texture2d   <float, access::sample> normalMap [[texture(3)]],
-    sampler                             sampler   [[sampler(0)]])
+    texture2d   <float, access::sample> texture   [[texture(2)]],
+    texture2d   <float, access::sample> normalMap [[texture(3)]])
 {
     float2 uv_diffuse = fragmentData.uv * material.textureTiling;
     float2 uv_normal = fragmentData.uv * material.normalMapTiling;
     
-    float4 color = float4(material.color, material.opacity);
+    float4 color = material.color;
     if (material.textureAmount > 0.0) {
         auto tcolor = texture.sample(sampler, uv_diffuse);
         color = material.textureAmount * tcolor + (1 - material.textureAmount) * color;

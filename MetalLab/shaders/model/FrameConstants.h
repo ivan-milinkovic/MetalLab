@@ -9,8 +9,8 @@ struct FrameConstants {
     float4x4 viewProjectionMatrix; // not used here, but maintains correct memory structure
     
     float3 directionalLightDir;
-    float4x4 lightProjectionMatrix;
     
+    float4x4 lightProjectionMatrix;
     SpotLight spotLight;
 };
 

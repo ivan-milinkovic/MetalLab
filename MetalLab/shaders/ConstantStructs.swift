@@ -5,7 +5,8 @@ struct ObjectConstants {
 }
 
 struct MaterialConstants {
-    let color: Float3
+    let color: Float4
+    let emissiveColor: Float3
     let metalness: Float
     let roughness: Float
     let ambientOcclusion: Float
@@ -33,6 +34,7 @@ struct SpotLightConstants {
     var position: Float3
     var direction: Float3
     var color: Float3
+    var intensity: Float
 }
 
 struct UpdateShearConstants {

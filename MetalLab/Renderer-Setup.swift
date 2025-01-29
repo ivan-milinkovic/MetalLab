@@ -35,7 +35,8 @@ extension Renderer {
         
         let mainPipelineDesc = MTLRenderPipelineDescriptor()
         mainPipelineDesc.vertexFunction = library.makeFunction(name: "vertex_main")!
-        mainPipelineDesc.fragmentFunction = library.makeFunction(name: "fragment_main")!
+        //mainPipelineDesc.fragmentFunction = library.makeFunction(name: "fragment_main")!
+        mainPipelineDesc.fragmentFunction = library.makeFunction(name: "fragment_main_pbr")!
         mainPipelineDesc.vertexDescriptor = VertexData.vertexDescriptor
         mainPipelineDesc.colorAttachments[0].pixelFormat = colorPixelFormat
         mainPipelineDesc.depthAttachmentPixelFormat = depthPixelFormat

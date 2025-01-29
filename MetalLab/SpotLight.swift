@@ -3,6 +3,7 @@ import Metal
 class SpotLight {
     var position: Transform = .init()
     var color: Float3 = .one
+    var intensity: Float = 10
     let texture: MTLTexture
     
     init(device: MTLDevice) {

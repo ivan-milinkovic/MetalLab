@@ -20,10 +20,10 @@ struct ContentView: View {
                     HStack {
                         Text("Select:")
                         Button("camera") { viewController.scene.selection = viewController.scene.camera }
+                        Button("character") { viewController.scene.selection = viewController.scene.character }
+                        Button("helmet") { viewController.scene.selection = viewController.scene.helmet }
                         Button("monkey") { viewController.scene.selection = viewController.scene.monkey }
-                        Button("cobble")   { viewController.scene.selection = viewController.scene.normalMapPlane }
-                        Button("gizmo") { viewController.scene.selection = viewController.scene.animMesh }
-                        Button("character") { viewController.scene.selection = viewController.scene.fileScene }
+                        Button("cobble")   { viewController.scene.selection = viewController.scene.displacementPlane }
                     }
                 }
                 

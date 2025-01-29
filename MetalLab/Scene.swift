@@ -12,14 +12,19 @@ class MyScene {
     var tessObjects: [MeshObject] = []
     var transparentObjects: [MeshObject] = []
     
+    var fileScenes: [FileScene] = []
+    var animFileScenes: [FileScene] = []
+    var staticFileScenes: [FileScene] = []
+    
     let directionalLightDir: Float3 = [1, -1, -1]
     var spotLight: SpotLight!
     let wind: Wind = .init()
     var grass: GrassController!
     var monkey: MeshObject!
-    var normalMapPlane: MeshObject!
-    var animMesh: AnimatedMesh?
-    var fileScene: FileScene!
+    var displacementPlane: MeshObject!
+    var simpleAnimMesh: SimpleAnimatedMesh?
+    var character: FileScene!
+    var helmet: FileScene!
     
     var selection: AnyObject?
     
@@ -31,15 +36,16 @@ class MyScene {
     @MainActor
     func load(device: MTLDevice) {
         
-        makeMonkey(device)
+        loadMonkey(device)
         makeFloor(device)
         makeInstancedBoxes(device)
         makeGrass(device)
         makeTransparentPlanes(device: device)
         makeReflectiveCubes(device: device)
         makeNormalMapPlane(device)
-        makeCoordMesh(device)
-        makeFileScene(device)
+        //makeCoordMesh(device)
+        loadCharacter(device)
+        loadHelmet(device)
         
         loadCubeMap(device: device)
         makeLight(device)
@@ -47,7 +53,7 @@ class MyScene {
         self.camera.transform.look(from: [0, 1.8, 3.2], at: [0, 1, -2])
         splitObjects()
         selection = camera
-        animMesh?.startAnimation()
+        simpleAnimMesh?.startAnimation()
         
         isReady = true
     }
@@ -56,6 +62,9 @@ class MyScene {
         regularObjects = sceneObjects.filter { !$0.shouldTesselate && !$0.hasTransparency }
         tessObjects = sceneObjects.filter { $0.shouldTesselate }
         transparentObjects = sceneObjects.filter { $0.hasTransparency }
+        
+        animFileScenes = fileScenes.filter { $0.isAnimated }
+        staticFileScenes = fileScenes.filter { !$0.isAnimated }
     }
     
     func rotateSelection(dx: Float, dy: Float) {
@@ -64,7 +73,7 @@ class MyScene {
             camera.transform.rotate2(dx: dx * 0.5, dy: dy * 0.5)
         case let meshObject as MeshObject:
             meshObject.transform.rotate2(dx: dx, dy: dy)
-        case let anim as AnimatedMesh:
+        case let anim as SimpleAnimatedMesh:
             anim.transform.rotate2(dx: dx, dy: dy)
         case let fs as FileScene:
             fs.transform.rotate2(dx: dx, dy: dy)
@@ -81,10 +90,10 @@ class MyScene {
     func update(dt: Float, timeCounter: Double) {
         updateControls(dt)
         updateMeshObjects()
-        animMesh?.updateAnim()
-        animMesh?.updateConstantsBuffer()
-        fileScene.update() // Mesh ransforms are updated in Node
-        grass.updateShear(timeCounter: timeCounter, wind: wind, characterPos: fileScene?.transform.position)
+        simpleAnimMesh?.updateAnim()
+        simpleAnimMesh?.updateConstantsBuffer()
+        fileScenes.forEach { $0.update() } // Mesh ransforms are updated in Node
+        grass.updateShear(timeCounter: timeCounter, wind: wind, characterPos: character?.transform.position)
     }
     
     func updateMeshObjects() {
@@ -99,7 +108,7 @@ class MyScene {
         let right = input.right - input.left
         let up = input.up - input.down
         if abs(fwd) + abs(right) + abs(up) < 0.001 {
-            fileScene.animate = false
+            character.animate = false
             return
         }
         
@@ -113,7 +122,7 @@ class MyScene {
         case let meshObject as MeshObject:
             meshObject.transform.moveBy([right*ds, up*ds, -fwd*ds])
             
-        case let anim as AnimatedMesh:
+        case let anim as SimpleAnimatedMesh:
             anim.transform.moveBy([right*ds, up*ds, -fwd*ds])
             
         case let fs as FileScene:
@@ -131,15 +140,15 @@ class MyScene {
         //camera.transform.move(d_forward: v.x, d_right: v.y, d_up: v.z)
     }
     
-    func makeMonkey(_ device: MTLDevice) {
+    func loadMonkey(_ device: MTLDevice) {
         let url = Bundle.main.url(forResource: "monkey", withExtension: "obj")!
         let metalMesh = MetalMesh.loadObjFile(url, device: device)
         metalMesh.setColor([0.7, 0.3, 0.14, 1])
         
-        let material = Material(color: [0.7, 0.3, 0.14], envMapReflectedAmount: 0.5)
+        let material = Material(color: [0.7, 0.3, 0.14, 1], envMapReflectedAmount: 0.5)
         let monkey = MeshObject(metalMesh: metalMesh, material: material, device: device)
-        monkey.transform.scale = 0.75
-        monkey.transform.moveBy([0, 1.4, -0.5])
+        monkey.transform.scale = 0.5
+        monkey.transform.moveBy([-2.2, 1.4, -0.5])
         
         self.monkey = monkey
         self.sceneObjects.append(monkey)
@@ -153,21 +162,22 @@ class MyScene {
         let normalMap = MetalMesh.loadTexture("cobblestone_normals.png", device)
         let displacementMap = MetalMesh.loadTexture("cobblestone_displacement.png", device)
         
-        let material = Material(colorTexture: texture, textureAmount: 1.0, normalTexture: normalMap, displacementFactor: 0.15, displacementTexture: displacementMap)
+        let material = Material(colorTexture: texture, textureAmount: 1.0, normalTexture: normalMap, roughness: 0.5,
+                                displacementFactor: 0.15, displacementTexture: displacementMap)
         let plane = MeshObject(metalMesh: metalMesh, material: material, device: device)
         plane.setupTesselationBuffer(tessellationFactor: 16, device: device)
         
         plane.transform.moveBy([-2.5, 0.2, 1.2])
         
         sceneObjects.append(plane)
-        normalMapPlane = plane
+        displacementPlane = plane
     }
     
     func makeFloor(_ device: MTLDevice) {
         let planeSize: Float = 4
         let planeMesh = MetalMesh.rectangle(p1: [-planeSize, 0, -planeSize], p2: [planeSize, 0, planeSize], device: device)
         
-        let material = Material(color: [0.025, 0.025, 0.0125])
+        let material = Material(color: [0.025, 0.025, 0.0125, 1])
         //let texture = MetalMesh.loadTexture("cobblestone_diffuse.png", srgb: true, device)
         //let normalMap = MetalMesh.loadTexture("cobblestone_normals.png", device)
         //let displacementMap = MetalMesh.loadTexture("cobblestone_displacement.png", device)
@@ -183,10 +193,11 @@ class MyScene {
         spotLight = SpotLight(device: device)
         spotLight.color = .one // [0.8, 0.8, 1]
         spotLight.position.look(from: [-3, 5, 2.5], at: [0, 0, 0])
+        spotLight.intensity = 4
     }
     
     func makeTransparentPlanes(device: MTLDevice) {
-        let material = Material(color: [0.168, 0.28, 0.45], opacity: 0.6)
+        let material = Material(color: [0.168, 0.28, 0.45, 1], opacity: 0.6)
         let alphaRectMesh = MetalMesh.rectangle(p1: [-1, 0, -1], p2: [1, 0, 0.5], device: device)
         let alphaRect = MeshObject(metalMesh: alphaRectMesh, material: material, device: device)
         alphaRect.transform.moveBy([-1.5, 0.5, 0])
@@ -196,7 +207,7 @@ class MyScene {
         
         let alphaRectMesh2 = MetalMesh.rectangle(p1: [-1, 0, -1], p2: [1, 0, 0.5], device: device)
         let alphaRect2 = MeshObject(metalMesh: alphaRectMesh2, material: material, device: device)
-        alphaRect2.transform.moveBy([-1.5, 0.5, -1])
+        alphaRect2.transform.moveBy([-1.5, 0.5, -0.5])
         alphaRect2.transform.scale = 0.5
         alphaRect2.transform.rotate(dx: .pi * 0.5)
         alphaRect2.hasTransparency = true
@@ -257,7 +268,7 @@ class MyScene {
         let url = Bundle.main.url(forResource: "box", withExtension: "obj")!
         let metalMesh = MetalMesh.loadObjFile(url, device: device)
         let colorTexture = MetalMesh.loadTexture("placeholder2.png", srgb: true, device)
-        let material = Material(color: [0.1, 0.3, 0.8], colorTexture: colorTexture, textureAmount: 1.0)
+        let material = Material(color: [0.1, 0.3, 0.8, 1], colorTexture: colorTexture, textureAmount: 1.0)
         let boxesCluster = InstancedObject(metalMesh: metalMesh, positions: instancePositions, material: material, device: device)
         boxesCluster.transform.moveBy([-rectSize, 0, 1])
         
@@ -266,7 +277,6 @@ class MyScene {
     
     func makeGrass(_ device: MTLDevice) {
         self.grass = GrassController.makeGrass(device, commandQueue: renderer.commandQueue)
-        self.grass.grass.transform.moveBy([0, 0, 1])
         sceneObjects.append(grass.grass)
     }
     
@@ -336,16 +346,30 @@ class MyScene {
     }
     
     @MainActor func makeCoordMesh(_ device: MTLDevice) {
-        animMesh = AnimatedMesh(device)
-        animMesh?.transform.scale = 0.3
-        animMesh?.transform.moveBy([2, 1, 0])
+        simpleAnimMesh = SimpleAnimatedMesh(device)
+        simpleAnimMesh?.transform.scale = 0.3
+        simpleAnimMesh?.transform.moveBy([2, 1, 0])
     }
     
-    @MainActor func makeFileScene(_ device: MTLDevice) {
-        fileScene = FileScene()
-        fileScene.loadTestScene(device)
-        fileScene.transform.scale = 0.3
-        fileScene.transform.moveBy([1.25, 0.1, 0])
+    @MainActor func loadCharacter(_ device: MTLDevice) {
+        let url = Bundle.main.url(forResource: "Character", withExtension: "usda")!
+        let character = FileScene()
+        character.loadScene(url: url, device: device)
+        character.transform.scale = 0.3
+        character.transform.moveBy([1.25, 0.1, 0])
+        
+        fileScenes.append(character)
+        self.character = character
+    }
+    
+    @MainActor func loadHelmet(_ device: MTLDevice) {
+        let url = Bundle.main.url(forResource: "DamagedHelmet", withExtension: "usdz")!
+        let helmet = FileScene()
+        helmet.loadScene(url: url, device: device)
+        helmet.transform.moveBy([0, 1.5, -1])
+        
+        self.helmet = helmet
+        fileScenes.append(helmet)
     }
 }
 

@@ -3,7 +3,7 @@ import Metal
 import ModelIO
 import MetalKit
 
-class AnimatedMesh {
+class SimpleAnimatedMesh {
     var transform: Transform = .init()
     let material: Material
     
@@ -75,7 +75,7 @@ class AnimatedMesh {
         var prototype = ObjectConstants()
         objectConstantsBuff = device.makeBuffer(bytes: &prototype, length: MemoryLayout<ObjectConstants>.stride, options: .storageModeShared)!
         
-        material = Material(color: [0.7, 0.3, 0.0])
+        material = Material(color: [0.7, 0.3, 0.0, 1])
         
         updateJointAnimMats(localAnimMats: jointRestMats)
     }
