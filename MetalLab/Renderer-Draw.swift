@@ -16,7 +16,7 @@ extension Renderer {
         drawShadowMap(scene: scene, cmdBuff: commandBuffer)
         drawMain(scene: scene, cmdBuff: commandBuffer)
 
-        //drawShadowMapDepthTexture(scene: scene, cmdBuff: commandBuffer)
+        //visualizeTexture(texture: scene.spotLight.texture, scene: scene, cmdBuff: commandBuffer)
         
         commandBuffer.present(drawable)
         commandBuffer.commit()
@@ -229,7 +229,7 @@ extension Renderer {
     
     
     @MainActor
-    func drawShadowMapDepthTexture(scene: MyScene, cmdBuff: MTLCommandBuffer) {
+    func visualizeTexture(texture: MTLTexture, scene: MyScene, cmdBuff: MTLCommandBuffer) {
         let pipeline = MTLRenderPipelineDescriptor()
         pipeline.vertexDescriptor = VertexData.vertexDescriptor
         pipeline.vertexFunction = library.makeFunction(name: "vertex_depth_show")
@@ -250,13 +250,13 @@ extension Renderer {
             [ 1, -1],
             [ 1,  1]
         ]
+        // Make it a square in screen space
         let aspect = Float(mtkView.drawableSize.width / mtkView.drawableSize.height)
         let wscale = 0.25/aspect
         let scaleMat = float2x2([wscale, 0], [0, 0.25])
         vertices = vertices.map { v in
             scaleMat * v + [-(1-wscale), 0.75]
         }
-        let vbuff = device.makeBuffer(bytes: &vertices,length: MemoryLayout<SIMD2<Float>>.stride * vertices.count, options: .storageModeShared)
         
         var uvs: [Float2] = [
             [0.0,  0.0],
@@ -266,16 +266,15 @@ extension Renderer {
             [1.0,  1.0],
             [1.0,  0.0]
         ]
-        let uvbuff = device.makeBuffer(bytes: &uvs,length: MemoryLayout<SIMD2<Float>>.stride * uvs.count, options: .storageModeShared)
         
         let enc = cmdBuff.makeRenderCommandEncoder(descriptor: renderPass)!
         enc.setFrontFacing(winding)
         enc.setCullMode(.back)
         enc.setRenderPipelineState(pipelineState)
-        enc.setVertexBuffer(vbuff, offset: 0, index: 0)
-        enc.setVertexBuffer(uvbuff, offset: 0, index: 1)
+        enc.setVertexBytes(&vertices, length: MemoryLayout<SIMD2<Float>>.stride * vertices.count, index: 0)
+        enc.setVertexBytes(&uvs, length: MemoryLayout<SIMD2<Float>>.stride * uvs.count, index: 1)
         enc.setFragmentSamplerState(textureSamplerState, index: 0)
-        enc.setFragmentTexture(scene.spotLight.texture, index: 0)
+        enc.setFragmentTexture(texture, index: 0)
         enc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6)
         enc.endEncoding()
     }
