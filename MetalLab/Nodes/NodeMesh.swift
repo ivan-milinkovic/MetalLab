@@ -51,7 +51,6 @@ private func readSubmeshes(mdlSubmeshes: [MDLSubmesh], device: MTLDevice) -> [Su
         .textureStorageMode: MTLStorageMode.private.rawValue,
         .origin : MTKTextureLoader.Origin.flippedVertically,
         .generateMipmaps : true,
-//        .SRGB: true
     ]
     let texLoader = MTKTextureLoader(device: device)
     
@@ -72,7 +71,7 @@ private func readMaterial(_ mdlMaterial: MDLMaterial?,
     var mat = Material()
     let colorSpace = CGColorSpace(name: CGColorSpace.linearSRGB)!
     
-    // TODO: don't load the same texture more than once
+    // TODO: don't load textures more than once
     
     let colorTexOpts = texOpts.merging([.SRGB: true], uniquingKeysWith: { $1 })
     

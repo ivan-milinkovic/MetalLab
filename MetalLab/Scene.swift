@@ -352,7 +352,7 @@ class MyScene {
     }
     
     @MainActor func loadCharacter(_ device: MTLDevice) {
-        let url = Bundle.main.url(forResource: "Character", withExtension: "usda")!
+        let url = Bundle.main.url(forResource: "Character", withExtension: "usdz")!
         let character = FileScene()
         character.loadScene(url: url, device: device)
         character.transform.scale = 0.3

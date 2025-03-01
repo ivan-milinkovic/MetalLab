@@ -98,7 +98,6 @@ class FileScene {
     }
     
     func update() {
-        sceneNode.matrix = transform.matrix
         updateMatrices()
     }
     
@@ -109,7 +108,7 @@ class FileScene {
                 node.transformInScene = parent.transformInScene * node.matrix
             }
             else {
-                node.transformInScene = node.matrix
+                node.transformInScene = transform.matrix * node.matrix
             }
         }
         

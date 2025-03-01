@@ -103,6 +103,7 @@ extension Renderer {
         shadowAnimPipelineState = try! device.makeRenderPipelineState(descriptor: shadowAnimPipelineDesc)
         
         frameConstantsBuff = device.makeBuffer(length: MemoryLayout<FrameConstants>.stride, options: .storageModeShared)
+        frameConstantsBuff.label = "Frame Constants Buffer"
         
         let envPD = MTLRenderPipelineDescriptor()
         envPD.colorAttachments[0].pixelFormat = colorPixelFormat

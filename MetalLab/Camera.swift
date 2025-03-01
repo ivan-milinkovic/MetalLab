@@ -10,7 +10,7 @@ class Camera {
     func updateProjection(size: CGSize) {
         let vFovRads: Float = 60 * Float.pi / 180.0
         let near: Float = 0.2
-        let far: Float = 100.0
+        let far: Float = 1000.0
         let aspect = Float(size.width) / Float(size.height)
         projectionMatrix = float4x4.perspectiveProjection(vFovRads: vFovRads, aspectRatio: aspect, near: near, far: far)
         
