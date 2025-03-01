@@ -128,4 +128,13 @@ class FileScene {
         transform.orientation = simd_quatf(float3x3(right, up, fwd))
         transform.moveBy(ds)
     }
+    
+    // Seems that, when roughness is missing, Metal defaults to 0.5. This is to reset it.
+    func setRoughnessToAllMaterials(_ roughness: Float) {
+        for meshNode in meshNodes {
+            for submesh in meshNode.nodeMesh!.submeshes {
+                submesh.material.roughness = roughness
+            }
+        }
+    }
 }

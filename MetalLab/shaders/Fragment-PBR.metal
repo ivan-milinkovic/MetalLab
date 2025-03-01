@@ -97,13 +97,14 @@ fragment float4 fragment_main_pbr
     // Sample environment color
     float4 posView = frameConstants.viewMatrix * fragmentData.positionWorld; // position in view space
     float3 pointToCameraDir = normalize(-posView.xyz);
-    {   // reflection
+    float3 envReflectionColor = float3(0);
+    {   // reflection based on a provided factor (not roughness), older implementation
         auto fRefl = material.envMapReflectedAmount;
         auto reflected = reflect(-pointToCameraDir, N);
-        auto reflectionEnvColor = cubeMap.sample(sampler, reflected).rgb;
-        baseColor = mix(baseColor, reflectionEnvColor, fRefl);
+        envReflectionColor = cubeMap.sample(sampler, reflected).rgb;
+        baseColor = mix(baseColor, envReflectionColor, fRefl);
     }
-    {   // refraction
+    {   // refraction based on a provided factor
         auto fRefr = material.envMapRefractedAmount;
         auto refracted = refract(-pointToCameraDir, N, 1.33);
         auto refractionEnvColor = cubeMap.sample(sampler, refracted).rgb;
@@ -136,6 +137,7 @@ fragment float4 fragment_main_pbr
     auto H = normalize(V + L);
     
     // diffuse
+    baseColor = mix(baseColor, envReflectionColor, roughness);
     float3 diffuseColor = mix(baseColor, float3(0.0), metalness);
     auto lambertian = diffuseColor * M_1_PI_F;
     auto fd = lambertian * ambOcclusion;

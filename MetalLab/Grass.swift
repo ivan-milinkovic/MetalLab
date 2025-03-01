@@ -75,7 +75,8 @@ class GrassController {
         }
         
         let mesh = MetalMesh.grassStrand(device)
-        let material = Material(color: Float4(0.2, 0.4, 0.15, 1))
+        let material = Material()
+        material.color = Float4(0.2, 0.4, 0.15, 1)
         let grass = AnimatedInstancedObject(metalMesh: mesh, positions: instancePositions, flexibility: flexibility, material: material, device: device)
         
         grass.transform.moveBy([0, 0, 1])

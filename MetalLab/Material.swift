@@ -1,6 +1,6 @@
 import Metal
 
-struct Material {
+class Material {
     
     var color: Float4 = [1, 1, 1, 1]
     var opacity: Float = 1
@@ -17,7 +17,7 @@ struct Material {
     var metalness: Float = 0
     var metalnessTexture: MTLTexture?
     
-    var roughness: Float = 0.5
+    var roughness: Float = 0.0
     var roughnessTexture: MTLTexture?
     
     var ambOcclusion: Float = 1.0
@@ -47,4 +47,5 @@ struct Material {
             specularExponent: specularExponent,
             displacementFactor: displacementFactor)
     }
+    
 }

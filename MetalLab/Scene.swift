@@ -42,7 +42,7 @@ class MyScene {
         makeGrass(device)
         makeTransparentPlanes(device: device)
         makeReflectiveCubes(device: device)
-        makeNormalMapPlane(device)
+        makeCobblestonePlane(device)
         //makeCoordMesh(device)
         loadCharacter(device)
         loadHelmet(device)
@@ -145,7 +145,9 @@ class MyScene {
         let metalMesh = MetalMesh.loadObjFile(url, device: device)
         metalMesh.setColor([0.7, 0.3, 0.14, 1])
         
-        let material = Material(color: [0.7, 0.3, 0.14, 1], envMapReflectedAmount: 0.5)
+        let material = Material()
+        material.color = [0.7, 0.3, 0.14, 1]
+        material.envMapReflectedAmount = 0.5
         let monkey = MeshObject(metalMesh: metalMesh, material: material, device: device)
         monkey.transform.scale = 0.5
         monkey.transform.moveBy([-2.2, 1.4, -0.5])
@@ -155,15 +157,20 @@ class MyScene {
     }
     
     // Max tesselation factor is 16. Large objects with detailed textures need more triangles in the model itself
-    func makeNormalMapPlane(_ device: MTLDevice) {
+    func makeCobblestonePlane(_ device: MTLDevice) {
         let url = Bundle.main.url(forResource: "plane", withExtension: "obj")!
         let metalMesh = MetalMesh.loadObjFile(url, device: device)
         let texture = MetalMesh.loadTexture("cobblestone_diffuse.png", srgb: true, device)
         let normalMap = MetalMesh.loadTexture("cobblestone_normals.png", device)
         let displacementMap = MetalMesh.loadTexture("cobblestone_displacement.png", device)
         
-        let material = Material(colorTexture: texture, textureAmount: 1.0, normalTexture: normalMap, roughness: 0.5,
-                                displacementFactor: 0.15, displacementTexture: displacementMap)
+        let material = Material()
+        material.colorTexture = texture
+        material.textureAmount = 1.0
+        material.normalTexture = normalMap
+        material.roughness = 0.0
+        material.displacementFactor = 0.15
+        material.displacementTexture = displacementMap
         let plane = MeshObject(metalMesh: metalMesh, material: material, device: device)
         plane.setupTesselationBuffer(tessellationFactor: 16, device: device)
         
@@ -177,11 +184,18 @@ class MyScene {
         let planeSize: Float = 4
         let planeMesh = MetalMesh.rectangle(p1: [-planeSize, 0, -planeSize], p2: [planeSize, 0, planeSize], device: device)
         
-        let material = Material(color: [0.025, 0.025, 0.0125, 1])
+        let material = Material()
+        material.color = [0.025, 0.025, 0.0125, 1]
         //let texture = MetalMesh.loadTexture("cobblestone_diffuse.png", srgb: true, device)
         //let normalMap = MetalMesh.loadTexture("cobblestone_normals.png", device)
         //let displacementMap = MetalMesh.loadTexture("cobblestone_displacement.png", device)
-        //let material = Material(colorTexture: texture, normalTexture: normalMap, textureAmount: 1.0, textureTiling: 2.0, normalMapTiling: 2.0, displacementTexture: displacementMap)
+        //let material = Material()
+        //material.colorTexture = texture
+        //material.normalTexture = normalMap
+        //material.textureAmount = 1.0
+        //material.textureTiling = 2.0
+        //material.normalMapTiling = 2.0
+        //material.displacementTexture = displacementMap
         
         let plane = MeshObject(metalMesh: planeMesh, material: material, device: device)
         plane.setupTesselationBuffer(tessellationFactor: 16, device: device)
@@ -197,7 +211,9 @@ class MyScene {
     }
     
     func makeTransparentPlanes(device: MTLDevice) {
-        let material = Material(color: [0.168, 0.28, 0.45, 1], opacity: 0.6)
+        let material = Material()
+        material.color = [0.168, 0.28, 0.45, 1]
+        material.opacity = 0.6
         let alphaRectMesh = MetalMesh.rectangle(p1: [-1, 0, -1], p2: [1, 0, 0.5], device: device)
         let alphaRect = MeshObject(metalMesh: alphaRectMesh, material: material, device: device)
         alphaRect.transform.moveBy([-1.5, 0.5, 0])
@@ -225,7 +241,8 @@ class MyScene {
             let url = Bundle.main.url(forResource: "box", withExtension: "obj")!
             let metalMesh = MetalMesh.loadObjFile(url, device: device)
             metalMesh.setColor([0.1, 0.3, 0.8, 1])
-            let material = Material(envMapReflectedAmount: 1.0)
+            let material = Material()
+            material.envMapReflectedAmount = 1.0
             let cube = MeshObject(metalMesh: metalMesh, material: material, device: device)
             cube.transform.scale = scale
             cube.transform.moveBy(pos)
@@ -236,7 +253,8 @@ class MyScene {
         do {
             let url = Bundle.main.url(forResource: "box", withExtension: "obj")!
             let metalMesh = MetalMesh.loadObjFile(url, device: device)
-            let material = Material(envMapRefractedAmount: 1.0)
+            let material = Material()
+            material.envMapRefractedAmount = 1.0
             let cube = MeshObject(metalMesh: metalMesh, material: material, device: device)
             cube.transform.scale = scale
             cube.transform.moveBy(pos + Float3(2 * scale + 0.1, 0, 0))
@@ -268,7 +286,10 @@ class MyScene {
         let url = Bundle.main.url(forResource: "box", withExtension: "obj")!
         let metalMesh = MetalMesh.loadObjFile(url, device: device)
         let colorTexture = MetalMesh.loadTexture("placeholder2.png", srgb: true, device)
-        let material = Material(color: [0.1, 0.3, 0.8, 1], colorTexture: colorTexture, textureAmount: 1.0)
+        let material = Material()
+        material.color = [0.1, 0.3, 0.8, 1]
+        material.colorTexture = colorTexture
+        material.textureAmount = 1.0
         let boxesCluster = InstancedObject(metalMesh: metalMesh, positions: instancePositions, material: material, device: device)
         boxesCluster.transform.moveBy([-rectSize, 0, 1])
         
@@ -357,6 +378,7 @@ class MyScene {
         character.loadScene(url: url, device: device)
         character.transform.scale = 0.3
         character.transform.moveBy([1.25, 0.1, 0])
+        character.setRoughnessToAllMaterials(0.0)
         
         fileScenes.append(character)
         self.character = character

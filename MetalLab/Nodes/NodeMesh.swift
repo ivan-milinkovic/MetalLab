@@ -3,7 +3,7 @@ import MetalKit
 import ModelIO
 
 /// Easier access to mesh properties and conversion from MDL to MTK models
-struct NodeMesh {
+class NodeMesh {
     let mesh: MDLMesh
     let submeshes: [SubMesh]
     let objectConstantsBuff: MTLBuffer
@@ -23,6 +23,11 @@ struct NodeMesh {
 struct SubMesh {
     let mdlSubmesh: MDLSubmesh
     let material: Material
+    
+    init(mdlSubmesh: MDLSubmesh, material: Material) {
+        self.mdlSubmesh = mdlSubmesh
+        self.material = material
+    }
 }
 
 private func loadTangents(_ mesh: MDLMesh) {
@@ -68,7 +73,7 @@ private func readMaterial(_ mdlMaterial: MDLMaterial?,
     
     guard let mdlMaterial else { return Material() }
     
-    var mat = Material()
+    let mat = Material()
     let colorSpace = CGColorSpace(name: CGColorSpace.linearSRGB)!
     
     // TODO: don't load textures more than once
@@ -152,6 +157,7 @@ private func readMaterial(_ mdlMaterial: MDLMaterial?,
     
     
     // Roughness
+    // Note: Seems that, when roughness is missing, Metal defaults to 0.5
     if let roughnessProp = mdlMaterial.property(with: .roughness) {
         switch roughnessProp.type {
         case .float:

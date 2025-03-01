@@ -75,7 +75,9 @@ class SimpleAnimatedMesh {
         var prototype = ObjectConstants()
         objectConstantsBuff = device.makeBuffer(bytes: &prototype, length: MemoryLayout<ObjectConstants>.stride, options: .storageModeShared)!
         
-        material = Material(color: [0.7, 0.3, 0.0, 1])
+        let mat = Material()
+        mat.color = [0.7, 0.3, 0.0, 1]
+        material = mat
         
         updateJointAnimMats(localAnimMats: jointRestMats)
     }
